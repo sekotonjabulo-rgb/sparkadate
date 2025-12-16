@@ -303,9 +303,9 @@
             const onboardingData = JSON.parse(localStorage.getItem('sparkUserData') || '{}');
     
             const userData = {
-    email: document.getElementById('email').value,
-    password: document.getElementById('password').value,
-    display_name: document.getElementById('displayName').value,
+    email: emailInput.value.trim(),
+    password: passwordInput.value,
+    display_name: nameInput.value.trim(),
     age: onboardingData.age,
     gender: onboardingData.gender,
     seeking: onboardingData.seeking,
