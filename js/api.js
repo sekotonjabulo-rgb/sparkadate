@@ -1,6 +1,5 @@
 const API_BASE_URL = 'http://localhost:3000/api';
 
-// Token management
 function getToken() {
     return localStorage.getItem('sparkToken');
 }
@@ -13,7 +12,6 @@ function removeToken() {
     localStorage.removeItem('sparkToken');
 }
 
-// API helper
 async function apiRequest(endpoint, options = {}) {
     const token = getToken();
     
@@ -28,11 +26,11 @@ async function apiRequest(endpoint, options = {}) {
     try {
         const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
         const data = await response.json();
-
+        
         if (!response.ok) {
             throw new Error(data.error || 'Request failed');
         }
-
+        
         return data;
     } catch (error) {
         console.error('API Error:', error);
@@ -40,7 +38,6 @@ async function apiRequest(endpoint, options = {}) {
     }
 }
 
-// Auth API
 const auth = {
     async signup(userData) {
         const data = await apiRequest('/auth/signup', {
@@ -80,7 +77,6 @@ const auth = {
     }
 };
 
-// Users API
 const users = {
     async getProfile() {
         return apiRequest('/users/me');
@@ -108,7 +104,6 @@ const users = {
     }
 };
 
-// Matches API
 const matches = {
     async getCurrent() {
         return apiRequest('/matches/current');
@@ -127,7 +122,6 @@ const matches = {
     }
 };
 
-// Messages API
 const messages = {
     async getAll(matchId) {
         return apiRequest(`/messages/${matchId}`);
@@ -145,10 +139,9 @@ const messages = {
     }
 };
 
-// Export API object
 const SparkAPI = {
     auth,
     users,
     matches,
     messages
-};
+};  
