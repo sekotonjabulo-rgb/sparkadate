@@ -5,7 +5,6 @@ import { calculateCompatibility } from '../services/gemini.js';
 
 const router = express.Router();
 
-// Get current match
 router.get('/current', authenticateToken, async (req, res) => {
     try {
         const userId = req.user.id;
@@ -25,7 +24,6 @@ router.get('/current', authenticateToken, async (req, res) => {
             return res.json({ match: null });
         }
 
-        // Return partner info (not the requesting user)
         const partner = match.user_a_id === userId ? match.user_b : match.user_a;
 
         res.json({
@@ -47,12 +45,10 @@ router.get('/current', authenticateToken, async (req, res) => {
     }
 });
 
-// Find new match
 router.post('/find', authenticateToken, async (req, res) => {
     try {
         const userId = req.user.id;
 
-        // Check if user already has active match
         const { data: existingMatch } = await supabase
             .from('matches')
             .select('id')
@@ -64,16 +60,14 @@ router.post('/find', authenticateToken, async (req, res) => {
             return res.status(400).json({ error: 'Already have an active match' });
         }
 
-        // Get user data and preferences
         const { data: user } = await supabase
             .from('users')
             .select('*, user_preferences(*), personality_profiles(*)')
             .eq('id', userId)
             .single();
 
-const preferences = user.user_preferences?.[0] || user.user_preferences;
-        
-        // Find potential matches
+        const preferences = user.user_preferences?.[0] || user.user_preferences;
+
         const { data: candidates } = await supabase
             .from('users')
             .select('*, personality_profiles(*), interest_mappings(*)')
@@ -83,41 +77,46 @@ const preferences = user.user_preferences?.[0] || user.user_preferences;
             .gte('age', preferences?.age_min || 18)
             .lte('age', preferences?.age_max || 99);
 
-if (!candidates || candidates.length === 0) {
-    // Add to queue
-    await supabase
-        .from('match_queue')
-        .upsert({ user_id: userId, is_active: true });
+        if (!candidates || candidates.length === 0) {
+            await supabase
+                .from('match_queue')
+                .upsert({ user_id: userId, is_active: true });
 
-    return res.json({ match: null, queued: true });
-}
+            return res.json({ match: null, queued: true });
+        }
 
-// NEW CODE - Add this block here
-const { data: activeMatchUserIds } = await supabase
-    .from('matches')
-    .select('user_a_id, user_b_id')
-    .eq('status', 'active');
+        const { data: activeMatchUserIds } = await supabase
+            .from('matches')
+            .select('user_a_id, user_b_id')
+            .eq('status', 'active');
 
-const matchedUserIds = new Set();
-activeMatchUserIds?.forEach(m => {
-    matchedUserIds.add(m.user_a_id);
-    matchedUserIds.add(m.user_b_id);
-});
+        const matchedUserIds = new Set();
+        activeMatchUserIds?.forEach(m => {
+            matchedUserIds.add(m.user_a_id);
+            matchedUserIds.add(m.user_b_id);
+        });
 
-const availableCandidates = candidates.filter(c => !matchedUserIds.has(c.id));
+        const { data: previousMatches } = await supabase
+            .from('matches')
+            .select('user_a_id, user_b_id')
+            .or(`user_a_id.eq.${userId},user_b_id.eq.${userId}`);
 
-const validCandidates = availableCandidates.filter(c => {
-    const genderMap = { man: 'men', woman: 'women' };
-    const userSeeks = user.seeking === 'everyone' || user.seeking === genderMap[c.gender];
-    const candidateSeeks = c.seeking === 'everyone' || c.seeking === genderMap[user.gender];
-    return userSeeks && candidateSeeks;
-});
+        const previousPartnerIds = new Set();
+        previousMatches?.forEach(m => {
+            previousPartnerIds.add(m.user_a_id === userId ? m.user_b_id : m.user_a_id);
+        });
 
-        console.log('User:', user.id, user.gender, user.seeking);
-console.log('Candidates found:', candidates?.length);
-console.log('Available (not in active match):', availableCandidates?.length);
-console.log('Valid (seeking match):', validCandidates?.length);
-        
+        const availableCandidates = candidates.filter(c => 
+            !matchedUserIds.has(c.id) && !previousPartnerIds.has(c.id)
+        );
+
+        const validCandidates = availableCandidates.filter(c => {
+            const genderMap = { man: 'men', woman: 'women' };
+            const userSeeks = user.seeking === 'everyone' || user.seeking === genderMap[c.gender];
+            const candidateSeeks = c.seeking === 'everyone' || c.seeking === genderMap[user.gender];
+            return userSeeks && candidateSeeks;
+        });
+
         if (validCandidates.length === 0) {
             await supabase
                 .from('match_queue')
@@ -126,7 +125,6 @@ console.log('Valid (seeking match):', validCandidates?.length);
             return res.json({ match: null, queued: true });
         }
 
-        // Calculate compatibility with top candidate
         const candidate = validCandidates[0];
         const compatibility = await calculateCompatibility(
             user.personality_profiles,
@@ -135,7 +133,6 @@ console.log('Valid (seeking match):', validCandidates?.length);
             candidate.interest_mappings || []
         );
 
-        // Create match
         const revealHours = compatibility?.recommended_reveal_hours || Math.floor(Math.random() * 108) + 12;
         const revealAvailableAt = new Date(Date.now() + revealHours * 60 * 60 * 1000);
 
@@ -153,7 +150,6 @@ console.log('Valid (seeking match):', validCandidates?.length);
 
         if (error) throw error;
 
-        // Create conversation analytics entry
         await supabase
             .from('conversation_analytics')
             .insert({ match_id: match.id });
@@ -175,7 +171,6 @@ console.log('Valid (seeking match):', validCandidates?.length);
     }
 });
 
-// Request reveal
 router.post('/:matchId/reveal', authenticateToken, async (req, res) => {
     try {
         const { matchId } = req.params;
@@ -191,9 +186,7 @@ router.post('/:matchId/reveal', authenticateToken, async (req, res) => {
             return res.status(403).json({ error: 'Not authorized' });
         }
 
-        // Check if reveal already requested by other user
         if (match.reveal_requested_by && match.reveal_requested_by !== userId) {
-            // Both users agreed - reveal!
             await supabase
                 .from('matches')
                 .update({
@@ -205,7 +198,6 @@ router.post('/:matchId/reveal', authenticateToken, async (req, res) => {
             return res.json({ revealed: true });
         }
 
-        // First request
         await supabase
             .from('matches')
             .update({
@@ -221,7 +213,6 @@ router.post('/:matchId/reveal', authenticateToken, async (req, res) => {
     }
 });
 
-// Exit match
 router.post('/:matchId/exit', authenticateToken, async (req, res) => {
     try {
         const { matchId } = req.params;
@@ -249,17 +240,16 @@ router.post('/:matchId/exit', authenticateToken, async (req, res) => {
             })
             .eq('id', matchId);
 
-        // Decrement exits for free users
-        const { data: user } = await supabase
+        const { data: userData } = await supabase
             .from('users')
             .select('subscription_tier, exits_remaining')
             .eq('id', userId)
             .single();
 
-        if (user.subscription_tier === 'free' && user.exits_remaining > 0) {
+        if (userData.subscription_tier === 'free' && userData.exits_remaining > 0) {
             await supabase
                 .from('users')
-                .update({ exits_remaining: user.exits_remaining - 1 })
+                .update({ exits_remaining: userData.exits_remaining - 1 })
                 .eq('id', userId);
         }
 
