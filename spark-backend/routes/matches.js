@@ -71,8 +71,8 @@ router.post('/find', authenticateToken, async (req, res) => {
             .eq('id', userId)
             .single();
 
-        const preferences = user.user_preferences;
-
+const preferences = user.user_preferences?.[0] || user.user_preferences;
+        
         // Find potential matches
         const { data: candidates } = await supabase
             .from('users')
