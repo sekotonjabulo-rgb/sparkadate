@@ -26,6 +26,8 @@
             --color-surface: #FFFFFF;
             --color-text-primary: #FFFFFF;
             --color-text-secondary: rgba(255, 255, 255, 0.65);
+            --color-input-border: rgba(255, 255, 255, 0.12);
+            --radius-pill: 28px;
             --font-heading: 'CabinetGrotesk-Medium', -apple-system, BlinkMacSystemFont, sans-serif;
         }
 
@@ -55,8 +57,16 @@
             align-items: center;
             max-width: 428px;
             margin: 0 auto;
-            padding: 16px;
+            padding: 16px 16px 32px;
             animation: blurFadeIn 0.6s ease-out forwards;
+        }
+
+        .timer-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
         }
 
         .timer-label {
@@ -77,6 +87,88 @@
             margin-top: 16px;
         }
 
+        .timer-actions {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 0 8px;
+        }
+
+        .btn-skip {
+            width: 100%;
+            height: 52px;
+            background-color: transparent;
+            color: var(--color-text-primary);
+            border: 1px solid var(--color-input-border);
+            border-radius: var(--radius-pill);
+            font-family: var(--font-heading);
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: opacity 0.2s ease, border-color 0.2s ease;
+        }
+
+        .btn-skip:active {
+            opacity: 0.85;
+        }
+
+        .btn-skip:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .btn-upgrade {
+            width: 100%;
+            height: 52px;
+            background-color: var(--color-surface);
+            color: var(--color-background);
+            border: none;
+            border-radius: var(--radius-pill);
+            font-family: var(--font-heading);
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+        }
+
+        .btn-upgrade:active {
+            opacity: 0.85;
+        }
+
+        .skip-info {
+            font-size: 12px;
+            color: var(--color-text-secondary);
+            text-align: center;
+            margin-top: 8px;
+        }
+
+        .btn-back {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: none;
+            border: 1px solid var(--color-input-border);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: border-color 0.2s ease;
+        }
+
+        .btn-back:active {
+            border-color: var(--color-text-secondary);
+        }
+
+        .btn-back svg {
+            width: 20px;
+            height: 20px;
+            stroke: var(--color-text-primary);
+        }
+
         @keyframes blurFadeIn {
             0% {
                 opacity: 0;
@@ -90,44 +182,130 @@
     </style>
 </head>
 <body>
+    <button class="btn-back" id="backBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+    </button>
+
     <main class="timer-screen">
-        <p class="timer-label">Reveal available in</p>
-        <h1 class="timer-value" id="timerValue">--:--:--</h1>
-        <p class="timer-sublabel" id="timerSublabel"></p>
+        <div class="timer-content">
+            <p class="timer-label">Reveal available in</p>
+            <h1 class="timer-value" id="timerValue">--:--:--</h1>
+            <p class="timer-sublabel" id="timerSublabel"></p>
+        </div>
+
+        <div class="timer-actions">
+            <button class="btn-skip" id="skipBtn">Skip match</button>
+            <p class="skip-info" id="skipInfo"></p>
+        </div>
     </main>
 
+    <script src="js/api.js"></script>
     <script>
-        const timerValue = document.getElementById('timerValue');
-        const timerSublabel = document.getElementById('timerSublabel');
+        const timerValue = document.getElementById('timerValue')
+        const timerSublabel = document.getElementById('timerSublabel')
+        const skipBtn = document.getElementById('skipBtn')
+        const skipInfo = document.getElementById('skipInfo')
+        const backBtn = document.getElementById('backBtn')
 
-        const matchData = JSON.parse(localStorage.getItem('sparkCurrentMatch') || '{}');
+        const matchData = JSON.parse(localStorage.getItem('sparkCurrentMatch') || '{}')
+        let userProfile = null
 
-        function updateTimer() {
-            const now = Date.now();
-            const remaining = matchData.revealTime - now;
-
-            if (remaining <= 0) {
-                timerValue.textContent = 'Ready';
-                timerSublabel.textContent = 'You can now request a reveal';
-                return;
-            }
-
-            const days = Math.floor(remaining / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((remaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
-
-            if (days > 0) {
-                timerValue.textContent = `${days}d ${hours}h ${minutes}m`;
-                timerSublabel.textContent = `${days} day${days > 1 ? 's' : ''} remaining`;
-            } else {
-                timerValue.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-                timerSublabel.textContent = 'Keep chatting';
+        async function loadUserProfile() {
+            try {
+                const { user } = await SparkAPI.users.getProfile()
+                userProfile = user
+                updateSkipButton()
+            } catch (error) {
+                console.error('Failed to load user profile:', error)
             }
         }
 
-        updateTimer();
-        setInterval(updateTimer, 1000);
+        function updateSkipButton() {
+            if (!userProfile) return
+
+            const isPro = userProfile.subscription_tier === 'pro'
+            const exitsRemaining = userProfile.exits_remaining
+
+            if (isPro) {
+                skipBtn.textContent = 'Skip match'
+                skipBtn.classList.remove('btn-upgrade')
+                skipBtn.classList.add('btn-skip')
+                skipInfo.textContent = 'Unlimited skips with Pro'
+            } else if (exitsRemaining > 0) {
+                skipBtn.textContent = 'Skip match'
+                skipBtn.classList.remove('btn-upgrade')
+                skipBtn.classList.add('btn-skip')
+                skipInfo.textContent = `${exitsRemaining} skip${exitsRemaining !== 1 ? 's' : ''} remaining`
+            } else {
+                skipBtn.textContent = 'Upgrade to Pro'
+                skipBtn.classList.remove('btn-skip')
+                skipBtn.classList.add('btn-upgrade')
+                skipInfo.textContent = 'No skips remaining'
+            }
+        }
+
+        skipBtn.addEventListener('click', async () => {
+            if (!userProfile) return
+
+            const isPro = userProfile.subscription_tier === 'pro'
+            const exitsRemaining = userProfile.exits_remaining
+
+            if (!isPro && exitsRemaining <= 0) {
+                window.location.href = 'plan.html'
+                return
+            }
+
+            skipBtn.disabled = true
+            skipBtn.textContent = 'Skipping...'
+
+            try {
+                await SparkAPI.matches.exit(matchData.id)
+                
+                localStorage.removeItem('sparkCurrentMatch')
+                
+                window.location.href = 'match.html'
+            } catch (error) {
+                console.error('Skip failed:', error)
+                alert('Failed to skip match. Please try again.')
+                skipBtn.disabled = false
+                updateSkipButton()
+            }
+        })
+
+        backBtn.addEventListener('click', () => {
+            window.location.href = 'chat.html'
+        })
+
+        function updateTimer() {
+            const now = Date.now()
+            const remaining = matchData.revealTime - now
+
+            if (remaining <= 0) {
+                timerValue.textContent = 'Ready'
+                timerSublabel.textContent = 'You can now request a reveal'
+                return
+            }
+
+            const days = Math.floor(remaining / (1000 * 60 * 60 * 24))
+            const hours = Math.floor((remaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+            const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60))
+            const seconds = Math.floor((remaining % (1000 * 60)) / 1000)
+
+            if (days > 0) {
+                timerValue.textContent = `${days}d ${hours}h ${minutes}m`
+                timerSublabel.textContent = `${days} day${days > 1 ? 's' : ''} remaining`
+            } else {
+                timerValue.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+                timerSublabel.textContent = 'Keep chatting'
+            }
+        }
+
+        loadUserProfile()
+        updateTimer()
+        setInterval(updateTimer, 1000)
+        setInterval(loadUserProfile, 30000)
     </script>
 </body>
 </html>
