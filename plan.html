@@ -22,7 +22,7 @@
         }
 
         :root {
-            --color-background: #000;
+            --color-background: #000000;
             --color-surface: #FFFFFF;
             --color-text-primary: #FFFFFF;
             --color-text-secondary: rgba(255, 255, 255, 0.65);
@@ -303,8 +303,7 @@
 
     <script src="js/api.js"></script>
     <script>
- console.log('Plan script loaded')
- console.log('Plan script loaded')
+console.log('Plan script loaded')
 
 const freePlan = document.getElementById('freePlan')
 const proPlan = document.getElementById('proPlan')
@@ -334,7 +333,8 @@ continueBtn.addEventListener('click', () => {
         const user = JSON.parse(localStorage.getItem('sparkUser'))
         console.log('User from storage:', user)
         if (user && user.id) {
-            const checkoutUrl = `https://spark-thesocialapp.lemonsqueezy.com/checkout/buy/ee335969-d3c6-4835-8097-2610b43e7f2f?checkout[custom][user_id]=${user.id}`
+            const successUrl = encodeURIComponent('http://localhost:3000/prosuccess.html')
+            const checkoutUrl = `https://spark-thesocialapp.lemonsqueezy.com/checkout/buy/ee335969-d3c6-4835-8097-2610b43e7f2f?checkout[custom][user_id]=${user.id}&checkout[success_url]=${successUrl}`
             console.log('Redirecting to:', checkoutUrl)
             window.location.href = checkoutUrl
         } else {
@@ -348,7 +348,6 @@ continueBtn.addEventListener('click', () => {
 })
 
 console.log('Event listeners attached')
-
     </script>
 </body>
 </html>
