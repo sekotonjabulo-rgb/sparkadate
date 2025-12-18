@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
 export async function analyzeMessage(content, conversationContext = []) {
     const prompt = `
@@ -31,7 +31,6 @@ export async function analyzeMessage(content, conversationContext = []) {
         const result = await model.generateContent(prompt);
         const response = result.response.text();
         
-        // Extract JSON from response
         const jsonMatch = response.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
             return JSON.parse(jsonMatch[0]);
