@@ -139,9 +139,22 @@ router.post('/find', authenticateToken, async (req, res) => {
             }
         });
 
+        console.log('=== MATCHING DEBUG ===');
+        console.log('Current user:', {
+            id: userId,
+            gender: user.gender,
+            seeking: user.seeking
+        });
+        console.log('Total candidates from DB:', candidates?.length);
+        console.log('Users in active matches:', [...matchedUserIds]);
+        console.log('Previous match user IDs:', [...previousMatchUserIds]);
+
         const availableCandidates = candidates.filter(c => 
             !matchedUserIds.has(c.id) && !previousMatchUserIds.has(c.id)
         );
+
+        console.log('Available after filters:', availableCandidates?.length);
+        console.log('Available candidate names:', availableCandidates.map(c => c.display_name));
 
         const validCandidates = availableCandidates.filter(c => {
             const genderMap = { man: 'men', woman: 'women' };
@@ -150,22 +163,8 @@ router.post('/find', authenticateToken, async (req, res) => {
             return userSeeks && candidateSeeks;
         });
 
-        console.log('=== MATCHING DEBUG ===');
-        console.log('Current user:', {
-            id: userId,
-            gender: user.gender,
-            seeking: user.seeking
-        });
-        console.log('Total candidates from DB:', candidates?.length);
-        console.log('Available after active filter:', availableCandidates?.length);
-        console.log('Previous match user IDs:', [...previousMatchUserIds]);
-        availableCandidates.forEach(c => {
-            const genderMap = { man: 'men', woman: 'women' };
-            const userSeeks = user.seeking === 'everyone' || user.seeking === genderMap[c.gender];
-            const candidateSeeks = c.seeking === 'everyone' || c.seeking === genderMap[user.gender];
-            console.log(`Candidate ${c.display_name}: gender=${c.gender}, seeking=${c.seeking}, userSeeks=${userSeeks}, candidateSeeks=${candidateSeeks}`);
-        });
         console.log('Valid candidates after seeking filter:', validCandidates?.length);
+        console.log('Valid candidate names:', validCandidates.map(c => c.display_name));
         console.log('=== END DEBUG ===');
 
         if (validCandidates.length === 0) {
@@ -176,15 +175,24 @@ router.post('/find', authenticateToken, async (req, res) => {
         }
 
         const candidate = validCandidates[0];
-        const compatibility = await calculateCompatibility(
-            user.personality_profiles,
-            candidate.personality_profiles,
-            [],
-            candidate.interest_mappings || []
-        );
+        console.log('Selected candidate:', candidate.display_name, candidate.id);
+
+        let compatibility = null;
+        try {
+            compatibility = await calculateCompatibility(
+                user.personality_profiles,
+                candidate.personality_profiles,
+                [],
+                candidate.interest_mappings || []
+            );
+        } catch (geminiError) {
+            console.error('Gemini error (continuing with defaults):', geminiError.message);
+        }
 
         const revealHours = compatibility?.recommended_reveal_hours || Math.floor(Math.random() * 108) + 12;
         const revealAvailableAt = new Date(Date.now() + revealHours * 60 * 60 * 1000);
+
+        console.log('Creating match between', userId, 'and', candidate.id);
 
         const { data: match, error } = await supabase
             .from('matches')
@@ -198,7 +206,12 @@ router.post('/find', authenticateToken, async (req, res) => {
             .select()
             .single();
 
-        if (error) throw error;
+        if (error) {
+            console.error('Match insert error:', error);
+            throw error;
+        }
+
+        console.log('Match created successfully:', match.id);
 
         await supabase
             .from('conversation_analytics')
