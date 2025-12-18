@@ -125,7 +125,23 @@ router.post('/find', authenticateToken, async (req, res) => {
             matchedUserIds.add(m.user_b_id);
         });
 
-        const availableCandidates = candidates.filter(c => !matchedUserIds.has(c.id));
+        const { data: previousMatches } = await supabase
+            .from('matches')
+            .select('user_a_id, user_b_id')
+            .or(`user_a_id.eq.${userId},user_b_id.eq.${userId}`);
+
+        const previousMatchUserIds = new Set();
+        previousMatches?.forEach(m => {
+            if (m.user_a_id === userId) {
+                previousMatchUserIds.add(m.user_b_id);
+            } else {
+                previousMatchUserIds.add(m.user_a_id);
+            }
+        });
+
+        const availableCandidates = candidates.filter(c => 
+            !matchedUserIds.has(c.id) && !previousMatchUserIds.has(c.id)
+        );
 
         const validCandidates = availableCandidates.filter(c => {
             const genderMap = { man: 'men', woman: 'women' };
@@ -142,6 +158,7 @@ router.post('/find', authenticateToken, async (req, res) => {
         });
         console.log('Total candidates from DB:', candidates?.length);
         console.log('Available after active filter:', availableCandidates?.length);
+        console.log('Previous match user IDs:', [...previousMatchUserIds]);
         availableCandidates.forEach(c => {
             const genderMap = { man: 'men', woman: 'women' };
             const userSeeks = user.seeking === 'everyone' || user.seeking === genderMap[c.gender];
