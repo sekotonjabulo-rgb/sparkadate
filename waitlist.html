@@ -233,9 +233,6 @@
                 </div>
             </form>
 
-            <div class="success-message" id="successMessage">
-                <p>You're on the list! We'll notify you when Spark launches.</p>
-            </div>
         </section>
     </main>
 
@@ -250,7 +247,6 @@
         const submitBtn = document.getElementById('submitBtn');
         const nameInput = document.getElementById('nameInput');
         const emailInput = document.getElementById('emailInput');
-        const successMessage = document.getElementById('successMessage');
         const waitlistScreen = document.querySelector('.waitlist-screen');
 
         form.addEventListener('submit', async (e) => {
@@ -285,8 +281,13 @@
                     throw new Error(data.error || 'Failed to join waitlist');
                 }
 
-                waitlistScreen.classList.add('content-blur');
+// Start blurring the main content
+waitlistScreen.classList.add('content-blur');
 
+// After blur completes, redirect to confirmation page
+setTimeout(() => {
+    window.location.href = 'confirmation.html';
+}, 600);
                 // Optional: Store referral code in localStorage
                 if (data.waitlistEntry && data.waitlistEntry.referral_code) {
                     localStorage.setItem('sparkReferralCode', data.waitlistEntry.referral_code);
