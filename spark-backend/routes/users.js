@@ -1,8 +1,10 @@
 import express from 'express';
+import multer from 'multer';
 import { supabase } from '../config/supabase.js';
 import { authenticateToken } from '../middleware/auth.js';
 
 const router = express.Router();
+const upload = multer({ storage: multer.memoryStorage() });
 
 // Get user profile
 router.get('/me', authenticateToken, async (req, res) => {
@@ -20,9 +22,7 @@ router.get('/me', authenticateToken, async (req, res) => {
 
         if (error) throw error;
 
-        // Remove sensitive data
         delete user.password_hash;
-
         res.json({ user });
     } catch (error) {
         console.error('Get user error:', error);
@@ -54,7 +54,6 @@ router.patch('/me', authenticateToken, async (req, res) => {
         if (error) throw error;
 
         delete user.password_hash;
-
         res.json({ user });
     } catch (error) {
         console.error('Update user error:', error);
@@ -90,12 +89,11 @@ router.patch('/me/preferences', authenticateToken, async (req, res) => {
     }
 });
 
-// Add photo
+// Add photo (URL-based)
 router.post('/me/photos', authenticateToken, async (req, res) => {
     try {
         const { photo_url, is_primary } = req.body;
 
-        // If setting as primary, unset other primaries
         if (is_primary) {
             await supabase
                 .from('user_photos')
@@ -119,6 +117,106 @@ router.post('/me/photos', authenticateToken, async (req, res) => {
     } catch (error) {
         console.error('Add photo error:', error);
         res.status(500).json({ error: 'Failed to add photo' });
+    }
+});
+
+// Upload photo (file-based with Supabase Storage)
+router.post('/me/photos/upload', authenticateToken, upload.single('photo'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: 'No photo provided' });
+        }
+
+        const userId = req.user.id;
+        const isPrimary = req.body.is_primary === 'true' || req.body.is_primary === true;
+        const uploadOrder = parseInt(req.body.upload_order) || 0;
+        const fileExt = req.file.mimetype.split('/')[1] || 'jpg';
+        const fileName = `${userId}/${Date.now()}_${uploadOrder}.${fileExt}`;
+
+        const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('user-photos')
+            .upload(fileName, req.file.buffer, {
+                contentType: req.file.mimetype,
+                upsert: false
+            });
+
+        if (uploadError) {
+            console.error('Storage upload error:', uploadError);
+            throw uploadError;
+        }
+
+        const { data: urlData } = supabase.storage
+            .from('user-photos')
+            .getPublicUrl(fileName);
+
+        const photoUrl = urlData.publicUrl;
+
+        if (isPrimary) {
+            await supabase
+                .from('user_photos')
+                .update({ is_primary: false })
+                .eq('user_id', userId);
+        }
+
+        const { data: photo, error: dbError } = await supabase
+            .from('user_photos')
+            .insert({
+                user_id: userId,
+                photo_url: photoUrl,
+                is_primary: isPrimary,
+                upload_order: uploadOrder
+            })
+            .select()
+            .single();
+
+        if (dbError) {
+            console.error('Database insert error:', dbError);
+            throw dbError;
+        }
+
+        res.status(201).json({ photo });
+    } catch (error) {
+        console.error('Photo upload error:', error);
+        res.status(500).json({ error: 'Failed to upload photo' });
+    }
+});
+
+// Delete photo
+router.delete('/me/photos/:photoId', authenticateToken, async (req, res) => {
+    try {
+        const { photoId } = req.params;
+        const userId = req.user.id;
+
+        const { data: photo } = await supabase
+            .from('user_photos')
+            .select('*')
+            .eq('id', photoId)
+            .eq('user_id', userId)
+            .single();
+
+        if (!photo) {
+            return res.status(404).json({ error: 'Photo not found' });
+        }
+
+        const fileName = photo.photo_url.split('/').pop();
+        const filePath = `${userId}/${fileName}`;
+
+        await supabase.storage
+            .from('user-photos')
+            .remove([filePath]);
+
+        const { error } = await supabase
+            .from('user_photos')
+            .delete()
+            .eq('id', photoId)
+            .eq('user_id', userId);
+
+        if (error) throw error;
+
+        res.json({ deleted: true });
+    } catch (error) {
+        console.error('Delete photo error:', error);
+        res.status(500).json({ error: 'Failed to delete photo' });
     }
 });
 
