@@ -190,7 +190,7 @@ router.post('/find', authenticateToken, async (req, res) => {
             console.error('Gemini error (continuing with defaults):', geminiError.message);
         }
 
-        const revealHours = compatibility?.recommended_reveal_hours || Math.floor(Math.random() * 108) + 12;
+const revealHours = compatibility?.recommended_reveal_hours || Math.floor(Math.random() * 8760) + 1;
         const revealAvailableAt = new Date(Date.now() + revealHours * 60 * 60 * 1000);
 
         console.log('Creating match between', userId, 'and', candidate.id);
