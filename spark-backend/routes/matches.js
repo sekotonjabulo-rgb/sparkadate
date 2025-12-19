@@ -76,6 +76,7 @@ router.get('/current', authenticateToken, async (req, res) => {
 });
 
 router.post('/find', authenticateToken, async (req, res) => {
+    console.log('=== NEW CODE VERSION 2 ===');
     try {
         const userId = req.user.id;
 
