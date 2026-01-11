@@ -1,4 +1,12 @@
+/**
+ * Spark API Configuration
+ * Change this to http://localhost:3000/api for local testing
+ * or your ngrok URL for mobile/external testing.
+ */
 const API_BASE_URL = 'https://sparkadate-production.up.railway.app/api';
+
+// --- Token Management Helpers ---
+
 function getToken() {
     return localStorage.getItem('sparkToken');
 }
@@ -11,12 +19,16 @@ function removeToken() {
     localStorage.removeItem('sparkToken');
 }
 
+// --- Core Request Engine ---
+
 async function apiRequest(endpoint, options = {}) {
     const token = getToken();
 
     const config = {
         headers: {
             'Content-Type': 'application/json',
+            // Required to bypass the ngrok warning page during testing
+            'ngrok-skip-browser-warning': 'true', 
             ...(token && { 'Authorization': `Bearer ${token}` })
         },
         ...options
@@ -24,10 +36,19 @@ async function apiRequest(endpoint, options = {}) {
 
     try {
         const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
-        const data = await response.json();
+        
+        // 1. Check if the response actually has JSON content to parse
+        const contentType = response.headers.get("content-type");
+        let data = null;
+        
+        if (contentType && contentType.includes("application/json")) {
+            data = await response.json();
+        }
 
+        // 2. Handle HTTP errors (400s, 500s)
         if (!response.ok) {
-            throw new Error(data.error || 'Request failed');
+            // If the server didn't send a JSON error message, use the status text
+            throw new Error(data?.error || `Request failed with status: ${response.status}`);
         }
 
         return data;
@@ -37,14 +58,16 @@ async function apiRequest(endpoint, options = {}) {
     }
 }
 
+// --- API Service Modules ---
+
 const auth = {
     async signup(userData) {
         const data = await apiRequest('/auth/signup', {
             method: 'POST',
             body: JSON.stringify(userData)
         });
-        setToken(data.token);
-        localStorage.setItem('sparkUser', JSON.stringify(data.user));
+        if (data?.token) setToken(data.token);
+        if (data?.user) localStorage.setItem('sparkUser', JSON.stringify(data.user));
         return data;
     },
 
@@ -53,8 +76,8 @@ const auth = {
             method: 'POST',
             body: JSON.stringify({ email, password })
         });
-        setToken(data.token);
-        localStorage.setItem('sparkUser', JSON.stringify(data.user));
+        if (data?.token) setToken(data.token);
+        if (data?.user) localStorage.setItem('sparkUser', JSON.stringify(data.user));
         return data;
     },
 
@@ -112,6 +135,7 @@ const users = {
         formData.append('upload_order', index);
 
         const token = getToken();
+        // Note: FormData requests don't need 'Content-Type': 'application/json'
         const res = await fetch(`${API_BASE_URL}/users/me/photos/upload`, {
             method: 'POST',
             headers: {
@@ -178,6 +202,7 @@ const messages = {
     }
 };
 
+// --- Export for use in other scripts ---
 const SparkAPI = {
     auth,
     users,
