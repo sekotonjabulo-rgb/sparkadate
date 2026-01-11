@@ -149,6 +149,10 @@ const matches = {
         return apiRequest(`/matches/${matchId}/reveal`, { method: 'POST' });
     },
 
+    async markRevealSeen(matchId) {
+        return apiRequest(`/matches/${matchId}/seen`, { method: 'POST' });
+    },
+
     async exit(matchId) {
         return apiRequest(`/matches/${matchId}/exit`, { method: 'POST' });
     },
