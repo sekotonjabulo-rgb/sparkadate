@@ -421,13 +421,17 @@
                 if (!match) return;
 
                 const currentUser = SparkAPI.auth.getCurrentUser();
+                const seenBy = match.revealed_seen_by || [];
                 
                 if (match.status === 'revealed') {
-                    const seenBy = match.revealed_seen_by || [];
                     if (!seenBy.includes(currentUser.id)) {
                         window.location.href = 'revealed.html';
                         return;
                     }
+                    revealNotification.classList.remove('visible');
+                    revealBtn.href = '#';
+                    revealBtn.title = 'Already revealed';
+                    return;
                 }
 
                 if (match.reveal_requested_by && match.reveal_requested_by !== currentUser.id) {
