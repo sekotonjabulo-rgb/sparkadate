@@ -423,8 +423,11 @@
                 const currentUser = SparkAPI.auth.getCurrentUser();
                 
                 if (match.status === 'revealed') {
-                    window.location.href = 'revealed.html';
-                    return;
+                    const seenBy = match.revealed_seen_by || [];
+                    if (!seenBy.includes(currentUser.id)) {
+                        window.location.href = 'revealed.html';
+                        return;
+                    }
                 }
 
                 if (match.reveal_requested_by && match.reveal_requested_by !== currentUser.id) {
