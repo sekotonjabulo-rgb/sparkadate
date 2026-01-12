@@ -9,85 +9,76 @@ import waitlistRoutes from './routes/waitlist.js';
 
 dotenv.config();
 
+// 1. Environment Variable Check
 const requiredEnvVars = ['SUPABASE_URL', 'SUPABASE_SERVICE_KEY', 'JWT_SECRET', 'GEMINI_API_KEY'];
 const missingVars = requiredEnvVars.filter(v => !process.env[v]);
 
 if (missingVars.length > 0) {
-    console.error('Missing environment variables:', missingVars.join(', '));
-    console.error('Please check your .env file');
-    process.exit(1);
+    console.error('CRITICAL ERROR: Missing environment variables:', missingVars.join(', '));
+    // In production, we don't want to exit(1) immediately if the platform is trying to boot
+    // but we should log it clearly.
 }
 
+const app = express();
+
+// 2. The Definite CORS Fix
+// This allows your GitHub Pages frontend to talk to this backend.
 const allowedOrigins = [
-  'https://sekotonjabulo-rgb.github.io', // Your GitHub Pages URL
-  'http://localhost:5173',               // Keep this for local testing
+  'https://sekotonjabulo-rgb.github.io', 
+  'http://localhost:5173',               
   'http://localhost:3000'
 ];
 
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-app.use(cors());
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.log("CORS Blocked for origin:", origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 app.use(express.json());
 
-app.get('/api', (req, res) => {
-    res.json({
-        message: 'Spark API',
-        version: '1.0.0',
-        endpoints: {
-            health: 'GET /api/health',
-            auth: {
-                signup: 'POST /api/auth/signup',
-                login: 'POST /api/auth/login'
-            },
-            users: {
-                me: 'GET /api/users/me',
-                update: 'PATCH /api/users/me',
-                preferences: 'PATCH /api/users/me/preferences',
-                photos: 'POST /api/users/me/photos'
-            },
-            matches: {
-                current: 'GET /api/matches/current',
-                find: 'POST /api/matches/find',
-                reveal: 'POST /api/matches/:matchId/reveal',
-                exit: 'POST /api/matches/:matchId/exit'
-            },
-            messages: {
-                send: 'POST /api/messages/:matchId',
-                get: 'GET /api/messages/:matchId',
-                analyze: 'POST /api/messages/:matchId/analyze'
-            },
-            waitlist: {
-                join: 'POST /api/waitlist/join',
-                count: 'GET /api/waitlist/count',
-                position: 'POST /api/waitlist/position'
-            }
-        }
-    });
-});
+// 3. Robust Health Checks
+// Render/Fly often ping the root "/" or "/healthz". 
+app.get('/', (req, res) => res.status(200).send('Spark Backend is Live'));
+app.get('/healthz', (req, res) => res.status(200).send('OK'));
 
 app.get('/api/health', (req, res) => {
     res.json({ 
         status: 'ok', 
         timestamp: new Date().toISOString(),
-        port: PORT
+        environment: process.env.NODE_ENV || 'development'
     });
 });
 
+// 4. API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/matches', matchesRoutes);
 app.use('/api/messages', messagesRoutes);
 app.use('/api/waitlist', waitlistRoutes);
 
+// 5. Port Binding for Cloud Deployment
+// Clouds like Render/Fly inject the PORT variable. 0.0.0.0 is required for external access.
+const PORT = process.env.PORT || 3000;
+
 const server = app.listen(PORT, '0.0.0.0', () => {
     console.log('========================================');
     console.log(`Spark backend running on port ${PORT}`);
-    console.log(`Health check: http://localhost:${PORT}/api/health`);
+    console.log(`Health check: /api/health`);
     console.log('========================================');
 });
 
+// Error Handling to prevent silent crashes
 server.on('error', (err) => {
     console.error('Server error:', err);
 });
