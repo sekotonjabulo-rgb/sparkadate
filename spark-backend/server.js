@@ -18,6 +18,12 @@ if (missingVars.length > 0) {
     process.exit(1);
 }
 
+const allowedOrigins = [
+  'https://sekotonjabulo-rgb.github.io', // Your GitHub Pages URL
+  'http://localhost:5173',               // Keep this for local testing
+  'http://localhost:3000'
+];
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
