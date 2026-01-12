@@ -22,7 +22,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors({
-    origin: ['https://lethabo3.github.io', 'http://localhost:3000', 'http://sparkadate.online'],
+    origin: true,
     credentials: true
 }));
 
