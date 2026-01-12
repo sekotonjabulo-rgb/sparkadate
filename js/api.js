@@ -1,4 +1,4 @@
-const API_BASE_URL = 'https://sparkadate-ggbxuq.fly.dev/api';
+const API_URL = 'https://sparkadate-1n.onrender.com/api';
 function getToken() {
     return localStorage.getItem('sparkToken');
 }
