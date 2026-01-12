@@ -1,23 +1,21 @@
 // 1. Definite Base URL
 const API_BASE_URL = 'https://sparkadate-1n.onrender.com/api';
 
-function getToken() {
-    return localStorage.getItem('sparkToken');
-}
-
-function setToken(token) {
-    localStorage.setItem('sparkToken', token);
-}
-
-function removeToken() {
-    localStorage.removeItem('sparkToken');
-}
+/**
+ * Utility to manage the JWT token in LocalStorage
+ */
+const TokenManager = {
+    get: () => localStorage.getItem('sparkToken'),
+    set: (token) => localStorage.getItem('sparkToken', token),
+    remove: () => localStorage.removeItem('sparkToken')
+};
 
 /**
- * Helper to ensure the URL is built correctly without double slashes
+ * The Core Request Handler
+ * Standardizes headers and URL construction for all API calls.
  */
 async function apiRequest(endpoint, options = {}) {
-    const token = getToken();
+    const token = TokenManager.get();
     
     // Slash-Guard: Ensure endpoint starts with / and BASE_URL doesn't end with one
     const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
@@ -36,105 +34,109 @@ async function apiRequest(endpoint, options = {}) {
     try {
         const response = await fetch(url, config);
         
+        // Handle potential empty responses
         const contentType = response.headers.get("content-type");
         let data = null;
-        
         if (contentType && contentType.includes("application/json")) {
             data = await response.json();
         }
 
         if (!response.ok) {
-            // Log exactly what went wrong for debugging
             console.error(`❌ Server returned ${response.status}:`, data);
             throw new Error(data?.error || `Request failed with status: ${response.status}`);
         }
 
         return data;
     } catch (error) {
-        console.error('API Error:', error);
+        console.error('API Connection Error:', error);
         throw error;
     }
 }
 
-const auth = {
-    async signup(userData) {
-        // This hits /api/auth/signup
-        const data = await apiRequest('/auth/signup', {
-            method: 'POST',
-            body: JSON.stringify(userData)
-        });
-        if (data?.token) setToken(data.token);
-        if (data?.user) localStorage.setItem('sparkUser', JSON.stringify(data.user));
-        return data;
+/**
+ * SparkAPI Object
+ * Exposed to the window so your HTML scripts can call SparkAPI.auth.signup()
+ */
+window.SparkAPI = {
+    auth: {
+        async signup(userData) {
+            const data = await apiRequest('/auth/signup', {
+                method: 'POST',
+                body: JSON.stringify(userData)
+            });
+            if (data?.token) {
+                localStorage.setItem('sparkToken', data.token);
+                localStorage.setItem('sparkUser', JSON.stringify(data.user));
+            }
+            return data;
+        },
+
+        async login(email, password) {
+            const data = await apiRequest('/auth/login', {
+                method: 'POST',
+                body: JSON.stringify({ email, password })
+            });
+            if (data?.token) {
+                localStorage.setItem('sparkToken', data.token);
+                localStorage.setItem('sparkUser', JSON.stringify(data.user));
+            }
+            return data;
+        },
+
+        logout() {
+            localStorage.clear(); // Clears token and user data
+            window.location.href = 'index.html';
+        },
+
+        isLoggedIn() {
+            return !!localStorage.getItem('sparkToken');
+        }
     },
 
-    async login(email, password) {
-        // This hits /api/auth/login
-        const data = await apiRequest('/auth/login', {
-            method: 'POST',
-            body: JSON.stringify({ email, password })
-        });
-        if (data?.token) setToken(data.token);
-        if (data?.user) localStorage.setItem('sparkUser', JSON.stringify(data.user));
-        return data;
+    users: {
+        async getProfile() {
+            return apiRequest('/users/me');
+        },
+
+        async uploadPhoto(base64Data, index) {
+            // Helper to convert base64 to Blob for multipart upload
+            const response = await fetch(base64Data);
+            const blob = await response.blob();
+
+            const formData = new FormData();
+            formData.append('photo', blob, `photo_${index}.jpg`);
+            formData.append('is_primary', index === 0);
+            formData.append('upload_order', index);
+
+            const token = localStorage.getItem('sparkToken');
+            
+            // Manual fetch for FormData (apiRequest is optimized for JSON)
+            const res = await fetch(`${API_BASE_URL}/users/me/photos/upload`, {
+                method: 'POST',
+                headers: {
+                    ...(token && { 'Authorization': `Bearer ${token}` })
+                },
+                body: formData
+            });
+
+            if (!res.ok) throw new Error('Photo upload failed');
+            return res.json();
+        }
     },
 
-    logout() {
-        removeToken();
-        localStorage.removeItem('sparkUser');
-        localStorage.removeItem('sparkUserData');
-        localStorage.removeItem('sparkCurrentMatch');
-        window.location.href = 'index.html';
+    matches: {
+        async getCurrent() { return apiRequest('/matches/current'); },
+        async findNew() { return apiRequest('/matches/find', { method: 'POST' }); },
+        async exit(matchId) { return apiRequest(`/matches/${matchId}/exit`, { method: 'POST' }); }
+    },
+
+    messages: {
+        async getAll(matchId) { return apiRequest(`/messages/${matchId}`); },
+        async send(matchId, content) {
+            return apiRequest(`/messages/${matchId}`, {
+                method: 'POST',
+                body: JSON.stringify({ content })
+            });
+        }
     }
 };
-
-const users = {
-    async getProfile() {
-        return apiRequest('/users/me');
-    },
-    async updateProfile(updates) {
-        return apiRequest('/users/me', {
-            method: 'PATCH',
-            body: JSON.stringify(updates)
-        });
-    },
-    async uploadPhoto(base64Data, index) {
-        // For special multi-part uploads, we use fetch directly but keep BASE_URL
-        const response = await fetch(base64Data);
-        const blob = await response.blob();
-        const formData = new FormData();
-        formData.append('photo', blob, `photo_${index}.jpg`);
-        formData.append('is_primary', index === 0);
-
-        const token = getToken();
-        const res = await fetch(`${API_BASE_URL}/users/me/photos/upload`, {
-            method: 'POST',
-            headers: {
-                ...(token && { 'Authorization': `Bearer ${token}` })
-            },
-            body: formData
-        });
-
-        if (!res.ok) throw new Error('Photo upload failed');
-        return res.json();
-    }
-};
-
-const matches = {
-    async getCurrent() { return apiRequest('/matches/current'); },
-    async findNew() { return apiRequest('/matches/find', { method: 'POST' }); },
-    async requestReveal(matchId) { return apiRequest(`/matches/${matchId}/reveal`, { method: 'POST' }); }
-};
-
-const messages = {
-    async getAll(matchId) { return apiRequest(`/messages/${matchId}`); },
-    async send(matchId, content) {
-        return apiRequest(`/messages/${matchId}`, {
-            method: 'POST',
-            body: JSON.stringify({ content })
-        });
-    }
-};
-
-const SparkAPI = { auth, users, matches, messages };
-window.SparkAPI = SparkAPI;
