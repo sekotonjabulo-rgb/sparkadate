@@ -1,4 +1,6 @@
-const API_URL = 'https://sparkadate-1n.onrender.com/api';
+// 1. Unified Base URL (matches the usage in functions below)
+const API_BASE_URL = 'https://sparkadate-1n.onrender.com/api';
+
 function getToken() {
     return localStorage.getItem('sparkToken');
 }
@@ -17,13 +19,14 @@ async function apiRequest(endpoint, options = {}) {
     const config = {
         headers: {
             'Content-Type': 'application/json',
-            'ngrok-skip-browser-warning': 'true', 
+            // ngrok header removed as it's no longer needed for Render
             ...(token && { 'Authorization': `Bearer ${token}` })
         },
         ...options
     };
 
     try {
+        // This now uses the correctly defined API_BASE_URL
         const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
         
         const contentType = response.headers.get("content-type");
@@ -119,6 +122,7 @@ const users = {
         formData.append('upload_order', index);
 
         const token = getToken();
+        // Updated here to use API_BASE_URL as well
         const res = await fetch(`${API_BASE_URL}/users/me/photos/upload`, {
             method: 'POST',
             headers: {
@@ -191,3 +195,6 @@ const SparkAPI = {
     matches,
     messages
 };
+
+// Make it globally available if not using modules
+window.SparkAPI = SparkAPI;
