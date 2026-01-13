@@ -105,7 +105,7 @@ window.SparkAPI = {
 
         logout() {
             TokenManager.remove();
-            localStorage.clear(); // Clears token and user data
+            localStorage.clear();
             window.location.href = 'index.html';
         },
 
@@ -120,7 +120,6 @@ window.SparkAPI = {
         },
 
         async uploadPhoto(base64Data, index) {
-            // Helper to convert base64 to Blob for multipart upload
             const response = await fetch(base64Data);
             const blob = await response.blob();
 
@@ -131,7 +130,6 @@ window.SparkAPI = {
 
             const token = TokenManager.get();
             
-            // Manual fetch for FormData (apiRequest is optimized for JSON)
             const res = await fetch(`${API_BASE_URL}/users/me/photos/upload`, {
                 method: 'POST',
                 headers: {
@@ -146,13 +144,32 @@ window.SparkAPI = {
     },
 
     matches: {
-        async getCurrent() { return apiRequest('/matches/current'); },
-        async findNew() { return apiRequest('/matches/find', { method: 'POST' }); },
-        async exit(matchId) { return apiRequest(`/matches/${matchId}/exit`, { method: 'POST' }); }
+        async getCurrent() { 
+            return apiRequest('/matches/current'); 
+        },
+        
+        async findNew() { 
+            return apiRequest('/matches/find', { method: 'POST' }); 
+        },
+        
+        async exit(matchId) { 
+            return apiRequest(`/matches/${matchId}/exit`, { method: 'POST' }); 
+        },
+
+        async markRevealSeen(matchId) {
+            return apiRequest(`/matches/${matchId}/reveal-seen`, { method: 'POST' });
+        },
+
+        async getMatchPhotos(matchId) {
+            return apiRequest(`/matches/${matchId}/photos`);
+        }
     },
 
     messages: {
-        async getAll(matchId) { return apiRequest(`/messages/${matchId}`); },
+        async getAll(matchId) { 
+            return apiRequest(`/messages/${matchId}`); 
+        },
+        
         async send(matchId, content) {
             return apiRequest(`/messages/${matchId}`, {
                 method: 'POST',
