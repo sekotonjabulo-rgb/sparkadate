@@ -1,163 +1,94 @@
-// 1. Definite Base URL
-const API_BASE_URL = 'https://sparkadate-1n.onrender.com/api';
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import authRoutes from './routes/auth.js';
+import usersRoutes from './routes/users.js';
+import matchesRoutes from './routes/matches.js';
+import messagesRoutes from './routes/messages.js';
+import waitlistRoutes from './routes/waitlist.js';
 
-/**
- * Utility to manage the JWT token in LocalStorage
- */
-const TokenManager = {
-    get: () => localStorage.getItem('sparkToken'),
-    set: (token) => localStorage.setItem('sparkToken', token),
-    remove: () => localStorage.removeItem('sparkToken')
-};
+dotenv.config();
 
-/**
- * The Core Request Handler
- * Standardizes headers and URL construction for all API calls.
- */
-async function apiRequest(endpoint, options = {}) {
-    const token = TokenManager.get();
-    
-    // Slash-Guard: Ensure endpoint starts with / and BASE_URL doesn't end with one
-    const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-    const url = `${API_BASE_URL}${cleanEndpoint}`;
+// 1. Environment Variable Check
+const requiredEnvVars = ['SUPABASE_URL', 'SUPABASE_SERVICE_KEY', 'JWT_SECRET', 'GEMINI_API_KEY'];
+const missingVars = requiredEnvVars.filter(v => !process.env[v]);
 
-    const config = {
-        headers: {
-            'Content-Type': 'application/json',
-            ...(token && { 'Authorization': `Bearer ${token}` })
-        },
-        ...options
-    };
-
-    console.log(`🚀 Requesting: ${config.method || 'GET'} ${url}`);
-
-    try {
-        const response = await fetch(url, config);
-        
-        // Handle potential empty responses
-        const contentType = response.headers.get("content-type");
-        let data = null;
-        if (contentType && contentType.includes("application/json")) {
-            data = await response.json();
-        }
-
-        if (!response.ok) {
-            console.error(`❌ Server returned ${response.status}:`, data);
-            throw new Error(data?.error || `Request failed with status: ${response.status}`);
-        }
-
-        return data;
-    } catch (error) {
-        console.error('API Connection Error:', error);
-        throw error;
-    }
+if (missingVars.length > 0) {
+    console.error('CRITICAL ERROR: Missing environment variables:', missingVars.join(', '));
+    // In production, we don't want to exit(1) immediately if the platform is trying to boot
+    // but we should log it clearly.
 }
 
-/**
- * SparkAPI Object
- * Exposed to the window so your HTML scripts can call SparkAPI.auth.signup()
- */
-window.SparkAPI = {
-    auth: {
-        async signup(userData) {
-            const data = await apiRequest('/auth/signup', {
-                method: 'POST',
-                body: JSON.stringify(userData)
-            });
-            if (data?.token) {
-                TokenManager.set(data.token);
-                localStorage.setItem('sparkUser', JSON.stringify(data.user));
-            }
-            return data;
-        },
+const app = express();
 
-        async login(email, password) {
-            const data = await apiRequest('/auth/login', {
-                method: 'POST',
-                body: JSON.stringify({ email, password })
-            });
-            if (data?.token) {
-                TokenManager.set(data.token);
-                localStorage.setItem('sparkUser', JSON.stringify(data.user));
-            }
-            return data;
-        },
+// 2. The Definite CORS Fix
+// This allows your GitHub Pages frontend to talk to this backend.
+const allowedOrigins = [
+  'https://sparkadate.online',           // Add this
+  'https://www.sparkadate.online',       // Add this too
+  'https://sekotonjabulo-rgb.github.io', 
+  'http://localhost:5173',               
+  'http://localhost:3000'
+];
 
-        async getCurrentUser() {
-            // First try to get from localStorage
-            const cachedUser = localStorage.getItem('sparkUser');
-            if (cachedUser) {
-                return JSON.parse(cachedUser);
-            }
-            
-            // If not in cache, fetch from API
-            try {
-                const userData = await apiRequest('/users/me');
-                if (userData) {
-                    localStorage.setItem('sparkUser', JSON.stringify(userData));
-                }
-                return userData;
-            } catch (error) {
-                console.error('Failed to get current user:', error);
-                return null;
-            }
-        },
-
-        logout() {
-            TokenManager.remove();
-            localStorage.clear(); // Clears token and user data
-            window.location.href = 'index.html';
-        },
-
-        isLoggedIn() {
-            return !!TokenManager.get();
-        }
-    },
-
-    users: {
-        async getProfile() {
-            return apiRequest('/users/me');
-        },
-
-        async uploadPhoto(base64Data, index) {
-            // Helper to convert base64 to Blob for multipart upload
-            const response = await fetch(base64Data);
-            const blob = await response.blob();
-
-            const formData = new FormData();
-            formData.append('photo', blob, `photo_${index}.jpg`);
-            formData.append('is_primary', index === 0);
-            formData.append('upload_order', index);
-
-            const token = TokenManager.get();
-            
-            // Manual fetch for FormData (apiRequest is optimized for JSON)
-            const res = await fetch(`${API_BASE_URL}/users/me/photos/upload`, {
-                method: 'POST',
-                headers: {
-                    ...(token && { 'Authorization': `Bearer ${token}` })
-                },
-                body: formData
-            });
-
-            if (!res.ok) throw new Error('Photo upload failed');
-            return res.json();
-        }
-    },
-
-    matches: {
-        async getCurrent() { return apiRequest('/matches/current'); },
-        async findNew() { return apiRequest('/matches/find', { method: 'POST' }); },
-        async exit(matchId) { return apiRequest(`/matches/${matchId}/exit`, { method: 'POST' }); }
-    },
-
-    messages: {
-        async getAll(matchId) { return apiRequest(`/messages/${matchId}`); },
-        async send(matchId, content) {
-            return apiRequest(`/messages/${matchId}`, {
-                method: 'POST',
-                body: JSON.stringify({ content })
-            });
-        }
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.log("CORS Blocked for origin:", origin);
+      callback(new Error('Not allowed by CORS'));
     }
-};
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+app.use(express.json());
+
+// 3. Robust Health Checks
+// Render/Fly often ping the root "/" or "/healthz". 
+app.get('/', (req, res) => res.status(200).send('Spark Backend is Live'));
+app.get('/healthz', (req, res) => res.status(200).send('OK'));
+
+app.get('/api/health', (req, res) => {
+    res.json({ 
+        status: 'ok', 
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV || 'development'
+    });
+});
+
+// 4. API Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/users', usersRoutes);
+app.use('/api/matches', matchesRoutes);
+app.use('/api/messages', messagesRoutes);
+app.use('/api/waitlist', waitlistRoutes);
+
+// 5. Port Binding for Cloud Deployment
+// Clouds like Render/Fly inject the PORT variable. 0.0.0.0 is required for external access.
+const PORT = process.env.PORT || 3000;
+
+const server = app.listen(PORT, '0.0.0.0', () => {
+    console.log('========================================');
+    console.log(`Spark backend running on port ${PORT}`);
+    console.log(`Health check: /api/health`);
+    console.log('========================================');
+});
+
+// Error Handling to prevent silent crashes
+server.on('error', (err) => {
+    console.error('Server error:', err);
+});
+
+process.on('uncaughtException', (err) => {
+    console.error('Uncaught exception:', err);
+});
+
+process.on('unhandledRejection', (err) => {
+    console.error('Unhandled rejection:', err);
+});
