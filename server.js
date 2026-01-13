@@ -1,98 +1,163 @@
-import express from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import authRoutes from './routes/auth.js';
-import usersRoutes from './routes/users.js';
-import matchesRoutes from './routes/matches.js';
-import messagesRoutes from './routes/messages.js';
-import waitlistRoutes from './routes/waitlist.js';
+// 1. Definite Base URL
+const API_BASE_URL = 'https://sparkadate-1n.onrender.com/api';
 
-dotenv.config();
+/**
+ * Utility to manage the JWT token in LocalStorage
+ */
+const TokenManager = {
+    get: () => localStorage.getItem('sparkToken'),
+    set: (token) => localStorage.setItem('sparkToken', token),
+    remove: () => localStorage.removeItem('sparkToken')
+};
 
-const requiredEnvVars = ['SUPABASE_URL', 'SUPABASE_SERVICE_KEY', 'JWT_SECRET', 'GEMINI_API_KEY'];
-const missingVars = requiredEnvVars.filter(v => !process.env[v]);
+/**
+ * The Core Request Handler
+ * Standardizes headers and URL construction for all API calls.
+ */
+async function apiRequest(endpoint, options = {}) {
+    const token = TokenManager.get();
+    
+    // Slash-Guard: Ensure endpoint starts with / and BASE_URL doesn't end with one
+    const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    const url = `${API_BASE_URL}${cleanEndpoint}`;
 
-if (missingVars.length > 0) {
-    console.error('Missing environment variables:', missingVars.join(', '));
-    console.error('Please check your .env file');
-    process.exit(1);
+    const config = {
+        headers: {
+            'Content-Type': 'application/json',
+            ...(token && { 'Authorization': `Bearer ${token}` })
+        },
+        ...options
+    };
+
+    console.log(`🚀 Requesting: ${config.method || 'GET'} ${url}`);
+
+    try {
+        const response = await fetch(url, config);
+        
+        // Handle potential empty responses
+        const contentType = response.headers.get("content-type");
+        let data = null;
+        if (contentType && contentType.includes("application/json")) {
+            data = await response.json();
+        }
+
+        if (!response.ok) {
+            console.error(`❌ Server returned ${response.status}:`, data);
+            throw new Error(data?.error || `Request failed with status: ${response.status}`);
+        }
+
+        return data;
+    } catch (error) {
+        console.error('API Connection Error:', error);
+        throw error;
+    }
 }
 
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-app.use(cors({
-    origin: ['https://lethabo3.github.io', 'http://localhost:3000', 'http://sparkadate.online'],
-    credentials: true
-}));
-
-app.use(express.json());
-
-app.get('/api', (req, res) => {
-    res.json({
-        message: 'Spark API',
-        version: '1.0.0',
-        endpoints: {
-            health: 'GET /api/health',
-            auth: {
-                signup: 'POST /api/auth/signup',
-                login: 'POST /api/auth/login'
-            },
-            users: {
-                me: 'GET /api/users/me',
-                update: 'PATCH /api/users/me',
-                preferences: 'PATCH /api/users/me/preferences',
-                photos: 'POST /api/users/me/photos'
-            },
-            matches: {
-                current: 'GET /api/matches/current',
-                find: 'POST /api/matches/find',
-                reveal: 'POST /api/matches/:matchId/reveal',
-                exit: 'POST /api/matches/:matchId/exit'
-            },
-            messages: {
-                send: 'POST /api/messages/:matchId',
-                get: 'GET /api/messages/:matchId',
-                analyze: 'POST /api/messages/:matchId/analyze'
-            },
-            waitlist: {
-                join: 'POST /api/waitlist/join',
-                count: 'GET /api/waitlist/count',
-                position: 'POST /api/waitlist/position'
+/**
+ * SparkAPI Object
+ * Exposed to the window so your HTML scripts can call SparkAPI.auth.signup()
+ */
+window.SparkAPI = {
+    auth: {
+        async signup(userData) {
+            const data = await apiRequest('/auth/signup', {
+                method: 'POST',
+                body: JSON.stringify(userData)
+            });
+            if (data?.token) {
+                TokenManager.set(data.token);
+                localStorage.setItem('sparkUser', JSON.stringify(data.user));
             }
+            return data;
+        },
+
+        async login(email, password) {
+            const data = await apiRequest('/auth/login', {
+                method: 'POST',
+                body: JSON.stringify({ email, password })
+            });
+            if (data?.token) {
+                TokenManager.set(data.token);
+                localStorage.setItem('sparkUser', JSON.stringify(data.user));
+            }
+            return data;
+        },
+
+        async getCurrentUser() {
+            // First try to get from localStorage
+            const cachedUser = localStorage.getItem('sparkUser');
+            if (cachedUser) {
+                return JSON.parse(cachedUser);
+            }
+            
+            // If not in cache, fetch from API
+            try {
+                const userData = await apiRequest('/users/me');
+                if (userData) {
+                    localStorage.setItem('sparkUser', JSON.stringify(userData));
+                }
+                return userData;
+            } catch (error) {
+                console.error('Failed to get current user:', error);
+                return null;
+            }
+        },
+
+        logout() {
+            TokenManager.remove();
+            localStorage.clear(); // Clears token and user data
+            window.location.href = 'index.html';
+        },
+
+        isLoggedIn() {
+            return !!TokenManager.get();
         }
-    });
-});
+    },
 
-app.get('/api/health', (req, res) => {
-    res.json({ 
-        status: 'ok', 
-        timestamp: new Date().toISOString(),
-        port: PORT
-    });
-});
+    users: {
+        async getProfile() {
+            return apiRequest('/users/me');
+        },
 
-app.use('/api/auth', authRoutes);
-app.use('/api/users', usersRoutes);
-app.use('/api/matches', matchesRoutes);
-app.use('/api/messages', messagesRoutes);
-app.use('/api/waitlist', waitlistRoutes);
+        async uploadPhoto(base64Data, index) {
+            // Helper to convert base64 to Blob for multipart upload
+            const response = await fetch(base64Data);
+            const blob = await response.blob();
 
-const server = app.listen(PORT, '0.0.0.0', () => {
-    console.log('========================================');
-    console.log(`Spark backend running on port ${PORT}`);
-    console.log(`Health check: http://localhost:${PORT}/api/health`);
-    console.log('========================================');
-});
+            const formData = new FormData();
+            formData.append('photo', blob, `photo_${index}.jpg`);
+            formData.append('is_primary', index === 0);
+            formData.append('upload_order', index);
 
-server.on('error', (err) => {
-    console.error('Server error:', err);
-});
+            const token = TokenManager.get();
+            
+            // Manual fetch for FormData (apiRequest is optimized for JSON)
+            const res = await fetch(`${API_BASE_URL}/users/me/photos/upload`, {
+                method: 'POST',
+                headers: {
+                    ...(token && { 'Authorization': `Bearer ${token}` })
+                },
+                body: formData
+            });
 
-process.on('uncaughtException', (err) => {
-    console.error('Uncaught exception:', err);
-});
+            if (!res.ok) throw new Error('Photo upload failed');
+            return res.json();
+        }
+    },
 
-process.on('unhandledRejection', (err) => {
-    console.error('Unhandled rejection:', err);
-});
+    matches: {
+        async getCurrent() { return apiRequest('/matches/current'); },
+        async findNew() { return apiRequest('/matches/find', { method: 'POST' }); },
+        async exit(matchId) { return apiRequest(`/matches/${matchId}/exit`, { method: 'POST' }); }
+    },
+
+    messages: {
+        async getAll(matchId) { return apiRequest(`/messages/${matchId}`); },
+        async send(matchId, content) {
+            return apiRequest(`/messages/${matchId}`, {
+                method: 'POST',
+                body: JSON.stringify({ content })
+            });
+        }
+    }
+};
