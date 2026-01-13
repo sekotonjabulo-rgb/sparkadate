@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Support – Spark</title>
+    <meta name="description" content="Get help with Spark. FAQs and contact information.">
+    <link rel="icon" href="../blueocean.jpeg" type="image/jpeg">
+    <style>
+        @font-face {
+            font-family: 'CabinetGrotesk-Medium';
+            src: url('../fonts/CabinetGrotesk-Medium.woff2') format('woff2'),
+                 url('../fonts/CabinetGrotesk-Medium.woff') format('woff'),
+                 url('../fonts/CabinetGrotesk-Medium.ttf') format('truetype');
+            font-weight: 500;
+            font-display: swap;
+            font-style: normal;
+        }
+
+        :root {
+            --color-background: #000000;
+            --color-surface: #FFFFFF;
+            --color-text-primary: #FFFFFF;
+            --color-text-secondary: rgba(255, 255, 255, 0.65);
+            --color-border: rgba(255, 255, 255, 0.12);
+            --color-input-bg: rgba(255, 255, 255, 0.08);
+            --radius-input: 16px;
+            --radius-pill: 28px;
+            --font-heading: 'CabinetGrotesk-Medium', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-heading);
+            background-color: var(--color-background);
+            color: var(--color-text-primary);
+            -webkit-font-smoothing: antialiased;
+            line-height: 1.6;
+        }
+
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            background-color: var(--color-background);
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: var(--color-text-primary);
+        }
+
+        .nav-logo img {
+            width: 32px;
+            height: 32px;
+        }
+
+        .nav-logo span {
+            font-size: 18px;
+            font-weight: 500;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 24px;
+        }
+
+        .nav-links a {
+            color: var(--color-text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.2s ease;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: var(--color-text-primary);
+        }
+
+        .content {
+            max-width: 680px;
+            margin: 0 auto;
+            padding: 120px 24px 80px;
+        }
+
+        .page-title {
+            font-size: clamp(32px, 6vw, 44px);
+            font-weight: 500;
+            letter-spacing: -0.02em;
+            margin-bottom: 16px;
+        }
+
+        .page-subtitle {
+            font-size: 16px;
+            color: var(--color-text-secondary);
+            margin-bottom: 48px;
+        }
+
+        .faq-section {
+            margin-bottom: 64px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 500;
+            margin-bottom: 24px;
+        }
+
+        .faq-item {
+            border-bottom: 1px solid var(--color-border);
+            padding: 20px 0;
+        }
+
+        .faq-question {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 12px;
+        }
+
+        .faq-answer {
+            font-size: 14px;
+            color: var(--color-text-secondary);
+        }
+
+        .contact-section {
+            margin-bottom: 48px;
+        }
+
+        .contact-form {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .form-input,
+        .form-textarea {
+            width: 100%;
+            padding: 16px 20px;
+            background-color: var(--color-input-bg);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-input);
+            font-family: var(--font-heading);
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--color-text-primary);
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .form-input::placeholder,
+        .form-textarea::placeholder {
+            color: var(--color-text-secondary);
+        }
+
+        .form-input:focus,
+        .form-textarea:focus {
+            border-color: var(--color-surface);
+        }
+
+        .form-textarea {
+            min-height: 140px;
+            resize: vertical;
+        }
+
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            height: 52px;
+            padding: 0 32px;
+            background-color: var(--color-surface);
+            color: var(--color-background);
+            border: none;
+            border-radius: var(--radius-pill);
+            font-family: var(--font-heading);
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+        }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+        }
+
+        .contact-email {
+            text-align: center;
+            margin-top: 32px;
+        }
+
+        .contact-email p {
+            font-size: 14px;
+            color: var(--color-text-secondary);
+        }
+
+        .contact-email a {
+            color: var(--color-text-primary);
+            text-decoration: none;
+        }
+
+        .contact-email a:hover {
+            text-decoration: underline;
+        }
+
+        footer {
+            padding: 40px 24px;
+            border-top: 1px solid var(--color-border);
+            text-align: center;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .footer-links a {
+            color: var(--color-text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.2s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--color-text-primary);
+        }
+
+        .footer-copy {
+            font-size: 12px;
+            color: var(--color-text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="index.html" class="nav-logo">
+            <img src="../blueocean.jpeg" alt="Spark">
+            <span>Spark</span>
+        </a>
+        <div class="nav-links">
+            <a href="privacy.html">Privacy</a>
+            <a href="support.html" class="active">Support</a>
+        </div>
+    </nav>
+
+    <main class="content">
+        <h1 class="page-title">Support</h1>
+        <p class="page-subtitle">Find answers to common questions or get in touch with our team.</p>
+
+        <section class="faq-section">
+            <h2 class="section-title">Frequently Asked Questions</h2>
+            
+            <div class="faq-item">
+                <h3 class="faq-question">How does blind matching work?</h3>
+                <p class="faq-answer">When you match with someone, both of your photos remain hidden. You can chat freely and get to know each other. After a period determined by our algorithm (12 hours to 5 days), you can reveal your photos to each other simultaneously.</p>
+            </div>
+
+            <div class="faq-item">
+                <h3 class="faq-question">Can I reveal my photos early?</h3>
+                <p class="faq-answer">Pro users can request an early reveal at any time. However, both parties must agree for the reveal to happen. Free users must wait until the timer expires.</p>
+            </div>
+
+            <div class="faq-item">
+                <h3 class="faq-question">What happens after the reveal?</h3>
+                <p class="faq-answer">After photos are revealed, both users are asked if they want to continue the conversation. If either person chooses to leave, the match ends and you'll be paired with someone new.</p>
+            </div>
+
+            <div class="faq-item">
+                <h3 class="faq-question">What's included in Spark Pro?</h3>
+                <p class="faq-answer">Pro members get unlimited exits, the ability to request early reveals, purchase time extensions, and shorter wait times between matches. Pro costs $20/month.</p>
+            </div>
+
+            <div class="faq-item">
+                <h3 class="faq-question">How do I delete my account?</h3>
+                <p class="faq-answer">You can delete your account from the settings page. All your data, including photos and messages, will be permanently removed within 30 days.</p>
+            </div>
+        </section>
+
+        <section class="contact-section">
+            <h2 class="section-title">Contact Us</h2>
+            <form class="contact-form">
+                <input type="email" class="form-input" placeholder="Your email" required>
+                <input type="text" class="form-input" placeholder="Subject" required>
+                <textarea class="form-textarea" placeholder="How can we help?" required></textarea>
+                <button type="submit" class="btn-primary">Send Message</button>
+            </form>
+            <div class="contact-email">
+                <p>Or email us directly at <a href="mailto:support@spark.app">support@spark.app</a></p>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-links">
+            <a href="privacy.html">Privacy Policy</a>
+            <a href="support.html">Support</a>
+        </div>
+        <p class="footer-copy">© 2025 Spark. All rights reserved.</p>
+    </footer>
+</body>
+</html>
