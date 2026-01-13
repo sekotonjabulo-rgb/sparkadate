@@ -162,6 +162,10 @@ window.SparkAPI = {
 
         async getMatchPhotos(matchId) {
             return apiRequest(`/matches/${matchId}/photos`);
+        },
+
+        async requestReveal(matchId) {
+            return apiRequest(`/matches/${matchId}/request-reveal`, { method: 'POST' });
         }
     },
 
