@@ -1,4 +1,5 @@
 const API_BASE_URL = 'https://sparkadate-1n.onrender.com/api';
+
 function getToken() {
     return localStorage.getItem('sparkToken');
 }
@@ -148,6 +149,10 @@ const matches = {
         return apiRequest(`/matches/${matchId}/reveal`, { method: 'POST' });
     },
 
+    async markRevealSeen(matchId) {
+        return apiRequest(`/matches/${matchId}/seen`, { method: 'POST' });
+    },
+
     async exit(matchId) {
         return apiRequest(`/matches/${matchId}/exit`, { method: 'POST' });
     },
@@ -174,7 +179,7 @@ const messages = {
     }
 };
 
-const SparkAPI = {
+window.SparkAPI = {
     auth,
     users,
     matches,
