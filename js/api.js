@@ -6,7 +6,7 @@ const API_BASE_URL = 'https://sparkadate-1n.onrender.com/api';
  */
 const TokenManager = {
     get: () => localStorage.getItem('sparkToken'),
-    set: (token) => localStorage.getItem('sparkToken', token),
+    set: (token) => localStorage.setItem('sparkToken', token),
     remove: () => localStorage.removeItem('sparkToken')
 };
 
@@ -65,7 +65,7 @@ window.SparkAPI = {
                 body: JSON.stringify(userData)
             });
             if (data?.token) {
-                localStorage.setItem('sparkToken', data.token);
+                TokenManager.set(data.token);
                 localStorage.setItem('sparkUser', JSON.stringify(data.user));
             }
             return data;
@@ -77,19 +77,40 @@ window.SparkAPI = {
                 body: JSON.stringify({ email, password })
             });
             if (data?.token) {
-                localStorage.setItem('sparkToken', data.token);
+                TokenManager.set(data.token);
                 localStorage.setItem('sparkUser', JSON.stringify(data.user));
             }
             return data;
         },
 
+        async getCurrentUser() {
+            // First try to get from localStorage
+            const cachedUser = localStorage.getItem('sparkUser');
+            if (cachedUser) {
+                return JSON.parse(cachedUser);
+            }
+            
+            // If not in cache, fetch from API
+            try {
+                const userData = await apiRequest('/users/me');
+                if (userData) {
+                    localStorage.setItem('sparkUser', JSON.stringify(userData));
+                }
+                return userData;
+            } catch (error) {
+                console.error('Failed to get current user:', error);
+                return null;
+            }
+        },
+
         logout() {
+            TokenManager.remove();
             localStorage.clear(); // Clears token and user data
             window.location.href = 'index.html';
         },
 
         isLoggedIn() {
-            return !!localStorage.getItem('sparkToken');
+            return !!TokenManager.get();
         }
     },
 
@@ -108,7 +129,7 @@ window.SparkAPI = {
             formData.append('is_primary', index === 0);
             formData.append('upload_order', index);
 
-            const token = localStorage.getItem('sparkToken');
+            const token = TokenManager.get();
             
             // Manual fetch for FormData (apiRequest is optimized for JSON)
             const res = await fetch(`${API_BASE_URL}/users/me/photos/upload`, {
