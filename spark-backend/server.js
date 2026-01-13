@@ -24,6 +24,8 @@ const app = express();
 // 2. The Definite CORS Fix
 // This allows your GitHub Pages frontend to talk to this backend.
 const allowedOrigins = [
+  'https://sparkadate.online',           // Add this
+  'https://www.sparkadate.online',       // Add this too
   'https://sekotonjabulo-rgb.github.io', 
   'http://localhost:5173',               
   'http://localhost:3000'
