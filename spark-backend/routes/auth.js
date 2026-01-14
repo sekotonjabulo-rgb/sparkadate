@@ -49,7 +49,7 @@ if (!latitude || !longitude) {
 
         const { data: user, error } = await supabase
             .from('users')
-            .insert({ email, password_hash, display_name, age, gender, seeking, location })
+            .insert({ email, password_hash, display_name, age, gender, seeking, location, latitude, longitude })
             .select().single();
 
         if (error) throw error;
