@@ -418,6 +418,12 @@ router.post('/:matchId/exit', authenticateToken, async (req, res) => {
                 .eq('id', userId);
         }
 
+        // Increment total_conversations_analyzed for both users
+        const partnerId = match.user_a_id === userId ? match.user_b_id : match.user_a_id;
+        
+        await supabase.rpc('increment_conversations_analyzed', { user_id_param: userId });
+        await supabase.rpc('increment_conversations_analyzed', { user_id_param: partnerId });
+
         res.json({ exited: true });
     } catch (error) {
         console.error('Exit match error:', error);
