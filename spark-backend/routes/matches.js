@@ -14,6 +14,13 @@ function calculateDistanceKm(lat1, lon1, lat2, lon2) {
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
+function hasProfileData(profile) {
+    if (!profile) return false;
+    return profile.total_messages_analyzed > 0 || 
+           profile.humor_score !== null || 
+           profile.formality_score !== null;
+}
+
 router.get('/debug', authenticateToken, async (req, res) => {
     const userId = req.user.id;
 
@@ -95,7 +102,7 @@ router.get('/current', authenticateToken, async (req, res) => {
 });
 
 router.post('/find', authenticateToken, async (req, res) => {
-    console.log('=== MATCHES WITH DISTANCE FILTERING ===');
+    console.log('=== SMART COMPATIBILITY MATCHING ===');
     try {
         const userId = req.user.id;
 
@@ -117,6 +124,7 @@ router.post('/find', authenticateToken, async (req, res) => {
             .single();
 
         const preferences = user.user_preferences?.[0] || user.user_preferences;
+        const userProfile = user.personality_profiles?.[0] || user.personality_profiles;
         const maxDistanceKm = preferences?.max_distance_km || 80;
 
         const { data: candidates } = await supabase
@@ -166,18 +174,16 @@ router.post('/find', authenticateToken, async (req, res) => {
             gender: user.gender,
             seeking: user.seeking,
             latitude: user.latitude,
-            longitude: user.longitude
+            longitude: user.longitude,
+            hasProfile: hasProfileData(userProfile)
         });
         console.log('Total candidates from DB:', candidates?.length);
-        console.log('Users in active matches:', [...matchedUserIds]);
-        console.log('Previous match user IDs:', [...previousMatchUserIds]);
 
         const availableCandidates = candidates.filter(c =>
             !matchedUserIds.has(c.id) && !previousMatchUserIds.has(c.id)
         );
 
         console.log('Available after filters:', availableCandidates?.length);
-        console.log('Available candidate names:', availableCandidates.map(c => c.display_name));
 
         const validCandidates = availableCandidates.filter(c => {
             const genderMap = { man: 'men', woman: 'women' };
@@ -191,8 +197,6 @@ router.post('/find', authenticateToken, async (req, res) => {
         });
 
         console.log('Valid candidates after seeking + distance filter:', validCandidates?.length);
-        console.log('Valid candidate names:', validCandidates.map(c => c.display_name));
-        console.log('=== END DEBUG ===');
 
         if (validCandidates.length === 0) {
             await supabase
@@ -201,32 +205,69 @@ router.post('/find', authenticateToken, async (req, res) => {
             return res.json({ match: null, queued: true });
         }
 
-        const candidate = validCandidates[0];
-        console.log('Selected candidate:', candidate.display_name, candidate.id);
+        // Smart matching: score top 10 candidates and pick the best
+        const candidatesToScore = validCandidates.slice(0, 10);
+        const scoredCandidates = [];
 
-        let compatibility = null;
-        try {
-            compatibility = await calculateCompatibility(
-                user.personality_profiles,
-                candidate.personality_profiles,
-                [],
-                candidate.interest_mappings || []
-            );
-        } catch (geminiError) {
-            console.error('Gemini error (continuing with defaults):', geminiError.message);
+        console.log('=== SCORING CANDIDATES ===');
+
+        for (const candidate of candidatesToScore) {
+            const candidateProfile = candidate.personality_profiles?.[0] || candidate.personality_profiles;
+            
+            let compatibility = null;
+            let score = 0.5; // Default score for users without profile data
+
+            // Only call AI if both users have some profile data
+            if (hasProfileData(userProfile) && hasProfileData(candidateProfile)) {
+                try {
+                    compatibility = await calculateCompatibility(
+                        userProfile,
+                        candidateProfile,
+                        [],
+                        candidate.interest_mappings || []
+                    );
+                    score = compatibility?.compatibility_score || 0.5;
+                } catch (error) {
+                    console.error('Compatibility calculation error:', error.message);
+                }
+            } else if (hasProfileData(userProfile) || hasProfileData(candidateProfile)) {
+                // One user has profile data, give a slight bump over completely new users
+                score = 0.55;
+            }
+
+            // Boost score slightly for users who are geographically closer
+            const distance = calculateDistanceKm(user.latitude, user.longitude, candidate.latitude, candidate.longitude);
+            if (distance !== null && distance < 20) {
+                score += 0.05; // Small boost for very close users
+            }
+
+            scoredCandidates.push({
+                candidate,
+                candidateProfile,
+                compatibility,
+                score,
+                distance
+            });
+
+            console.log(`Candidate ${candidate.display_name}: score=${score.toFixed(2)}, distance=${distance ? Math.round(distance) + 'km' : 'unknown'}`);
         }
 
-        const revealHours = compatibility?.recommended_reveal_hours || Math.floor(Math.random() * 108) + 12;
-        const revealAvailableAt = new Date(Date.now() + revealHours * 60 * 60 * 1000);
+        // Sort by score descending and pick the best match
+        scoredCandidates.sort((a, b) => b.score - a.score);
+        const bestMatch = scoredCandidates[0];
 
-        console.log('Creating match between', userId, 'and', candidate.id);
+        console.log('=== BEST MATCH ===');
+        console.log(`Selected: ${bestMatch.candidate.display_name} with score ${bestMatch.score.toFixed(2)}`);
+
+        const revealHours = bestMatch.compatibility?.recommended_reveal_hours || Math.floor(Math.random() * 108) + 12;
+        const revealAvailableAt = new Date(Date.now() + revealHours * 60 * 60 * 1000);
 
         const { data: match, error } = await supabase
             .from('matches')
             .insert({
                 user_a_id: userId,
-                user_b_id: candidate.id,
-                compatibility_score: compatibility?.compatibility_score || 0.5,
+                user_b_id: bestMatch.candidate.id,
+                compatibility_score: bestMatch.score,
                 recommended_reveal_hours: revealHours,
                 reveal_available_at: revealAvailableAt.toISOString()
             })
@@ -248,10 +289,11 @@ router.post('/find', authenticateToken, async (req, res) => {
             match: {
                 id: match.id,
                 partner: {
-                    id: candidate.id,
-                    display_name: candidate.display_name,
-                    age: candidate.age
+                    id: bestMatch.candidate.id,
+                    display_name: bestMatch.candidate.display_name,
+                    age: bestMatch.candidate.age
                 },
+                compatibility_score: bestMatch.score,
                 reveal_available_at: match.reveal_available_at
             }
         });
