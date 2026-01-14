@@ -31,7 +31,7 @@ router.post('/:matchId', authenticateToken, async (req, res) => {
             .order('sent_at', { ascending: false })
             .limit(5);
 
-        // Analyze message with Gemini
+        // Analyze message with Groq
         const analysis = await analyzeMessage(content, recentMessages || []);
 
         // Save message
@@ -52,10 +52,42 @@ router.post('/:matchId', authenticateToken, async (req, res) => {
         if (error) throw error;
 
         // Update match message count
+        const newMessageCount = (match.total_messages || 0) + 1;
         await supabase
             .from('matches')
-            .update({ total_messages: match.total_messages + 1 })
+            .update({ total_messages: newMessageCount })
             .eq('id', matchId);
+
+        // Update personality profile every 5 messages
+        if (newMessageCount % 5 === 0) {
+            const { data: allUserMessages } = await supabase
+                .from('messages')
+                .select('*')
+                .eq('sender_id', senderId);
+
+            const profileUpdate = await updatePersonalityProfile(senderId, allUserMessages);
+
+            if (profileUpdate) {
+                await supabase
+                    .from('personality_profiles')
+                    .update({
+                        avg_message_length: profileUpdate.avg_message_length,
+                        formality_score: profileUpdate.formality_score,
+                        humor_score: profileUpdate.humor_score,
+                        emoji_frequency: profileUpdate.emoji_frequency,
+                        question_asking_rate: profileUpdate.question_asking_rate,
+                        depth_preference: profileUpdate.depth_preference,
+                        emotional_openness_speed: profileUpdate.emotional_openness_speed,
+                        positivity_score: profileUpdate.positivity_score,
+                        emotional_expressiveness: profileUpdate.emotional_expressiveness,
+                        empathy_signals: profileUpdate.empathy_signals,
+                        conflict_handling_style: profileUpdate.conflict_handling_style,
+                        total_messages_analyzed: allUserMessages.length,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('user_id', senderId);
+            }
+        }
 
         res.status(201).json({ message, analysis });
     } catch (error) {
