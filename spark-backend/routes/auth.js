@@ -3,6 +3,20 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { createClient } from '@supabase/supabase-js';
 
+async function geocodeLocation(locationText) {
+    try {
+        const response = await fetch(`https://geocode.maps.co/search?q=${encodeURIComponent(locationText)}&api_key=${process.env.GEOCODE_API_KEY}`);
+        const data = await response.json();
+        if (data && data.length > 0) {
+            return { latitude: parseFloat(data[0].lat), longitude: parseFloat(data[0].lon) };
+        }
+        return { latitude: null, longitude: null };
+    } catch (error) {
+        console.error('Geocoding failed:', error);
+        return { latitude: null, longitude: null };
+    }
+}
+
 const router = express.Router();
 
 const supabase = createClient(
@@ -13,8 +27,16 @@ const supabase = createClient(
 // SIGNUP ROUTE
 router.post('/signup', async (req, res) => {
     try {
-        const { email, password, display_name, age, gender, seeking, location } = req.body;
+const { email, password, display_name, age, gender, seeking, location, latitude: providedLat, longitude: providedLon } = req.body;
 
+let latitude = providedLat;
+let longitude = providedLon;
+
+if (!latitude || !longitude) {
+    const coords = await geocodeLocation(location);
+    latitude = coords.latitude;
+    longitude = coords.longitude;
+}
         const { data: existingUser } = await supabase
             .from('users')
             .select('id')
