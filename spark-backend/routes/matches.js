@@ -5,6 +5,15 @@ import { calculateCompatibility } from '../services/gemini.js';
 
 const router = express.Router();
 
+function calculateDistanceKm(lat1, lon1, lat2, lon2) {
+    if (!lat1 || !lon1 || !lat2 || !lon2) return null;
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
 router.get('/debug', authenticateToken, async (req, res) => {
     const userId = req.user.id;
 
@@ -21,18 +30,23 @@ router.get('/debug', authenticateToken, async (req, res) => {
 
     const genderMap = { man: 'men', woman: 'women' };
 
-    const results = candidates.map(c => ({
-        name: c.display_name,
-        gender: c.gender,
-        seeking: c.seeking,
-        userSeeks: user.seeking === 'everyone' || user.seeking === genderMap[c.gender],
-        candidateSeeks: c.seeking === 'everyone' || c.seeking === genderMap[user.gender],
-        wouldMatch: (user.seeking === 'everyone' || user.seeking === genderMap[c.gender]) &&
-            (c.seeking === 'everyone' || c.seeking === genderMap[user.gender])
-    }));
+    const results = candidates.map(c => {
+        const distance = calculateDistanceKm(user.latitude, user.longitude, c.latitude, c.longitude);
+        return {
+            name: c.display_name,
+            gender: c.gender,
+            seeking: c.seeking,
+            distance_km: distance ? Math.round(distance) : null,
+            userSeeks: user.seeking === 'everyone' || user.seeking === genderMap[c.gender],
+            candidateSeeks: c.seeking === 'everyone' || c.seeking === genderMap[user.gender],
+            wouldMatch: (user.seeking === 'everyone' || user.seeking === genderMap[c.gender]) &&
+                (c.seeking === 'everyone' || c.seeking === genderMap[user.gender]) &&
+                (distance === null || distance <= 80)
+        };
+    });
 
     res.json({
-        currentUser: { gender: user.gender, seeking: user.seeking },
+        currentUser: { gender: user.gender, seeking: user.seeking, latitude: user.latitude, longitude: user.longitude },
         candidates: results
     });
 });
@@ -81,7 +95,7 @@ router.get('/current', authenticateToken, async (req, res) => {
 });
 
 router.post('/find', authenticateToken, async (req, res) => {
-    console.log('=== NEW CODE VERSION 2 ===');
+    console.log('=== MATCHES WITH DISTANCE FILTERING ===');
     try {
         const userId = req.user.id;
 
@@ -103,6 +117,7 @@ router.post('/find', authenticateToken, async (req, res) => {
             .single();
 
         const preferences = user.user_preferences?.[0] || user.user_preferences;
+        const maxDistanceKm = preferences?.max_distance_km || 80;
 
         const { data: candidates } = await supabase
             .from('users')
@@ -149,7 +164,9 @@ router.post('/find', authenticateToken, async (req, res) => {
         console.log('Current user:', {
             id: userId,
             gender: user.gender,
-            seeking: user.seeking
+            seeking: user.seeking,
+            latitude: user.latitude,
+            longitude: user.longitude
         });
         console.log('Total candidates from DB:', candidates?.length);
         console.log('Users in active matches:', [...matchedUserIds]);
@@ -166,10 +183,14 @@ router.post('/find', authenticateToken, async (req, res) => {
             const genderMap = { man: 'men', woman: 'women' };
             const userSeeks = user.seeking === 'everyone' || user.seeking === genderMap[c.gender];
             const candidateSeeks = c.seeking === 'everyone' || c.seeking === genderMap[user.gender];
-            return userSeeks && candidateSeeks;
+            if (!userSeeks || !candidateSeeks) return false;
+
+            const distance = calculateDistanceKm(user.latitude, user.longitude, c.latitude, c.longitude);
+            if (distance === null) return true;
+            return distance <= maxDistanceKm;
         });
 
-        console.log('Valid candidates after seeking filter:', validCandidates?.length);
+        console.log('Valid candidates after seeking + distance filter:', validCandidates?.length);
         console.log('Valid candidate names:', validCandidates.map(c => c.display_name));
         console.log('=== END DEBUG ===');
 
