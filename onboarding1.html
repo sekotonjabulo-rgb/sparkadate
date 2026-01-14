@@ -588,26 +588,28 @@ continueBtn4.addEventListener('click', () => {
 });
 
         function requestLocation() {
-            if ('geolocation' in navigator) {
-                navigator.geolocation.getCurrentPosition(
-                    async (position) => {
-                        try {
-                            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${position.coords.latitude}&lon=${position.coords.longitude}&format=json`);
-                            const data = await response.json();
-                            const city = data.address.city || data.address.town || data.address.village || '';
-                            const region = data.address.state || data.address.country || '';
-                            locationInput.value = city ? `${city}, ${region}` : region;
-                            continueBtn3.disabled = !locationInput.value.trim();
-                        } catch (error) {
-                            console.log('Reverse geocoding failed');
-                        }
-                    },
-                    (error) => {
-                        console.log('Location permission denied');
-                    }
-                );
+    if ('geolocation' in navigator) {
+        navigator.geolocation.getCurrentPosition(
+            async (position) => {
+                userData.latitude = position.coords.latitude;
+                userData.longitude = position.coords.longitude;
+                try {
+                    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${position.coords.latitude}&lon=${position.coords.longitude}&format=json`);
+                    const data = await response.json();
+                    const city = data.address.city || data.address.town || data.address.village || '';
+                    const region = data.address.state || data.address.country || '';
+                    locationInput.value = city ? `${city}, ${region}` : region;
+                    continueBtn3.disabled = !locationInput.value.trim();
+                } catch (error) {
+                    console.log('Reverse geocoding failed');
+                }
+            },
+            (error) => {
+                console.log('Location permission denied');
             }
-        }
+        );
+    }
+}
 
         updateProgress();
     </script>
