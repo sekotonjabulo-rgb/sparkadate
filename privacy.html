@@ -6,6 +6,7 @@
     <title>Privacy Policy – Spark</title>
     <meta name="description" content="Spark privacy policy. Learn how we protect your data.">
     <link rel="icon" href="../blueocean.jpeg" type="image/jpeg">
+
     <style>
         @font-face {
             font-family: 'CabinetGrotesk-Medium';
@@ -19,7 +20,6 @@
 
         :root {
             --color-background: #000000;
-            --color-surface: #FFFFFF;
             --color-text-primary: #FFFFFF;
             --color-text-secondary: rgba(255, 255, 255, 0.65);
             --color-border: rgba(255, 255, 255, 0.12);
@@ -36,8 +36,8 @@
             font-family: var(--font-heading);
             background-color: var(--color-background);
             color: var(--color-text-primary);
-            -webkit-font-smoothing: antialiased;
             line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
         }
 
         nav {
@@ -49,9 +49,9 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            z-index: 100;
             background-color: var(--color-background);
             border-bottom: 1px solid var(--color-border);
+            z-index: 100;
         }
 
         .nav-logo {
@@ -67,25 +67,15 @@
             height: 32px;
         }
 
-        .nav-logo span {
-            font-size: 18px;
-            font-weight: 500;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 24px;
-        }
-
         .nav-links a {
+            margin-left: 24px;
+            font-size: 14px;
             color: var(--color-text-secondary);
             text-decoration: none;
-            font-size: 14px;
-            transition: color 0.2s ease;
         }
 
-        .nav-links a:hover,
-        .nav-links a.active {
+        .nav-links a.active,
+        .nav-links a:hover {
             color: var(--color-text-primary);
         }
 
@@ -97,9 +87,7 @@
 
         .page-title {
             font-size: clamp(32px, 6vw, 44px);
-            font-weight: 500;
-            letter-spacing: -0.02em;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
         }
 
         .page-updated {
@@ -114,135 +102,123 @@
 
         .section-title {
             font-size: 20px;
-            font-weight: 500;
-            margin-bottom: 16px;
+            margin-bottom: 14px;
         }
 
         .section p {
             font-size: 15px;
             color: var(--color-text-secondary);
-            margin-bottom: 16px;
-        }
-
-        .section ul {
-            font-size: 15px;
-            color: var(--color-text-secondary);
-            margin-left: 24px;
-            margin-bottom: 16px;
-        }
-
-        .section li {
-            margin-bottom: 8px;
+            margin-bottom: 14px;
         }
 
         footer {
+            border-top: 0px solid var(--color-border);
             padding: 40px 24px;
-            border-top: 1px solid var(--color-border);
             text-align: center;
         }
 
-        .footer-links {
-            display: flex;
-            justify-content: center;
-            gap: 24px;
-            margin-bottom: 24px;
-        }
-
-        .footer-links a {
-            color: var(--color-text-secondary);
-            text-decoration: none;
+        footer a {
+            margin: 0 12px;
             font-size: 14px;
-            transition: color 0.2s ease;
+            color: var(--color-text-secondary);
+            text-decoration: none; 
         }
 
-        .footer-links a:hover {
+        footer a:hover {
             color: var(--color-text-primary);
         }
 
-        .footer-copy {
+        footer p {
+            margin-top: 16px;
             font-size: 12px;
             color: var(--color-text-secondary);
         }
     </style>
 </head>
+
 <body>
-    <nav>
-        <a href="index.html" class="nav-logo">
-            <img src="../blueocean.jpeg" alt="Spark">
-            <span>Spark</span>
-        </a>
-        <div class="nav-links">
-            <a href="privacy.html" class="active">Privacy</a>
-            <a href="support.html">Support</a>
-        </div>
-    </nav>
+<nav>
+    <a href="index.html" class="nav-logo">
+        <img src="spark-icon.png" alt="Spark logo" class="logo">
+                <span>Spark</span>
+    </a>
+    <div class="nav-links">
+        <a href="privacy.html" class="active">Privacy</a>
+        <a href="support.html">Support</a>
+    </div>
+</nav>
 
-    <main class="content">
-        <h1 class="page-title">Privacy Policy</h1>
-        <p class="page-updated">Last updated: January 2025</p>
+<main class="content">
+    <h1 class="page-title">Privacy Policy</h1>
+    <p class="page-updated">Last updated: January 2025</p>
 
-        <div class="section">
-            <h2 class="section-title">Introduction</h2>
-            <p>Spark ("we", "our", or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, and safeguard your information when you use our dating application.</p>
-        </div>
+    <div class="section">
+        <h2 class="section-title">Introduction</h2>
+        <p>
+            Spark ("we", "our", or "us") values your privacy. This Privacy Policy explains how we collect, use, and
+            protect your information when you use the Spark dating application.
+        </p>
+    </div>
 
-        <div class="section">
-            <h2 class="section-title">Information We Collect</h2>
-            <p>We collect information you provide directly to us, including:</p>
-            <ul>
-                <li>Account information (name, email, age, gender)</li>
-                <li>Profile information (photos, location, preferences)</li>
-                <li>Messages and communications with other users</li>
-                <li>Payment information for premium subscriptions</li>
-            </ul>
-        </div>
+    <div class="section">
+        <h2 class="section-title">Information We Collect</h2>
+        <p>
+            When you create and use a Spark account, we collect information you provide directly, such as your name,
+            email address, age, gender, profile photos, general location, preferences, and messages exchanged with
+            other users. If you choose to subscribe to Spark Pro, payment information is processed securely through
+            our payment providers and is not stored directly on our servers.
+        </p>
+    </div>
 
-        <div class="section">
-            <h2 class="section-title">How We Use Your Information</h2>
-            <p>We use the information we collect to:</p>
-            <ul>
-                <li>Provide and improve our services</li>
-                <li>Match you with compatible users</li>
-                <li>Process transactions and send related information</li>
-                <li>Send you technical notices and support messages</li>
-                <li>Respond to your comments and questions</li>
-            </ul>
-        </div>
+    <div class="section">
+        <h2 class="section-title">How We Use Your Information</h2>
+        <p>
+            We use your information to operate and improve Spark, create meaningful matches, facilitate
+            conversations, process subscriptions, communicate important updates, provide support, and ensure the
+            safety and integrity of the platform.
+        </p>
+    </div>
 
-        <div class="section">
-            <h2 class="section-title">Photo Privacy</h2>
-            <p>Your photos are a core part of our blind dating experience. Photos remain hidden from your matches until both parties agree to reveal or the timer expires. We do not share your photos with third parties for advertising or marketing purposes.</p>
-        </div>
+    <div class="section">
+        <h2 class="section-title">Photo Privacy</h2>
+        <p>
+            Photos are central to Spark’s blind matching experience. Your photos remain hidden from matches until
+            both users agree to reveal them or the reveal timer expires. Spark does not sell, rent, or use your photos
+            for advertising or marketing purposes.
+        </p>
+    </div>
 
-        <div class="section">
-            <h2 class="section-title">Data Security</h2>
-            <p>We implement appropriate technical and organizational measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction.</p>
-        </div>
+    <div class="section">
+        <h2 class="section-title">Data Security</h2>
+        <p>
+            We use appropriate technical and organizational safeguards to protect your personal data against
+            unauthorized access, loss, misuse, or disclosure. While no system is completely secure, we continuously
+            review and improve our security practices.
+        </p>
+    </div>
 
-        <div class="section">
-            <h2 class="section-title">Your Rights</h2>
-            <p>You have the right to:</p>
-            <ul>
-                <li>Access your personal data</li>
-                <li>Correct inaccurate data</li>
-                <li>Request deletion of your data</li>
-                <li>Export your data</li>
-                <li>Opt out of marketing communications</li>
-            </ul>
-        </div>
+    <div class="section">
+        <h2 class="section-title">Your Rights</h2>
+        <p>
+            You have the right to access, correct, export, or delete your personal data at any time through the app
+            settings. You may also opt out of non-essential communications. Account deletions permanently remove your
+            data within 30 days.
+        </p>
+    </div>
 
-        <div class="section">
-            <h2 class="section-title">Contact Us</h2>
-            <p>If you have any questions about this Privacy Policy, please contact us at privacy@spark.app</p>
-        </div>
-    </main>
+    <div class="section">
+        <h2 class="section-title">Contact</h2>
+        <p>
+            If you have questions or concerns about this Privacy Policy or your data, you can contact us at
+            <a href="mailto:support@sparkadate.online" style="color:#fff;text-decoration:none;">support@sparkadate.online</a>.
+        </p>
+    </div>
+</main>
 
-    <footer>
-        <div class="footer-links">
-            <a href="privacy.html">Privacy Policy</a>
-            <a href="support.html">Support</a>
-        </div>
-        <p class="footer-copy">© 2025 Spark. All rights reserved.</p>
-    </footer>
+<footer>
+    <a href="privacy.html">Privacy Policy</a>
+    <a href="support.html">Support</a>
+    <p>© 2025 Spark. All rights reserved.</p>
+</footer>
 </body>
 </html>
