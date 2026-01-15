@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Support – Spark</title>
-    <meta name="description" content="Get help with Spark. FAQs and contact information.">
-    <link rel="icon" href="../blueocean.jpeg" type="image/jpeg">
+    <meta name="description" content="Spark Support. FAQs and contact information." />
+    <link rel="icon" href="../blueocean.jpeg" type="image/jpeg" />
+
     <style>
         @font-face {
             font-family: 'CabinetGrotesk-Medium';
@@ -13,20 +14,18 @@
                  url('../fonts/CabinetGrotesk-Medium.woff') format('woff'),
                  url('../fonts/CabinetGrotesk-Medium.ttf') format('truetype');
             font-weight: 500;
-            font-display: swap;
             font-style: normal;
+            font-display: swap;
         }
 
         :root {
-            --color-background: #000000;
-            --color-surface: #FFFFFF;
-            --color-text-primary: #FFFFFF;
-            --color-text-secondary: rgba(255, 255, 255, 0.65);
-            --color-border: rgba(255, 255, 255, 0.12);
-            --color-input-bg: rgba(255, 255, 255, 0.08);
-            --radius-input: 16px;
-            --radius-pill: 28px;
-            --font-heading: 'CabinetGrotesk-Medium', -apple-system, BlinkMacSystemFont, sans-serif;
+            --bg: #000;
+            --text-primary: #fff;
+            --text-secondary: rgba(255,255,255,0.65);
+            --border: rgba(255,255,255,0.12);
+            --surface: rgba(255,255,255,0.06);
+            --radius: 18px;
+            --font: 'CabinetGrotesk-Medium', -apple-system, BlinkMacSystemFont, sans-serif;
         }
 
         * {
@@ -36,25 +35,25 @@
         }
 
         body {
-            font-family: var(--font-heading);
-            background-color: var(--color-background);
-            color: var(--color-text-primary);
-            -webkit-font-smoothing: antialiased;
+            background: var(--bg);
+            color: var(--text-primary);
+            font-family: var(--font);
             line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
         }
 
         nav {
             position: fixed;
             top: 0;
-            left: 0;
-            right: 0;
-            padding: 16px 24px;
+            inset-inline: 0;
+            height: 64px;
+            padding: 0 24px;
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            justify-content: space-between;
+            background: var(--bg);
+            border-bottom: 1px solid var(--border);
             z-index: 100;
-            background-color: var(--color-background);
-            border-bottom: 1px solid var(--color-border);
         }
 
         .nav-logo {
@@ -62,7 +61,7 @@
             align-items: center;
             gap: 10px;
             text-decoration: none;
-            color: var(--color-text-primary);
+            color: var(--text-primary);
         }
 
         .nav-logo img {
@@ -70,188 +69,139 @@
             height: 32px;
         }
 
-        .nav-logo span {
-            font-size: 18px;
-            font-weight: 500;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 24px;
-        }
-
         .nav-links a {
-            color: var(--color-text-secondary);
-            text-decoration: none;
+            margin-left: 24px;
             font-size: 14px;
-            transition: color 0.2s ease;
+            text-decoration: none;
+            color: var(--text-secondary);
         }
 
-        .nav-links a:hover,
-        .nav-links a.active {
-            color: var(--color-text-primary);
+        .nav-links a.active,
+        .nav-links a:hover {
+            color: var(--text-primary);
         }
 
-        .content {
+        main {
             max-width: 680px;
             margin: 0 auto;
             padding: 120px 24px 80px;
         }
 
-        .page-title {
+        h1 {
             font-size: clamp(32px, 6vw, 44px);
-            font-weight: 500;
-            letter-spacing: -0.02em;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
         }
 
-        .page-subtitle {
+        .subtitle {
+            color: var(--text-secondary);
+            margin-bottom: 56px;
             font-size: 16px;
-            color: var(--color-text-secondary);
-            margin-bottom: 48px;
-        }
-
-        .faq-section {
-            margin-bottom: 64px;
         }
 
         .section-title {
             font-size: 20px;
-            font-weight: 500;
             margin-bottom: 24px;
         }
 
+        /* FAQ Accordion */
         .faq-item {
-            border-bottom: 1px solid var(--color-border);
-            padding: 20px 0;
+            border-bottom: 1px solid var(--border);
         }
 
-        .faq-question {
-            font-size: 16px;
-            font-weight: 500;
-            margin-bottom: 12px;
-        }
-
-        .faq-answer {
-            font-size: 14px;
-            color: var(--color-text-secondary);
-        }
-
-        .contact-section {
-            margin-bottom: 48px;
-        }
-
-        .contact-form {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-
-        .form-input,
-        .form-textarea {
+        .faq-toggle {
             width: 100%;
-            padding: 16px 20px;
-            background-color: var(--color-input-bg);
-            border: 1px solid var(--color-border);
-            border-radius: var(--radius-input);
-            font-family: var(--font-heading);
-            font-size: 15px;
-            font-weight: 500;
-            color: var(--color-text-primary);
-            outline: none;
-            transition: border-color 0.2s ease;
-        }
-
-        .form-input::placeholder,
-        .form-textarea::placeholder {
-            color: var(--color-text-secondary);
-        }
-
-        .form-input:focus,
-        .form-textarea:focus {
-            border-color: var(--color-surface);
-        }
-
-        .form-textarea {
-            min-height: 140px;
-            resize: vertical;
-        }
-
-        .btn-primary {
-            display: inline-flex;
+            padding: 22px 0;
+            display: flex;
+            justify-content: space-between;
             align-items: center;
-            justify-content: center;
-            height: 52px;
-            padding: 0 32px;
-            background-color: var(--color-surface);
-            color: var(--color-background);
+            background: none;
             border: none;
-            border-radius: var(--radius-pill);
-            font-family: var(--font-heading);
+            color: var(--text-primary);
+            font-family: var(--font);
             font-size: 16px;
-            font-weight: 500;
             cursor: pointer;
-            transition: opacity 0.2s ease;
         }
 
-        .btn-primary:hover {
-            opacity: 0.9;
+        .faq-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.25s ease;
+    color: var(--text-primary);
+}
+
+.faq-item.active .faq-icon {
+    transform: rotate(45deg);
+}
+
+
+        .faq-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
         }
 
-        .contact-email {
-            text-align: center;
-            margin-top: 32px;
-        }
-
-        .contact-email p {
+        .faq-content p {
+            padding-bottom: 20px;
             font-size: 14px;
-            color: var(--color-text-secondary);
+            color: var(--text-secondary);
         }
 
-        .contact-email a {
-            color: var(--color-text-primary);
+        /* Contact Box */
+        .contact-box {
+            margin-top: 64px;
+            padding: 32px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            text-align: center;
+        }
+
+        .contact-box p {
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+
+        .contact-box a {
+            display: inline-block;
+            padding: 14px 28px;
+            border-radius: 28px;
+            background: #fff;
+            color: #000;
             text-decoration: none;
-        }
-
-        .contact-email a:hover {
-            text-decoration: underline;
+            font-size: 15px;
         }
 
         footer {
+            border-top: 0px solid var(--border);
             padding: 40px 24px;
-            border-top: 1px solid var(--color-border);
             text-align: center;
         }
 
-        .footer-links {
-            display: flex;
-            justify-content: center;
-            gap: 24px;
-            margin-bottom: 24px;
-        }
-
-        .footer-links a {
-            color: var(--color-text-secondary);
-            text-decoration: none;
+        footer a {
+            margin: 0 12px;
             font-size: 14px;
-            transition: color 0.2s ease;
+            color: var(--text-secondary);
+            text-decoration: none;
         }
 
-        .footer-links a:hover {
-            color: var(--color-text-primary);
+        footer a:hover {
+            color: var(--text-primary);
         }
 
-        .footer-copy {
+        footer p {
+            margin-top: 16px;
             font-size: 12px;
-            color: var(--color-text-secondary);
+            color: var(--text-secondary);
         }
     </style>
 </head>
+
 <body>
     <nav>
         <a href="index.html" class="nav-logo">
-            <img src="../blueocean.jpeg" alt="Spark">
-            <span>Spark</span>
+            <img src="spark-icon.png" alt="Spark logo" class="logo">            <span>Spark</span>
         </a>
         <div class="nav-links">
             <a href="privacy.html">Privacy</a>
@@ -259,59 +209,120 @@
         </div>
     </nav>
 
-    <main class="content">
-        <h1 class="page-title">Support</h1>
-        <p class="page-subtitle">Find answers to common questions or get in touch with our team.</p>
+    <main>
+        <h1>Support</h1>
+        <p class="subtitle">Find answers to common questions or contact our team.</p>
 
-        <section class="faq-section">
+        <section>
             <h2 class="section-title">Frequently Asked Questions</h2>
-            
+
             <div class="faq-item">
-                <h3 class="faq-question">How does blind matching work?</h3>
-                <p class="faq-answer">When you match with someone, both of your photos remain hidden. You can chat freely and get to know each other. After a period determined by our algorithm (12 hours to 5 days), you can reveal your photos to each other simultaneously.</p>
+                <button class="faq-toggle">
+                    How does blind matching work?
+                    <span class="faq-icon" aria-hidden="true">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                            <path d="M12 5v14M5 12h14"
+                                  stroke="currentColor"
+                                  stroke-width="2"
+                                  stroke-linecap="round"/>
+                        </svg>
+                    </span>
+                                    </button>
+                <div class="faq-content">
+                    <p>
+                        When you match, both profiles stay hidden. You chat first, and after 12 hours to 5 days
+                        (algorithm-based), photos reveal simultaneously.
+                    </p>
+                </div>
             </div>
 
             <div class="faq-item">
-                <h3 class="faq-question">Can I reveal my photos early?</h3>
-                <p class="faq-answer">Pro users can request an early reveal at any time. However, both parties must agree for the reveal to happen. Free users must wait until the timer expires.</p>
+                <button class="faq-toggle">
+                    Can I report a user?
+                    <span class="faq-icon" aria-hidden="true">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                            <path d="M12 5v14M5 12h14"
+                                  stroke="currentColor"
+                                  stroke-width="2"
+                                  stroke-linecap="round"/>
+                        </svg>
+                    </span>
+                                    </button>
+                <div class="faq-content">
+                    <p>
+                        Yes. You can report users directly from the chat or profile. Reports are reviewed to keep
+                        Spark safe and respectful.
+                    </p>
+                </div>
             </div>
 
             <div class="faq-item">
-                <h3 class="faq-question">What happens after the reveal?</h3>
-                <p class="faq-answer">After photos are revealed, both users are asked if they want to continue the conversation. If either person chooses to leave, the match ends and you'll be paired with someone new.</p>
+                <button class="faq-toggle">
+                    What’s included in Spark Pro?
+                    <span class="faq-icon" aria-hidden="true">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                            <path d="M12 5v14M5 12h14"
+                                  stroke="currentColor"
+                                  stroke-width="2"
+                                  stroke-linecap="round"/>
+                        </svg>
+                    </span>
+                                    </button>
+                <div class="faq-content">
+                    <p>
+                        Pro includes early reveal requests, unlimited exits, shorter match wait times, and time
+                        extensions.
+                    </p>
+                </div>
             </div>
 
             <div class="faq-item">
-                <h3 class="faq-question">What's included in Spark Pro?</h3>
-                <p class="faq-answer">Pro members get unlimited exits, the ability to request early reveals, purchase time extensions, and shorter wait times between matches. Pro costs $20/month.</p>
-            </div>
-
-            <div class="faq-item">
-                <h3 class="faq-question">How do I delete my account?</h3>
-                <p class="faq-answer">You can delete your account from the settings page. All your data, including photos and messages, will be permanently removed within 30 days.</p>
+                <button class="faq-toggle">
+                    How do I delete my account?
+                    <span class="faq-icon">+</span>
+                </button>
+                <div class="faq-content">
+                    <p>
+                        You can delete your account from Settings. All personal data is permanently removed within
+                        30 days.
+                    </p>
+                </div>
             </div>
         </section>
 
-        <section class="contact-section">
-            <h2 class="section-title">Contact Us</h2>
-            <form class="contact-form">
-                <input type="email" class="form-input" placeholder="Your email" required>
-                <input type="text" class="form-input" placeholder="Subject" required>
-                <textarea class="form-textarea" placeholder="How can we help?" required></textarea>
-                <button type="submit" class="btn-primary">Send Message</button>
-            </form>
-            <div class="contact-email">
-                <p>Or email us directly at <a href="mailto:support@spark.app">support@spark.app</a></p>
-            </div>
+        <section class="contact-box">
+            <p>Need help with something else?</p>
+            <a href="mailto:support@sparkadate.online">Email Support</a>
         </section>
     </main>
 
     <footer>
-        <div class="footer-links">
-            <a href="privacy.html">Privacy Policy</a>
-            <a href="support.html">Support</a>
-        </div>
-        <p class="footer-copy">© 2025 Spark. All rights reserved.</p>
+        <a href="privacy.html">Privacy Policy</a>
+        <a href="support.html">Support</a>
+        <p>© 2025 Spark. All rights reserved.</p>
     </footer>
+
+    <script>
+        const items = document.querySelectorAll('.faq-item');
+
+        items.forEach(item => {
+            const button = item.querySelector('.faq-toggle');
+            const content = item.querySelector('.faq-content');
+
+            button.addEventListener('click', () => {
+                items.forEach(i => {
+                    if (i !== item) {
+                        i.classList.remove('active');
+                        i.querySelector('.faq-content').style.maxHeight = null;
+                    }
+                });
+
+                item.classList.toggle('active');
+                content.style.maxHeight = item.classList.contains('active')
+                    ? content.scrollHeight + 'px'
+                    : null;
+            });
+        });
+    </script>
 </body>
 </html>
