@@ -2,7 +2,7 @@
     "name": "Spark",
     "short_name": "Spark",
     "description": "Connection before appearance",
-    "start_url": "/",
+    "start_url": "/app.html",
     "display": "standalone",
     "background_color": "#000000",
     "theme_color": "#000000",
