@@ -9,7 +9,8 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <meta name="apple-mobile-web-app-title" content="Spark">
-    <link rel="apple-touch-icon" href="blueocean.jpeg">
+    <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png">
     <style>
         @font-face {
             font-family: 'CabinetGrotesk-Medium';
@@ -228,23 +229,31 @@
             }
         }
     </style>
+    <script>
+        // Redirect logged-in users to app
+        if (localStorage.getItem('sparkToken')) {
+            window.location.href = 'app.html';
+        }
+    </script>
 </head>
 <body>
     <main class="landing-page">
         <nav class="nav">
-            <a href="https://lethabo3.github.io/sparkadate/" class="nav-logo">
-                <img src="blueocean.jpeg" alt="Spark">
+            <a href="index.html" class="nav-logo">
+                <img src="icons/icon-32.png" alt="Spark">
                 <span>Spark</span>
             </a>
             <div class="nav-links">
                 <a href="login.html" class="nav-link">Sign in</a>
-                <a href="app.html" class="nav-btn">Get Started</a>            </div>
+                <a href="app.html" class="nav-btn">Get Started</a>
+            </div>
         </nav>
         <section class="hero">
-            <img src="blueocean.jpeg" alt="Spark" class="hero-logo">
+            <img src="icons/icon-180.png" alt="Spark" class="hero-logo">
             <h1 class="hero-title">Connect deeply before the big reveal</h1>
             <p class="hero-subtitle">Spark is a blind dating app where real connections happen before appearances matter.</p>
-            <a href="app.html" class="btn-primary">Start your journey</a>        </section>
+            <a href="app.html" class="btn-primary">Start your journey</a>
+        </section>
 
         <footer class="footer">
             <div class="footer-links">
@@ -255,5 +264,4 @@
         </footer>
     </main>
 </body>
-
 </html>
