@@ -170,6 +170,8 @@
             color: var(--color-text-primary);
             cursor: pointer;
             transition: border-color 0.2s ease, background-color 0.2s ease;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
 
         .option-btn:hover {
@@ -210,6 +212,8 @@
             cursor: pointer;
             overflow: hidden;
             transition: border-color 0.2s ease;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
 
         .photo-slot:hover {
@@ -229,6 +233,7 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+            pointer-events: none;
         }
 
         .photo-add {
@@ -241,12 +246,14 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            pointer-events: none;
         }
 
         .photo-add svg {
             width: 24px;
             height: 24px;
             stroke: var(--color-text-secondary);
+            pointer-events: none;
         }
 
         .photo-slot.filled .photo-add {
@@ -266,12 +273,14 @@
             display: none;
             align-items: center;
             justify-content: center;
+            z-index: 10;
         }
 
         .photo-remove svg {
             width: 14px;
             height: 14px;
             stroke: var(--color-surface);
+            pointer-events: none;
         }
 
         .photo-slot.filled .photo-remove {
@@ -288,6 +297,7 @@
             background-color: rgba(0, 0, 0, 0.6);
             padding: 4px 8px;
             border-radius: 8px;
+            pointer-events: none;
         }
 
         .onboarding-actions {
@@ -308,6 +318,8 @@
             font-weight: 500;
             cursor: pointer;
             transition: opacity 0.2s ease;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
 
         .btn-primary:active {
@@ -464,6 +476,8 @@
             gender: null,
             seeking: null,
             location: null,
+            latitude: null,
+            longitude: null,
             photos: [null, null, null]
         };
 
@@ -519,10 +533,31 @@
             const removeBtn = slot.querySelector('.photo-remove');
             const index = parseInt(slot.dataset.index);
 
+            // Handle slot tap/click - more reliable for mobile
             slot.addEventListener('click', (e) => {
-                if (e.target !== removeBtn && !removeBtn.contains(e.target)) {
-                    input.click();
+                // Ignore if clicking remove button
+                if (e.target === removeBtn || removeBtn.contains(e.target)) {
+                    return;
                 }
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Small delay helps iOS Safari register the input click
+                setTimeout(() => {
+                    input.click();
+                }, 10);
+            });
+
+            // Also add touch event for better mobile support
+            slot.addEventListener('touchend', (e) => {
+                if (e.target === removeBtn || removeBtn.contains(e.target)) {
+                    return;
+                }
+                e.preventDefault();
+                
+                setTimeout(() => {
+                    input.click();
+                }, 10);
             });
 
             input.addEventListener('change', (e) => {
@@ -547,6 +582,7 @@
 
             removeBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
+                e.preventDefault();
                 userData.photos[index] = null;
                 const img = slot.querySelector('img');
                 if (img) img.remove();
@@ -577,39 +613,39 @@
             showStep(4);
         });
 
-continueBtn4.addEventListener('click', () => {
-    userData.photos = userData.photos.filter(p => p !== null);
-    localStorage.setItem('sparkUserData', JSON.stringify({
-        ...userData,
-        latitude: userData.latitude || null,
-        longitude: userData.longitude || null
-    }));
-    window.location.href = 'signup.html';
-});
+        continueBtn4.addEventListener('click', () => {
+            userData.photos = userData.photos.filter(p => p !== null);
+            localStorage.setItem('sparkUserData', JSON.stringify({
+                ...userData,
+                latitude: userData.latitude || null,
+                longitude: userData.longitude || null
+            }));
+            window.location.href = 'signup.html';
+        });
 
         function requestLocation() {
-    if ('geolocation' in navigator) {
-        navigator.geolocation.getCurrentPosition(
-            async (position) => {
-                userData.latitude = position.coords.latitude;
-                userData.longitude = position.coords.longitude;
-                try {
-                    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${position.coords.latitude}&lon=${position.coords.longitude}&format=json`);
-                    const data = await response.json();
-                    const city = data.address.city || data.address.town || data.address.village || '';
-                    const region = data.address.state || data.address.country || '';
-                    locationInput.value = city ? `${city}, ${region}` : region;
-                    continueBtn3.disabled = !locationInput.value.trim();
-                } catch (error) {
-                    console.log('Reverse geocoding failed');
-                }
-            },
-            (error) => {
-                console.log('Location permission denied');
+            if ('geolocation' in navigator) {
+                navigator.geolocation.getCurrentPosition(
+                    async (position) => {
+                        userData.latitude = position.coords.latitude;
+                        userData.longitude = position.coords.longitude;
+                        try {
+                            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${position.coords.latitude}&lon=${position.coords.longitude}&format=json`);
+                            const data = await response.json();
+                            const city = data.address.city || data.address.town || data.address.village || '';
+                            const region = data.address.state || data.address.country || '';
+                            locationInput.value = city ? `${city}, ${region}` : region;
+                            continueBtn3.disabled = !locationInput.value.trim();
+                        } catch (error) {
+                            console.log('Reverse geocoding failed');
+                        }
+                    },
+                    (error) => {
+                        console.log('Location permission denied');
+                    }
+                );
             }
-        );
-    }
-}
+        }
 
         updateProgress();
     </script>
