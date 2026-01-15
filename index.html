@@ -199,9 +199,81 @@
             color: var(--color-text-secondary);
         }
 
+        .install-prompt {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            max-width: 280px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 16px;
+            padding: 16px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            animation: slideUp 0.4s ease-out;
+        }
+
+        .install-prompt-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+
+        .install-prompt-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--color-text-primary);
+        }
+
+        .install-prompt-close {
+            background: none;
+            border: none;
+            color: var(--color-text-secondary);
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+            font-size: 18px;
+        }
+
+        .install-prompt-close:hover {
+            color: var(--color-text-primary);
+        }
+
+        .install-prompt-text {
+            font-size: 12px;
+            color: var(--color-text-secondary);
+            line-height: 1.5;
+        }
+
+        .install-prompt-icon {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            vertical-align: middle;
+            margin: 0 2px;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         @media (max-width: 480px) {
             .nav-link {
                 display: none;
+            }
+
+            .install-prompt {
+                left: 12px;
+                right: 12px;
+                max-width: none;
             }
         }
 
@@ -226,25 +298,31 @@
                 padding: 10px 28px;
                 font-size: 14px;
             }
+
+            .install-prompt {
+                display: none;
+            }
         }
     </style>
 </head>
 <body>
     <main class="landing-page">
         <nav class="nav">
-            <a href="https://lethabo3.github.io/sparkadate/" class="nav-logo">
+            <a href="index.html" class="nav-logo">
                 <img src="blueocean.jpeg" alt="Spark">
                 <span>Spark</span>
             </a>
             <div class="nav-links">
                 <a href="login.html" class="nav-link">Sign in</a>
-                <a href="app.html" class="nav-btn">Get Started</a>            </div>
+                <a href="app.html" class="nav-btn">Get Started</a>
+            </div>
         </nav>
         <section class="hero">
             <img src="blueocean.jpeg" alt="Spark" class="hero-logo">
             <h1 class="hero-title">Connect deeply before the big reveal</h1>
             <p class="hero-subtitle">Spark is a blind dating app where real connections happen before appearances matter.</p>
-            <a href="app.html" class="btn-primary">Start your journey</a>        </section>
+            <a href="app.html" class="btn-primary">Start your journey</a>
+        </section>
 
         <footer class="footer">
             <div class="footer-links">
@@ -254,7 +332,45 @@
             <p class="footer-text">© 2025 Spark. All rights reserved.</p>
         </footer>
     </main>
+
+    <div class="install-prompt" id="installPrompt">
+        <div class="install-prompt-header">
+            <span class="install-prompt-title">Install Spark</span>
+            <button class="install-prompt-close" id="closePrompt">×</button>
+        </div>
+        <p class="install-prompt-text" id="installText"></p>
+    </div>
+
+    <script>
+        const installPrompt = document.getElementById('installPrompt');
+        const closePrompt = document.getElementById('closePrompt');
+        const installText = document.getElementById('installText');
+
+        // Check if already installed or dismissed
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+        const isDismissed = localStorage.getItem('installPromptDismissed');
+
+        if (isStandalone || isDismissed) {
+            installPrompt.style.display = 'none';
+        } else {
+            // Detect platform and show appropriate instructions
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+            const isAndroid = /Android/.test(navigator.userAgent);
+
+            if (isIOS) {
+                installText.innerHTML = 'Tap <svg class="install-prompt-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7-7 7 7"/><rect x="4" y="17" width="16" height="2" rx="1"/></svg> then "Add to Home Screen" for the best experience.';
+            } else if (isAndroid) {
+                installText.innerHTML = 'Tap <svg class="install-prompt-icon" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg> then "Add to Home Screen" for the best experience.';
+            } else {
+                // Desktop - hide the prompt
+                installPrompt.style.display = 'none';
+            }
+        }
+
+        closePrompt.addEventListener('click', () => {
+            installPrompt.style.display = 'none';
+            localStorage.setItem('installPromptDismissed', 'true');
+        });
+    </script>
 </body>
-
 </html>
-
