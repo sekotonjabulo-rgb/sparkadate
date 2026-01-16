@@ -146,7 +146,6 @@ router.get('/current', authenticateToken, async (req, res) => {
 });
 
 router.post('/find', authenticateToken, async (req, res) => {
-    console.log('=== SMART COMPATIBILITY MATCHING ===');
     try {
         const userId = req.user.id;
 
@@ -187,6 +186,7 @@ router.post('/find', authenticateToken, async (req, res) => {
             return res.json({ match: null, queued: true });
         }
 
+        // Get users who are already in active matches
         const { data: activeMatchUserIds } = await supabase
             .from('matches')
             .select('user_a_id, user_b_id')
@@ -198,6 +198,7 @@ router.post('/find', authenticateToken, async (req, res) => {
             matchedUserIds.add(m.user_b_id);
         });
 
+        // Get previous matches to avoid re-matching
         const { data: previousMatches } = await supabase
             .from('matches')
             .select('user_a_id, user_b_id')
@@ -212,23 +213,12 @@ router.post('/find', authenticateToken, async (req, res) => {
             }
         });
 
-        console.log('=== MATCHING DEBUG ===');
-        console.log('Current user:', {
-            id: userId,
-            gender: user.gender,
-            seeking: user.seeking,
-            latitude: user.latitude,
-            longitude: user.longitude,
-            hasProfile: hasProfileData(userProfile)
-        });
-        console.log('Total candidates from DB:', candidates?.length);
-
+        // Filter to available candidates
         const availableCandidates = candidates.filter(c =>
             !matchedUserIds.has(c.id) && !previousMatchUserIds.has(c.id)
         );
 
-        console.log('Available after filters:', availableCandidates?.length);
-
+        // Filter by gender preferences and distance
         const validCandidates = availableCandidates.filter(c => {
             const genderMap = { man: 'men', woman: 'women' };
             const userSeeks = user.seeking === 'everyone' || user.seeking === genderMap[c.gender];
@@ -240,8 +230,6 @@ router.post('/find', authenticateToken, async (req, res) => {
             return distance <= maxDistanceKm;
         });
 
-        console.log('Valid candidates after seeking + distance filter:', validCandidates?.length);
-
         if (validCandidates.length === 0) {
             await supabase
                 .from('match_queue')
@@ -249,59 +237,58 @@ router.post('/find', authenticateToken, async (req, res) => {
             return res.json({ match: null, queued: true });
         }
 
-        // Smart matching: score top 10 candidates and pick the best
-        const candidatesToScore = validCandidates.slice(0, 10);
-        const scoredCandidates = [];
+        let bestMatch;
 
-        console.log('=== SCORING CANDIDATES ===');
-
-        for (const candidate of candidatesToScore) {
-            const candidateProfile = candidate.personality_profiles?.[0] || candidate.personality_profiles;
-            
-            let compatibility = null;
-            let score = 0.5; // Default score for users without profile data
-
-            // Only call AI if both users have some profile data
-            if (hasProfileData(userProfile) && hasProfileData(candidateProfile)) {
-                try {
-                    compatibility = await calculateCompatibility(
-                        userProfile,
-                        candidateProfile,
-                        [],
-                        candidate.interest_mappings || []
-                    );
-                    score = compatibility?.compatibility_score || 0.5;
-                } catch (error) {
-                    console.error('Compatibility calculation error:', error.message);
-                }
-            } else if (hasProfileData(userProfile) || hasProfileData(candidateProfile)) {
-                // One user has profile data, give a slight bump over completely new users
-                score = 0.55;
-            }
-
-            // Boost score slightly for users who are geographically closer
+        // If only 1-2 candidates, just pick the first one (skip AI scoring)
+        if (validCandidates.length <= 2) {
+            const candidate = validCandidates[0];
             const distance = calculateDistanceKm(user.latitude, user.longitude, candidate.latitude, candidate.longitude);
-            if (distance !== null && distance < 20) {
-                score += 0.05; // Small boost for very close users
-            }
-
-            scoredCandidates.push({
+            bestMatch = {
                 candidate,
-                candidateProfile,
-                compatibility,
-                score,
+                candidateProfile: candidate.personality_profiles?.[0] || candidate.personality_profiles,
+                compatibility: null,
+                score: 0.5,
                 distance
+            };
+        } else {
+            // Score top 5 candidates in parallel (not 10)
+            const candidatesToScore = validCandidates.slice(0, 5);
+
+            const scoringPromises = candidatesToScore.map(async (candidate) => {
+                const candidateProfile = candidate.personality_profiles?.[0] || candidate.personality_profiles;
+                let compatibility = null;
+                let score = 0.5;
+
+                // Only call AI if both users have profile data
+                if (hasProfileData(userProfile) && hasProfileData(candidateProfile)) {
+                    try {
+                        compatibility = await calculateCompatibility(
+                            userProfile,
+                            candidateProfile,
+                            [],
+                            candidate.interest_mappings || []
+                        );
+                        score = compatibility?.compatibility_score || 0.5;
+                    } catch (error) {
+                        // Silently use default score on error
+                    }
+                } else if (hasProfileData(userProfile) || hasProfileData(candidateProfile)) {
+                    score = 0.55;
+                }
+
+                // Boost for closer users
+                const distance = calculateDistanceKm(user.latitude, user.longitude, candidate.latitude, candidate.longitude);
+                if (distance !== null && distance < 20) {
+                    score += 0.05;
+                }
+
+                return { candidate, candidateProfile, compatibility, score, distance };
             });
 
-            console.log(`Candidate ${candidate.display_name}: score=${score.toFixed(2)}, distance=${distance ? Math.round(distance) + 'km' : 'unknown'}`);
+            const scoredCandidates = await Promise.all(scoringPromises);
+            scoredCandidates.sort((a, b) => b.score - a.score);
+            bestMatch = scoredCandidates[0];
         }
-
-        // Sort by score descending and pick the best match
-        scoredCandidates.sort((a, b) => b.score - a.score);
-        const bestMatch = scoredCandidates[0];
-
-        console.log('=== BEST MATCH ===');
-        console.log(`Selected: ${bestMatch.candidate.display_name} with score ${bestMatch.score.toFixed(2)}`);
 
         const revealHours = bestMatch.compatibility?.recommended_reveal_hours || Math.floor(Math.random() * 108) + 12;
         const revealAvailableAt = new Date(Date.now() + revealHours * 60 * 60 * 1000);
@@ -318,12 +305,7 @@ router.post('/find', authenticateToken, async (req, res) => {
             .select()
             .single();
 
-        if (error) {
-            console.error('Match insert error:', error);
-            throw error;
-        }
-
-        console.log('Match created successfully:', match.id);
+        if (error) throw error;
 
         await supabase
             .from('conversation_analytics')
