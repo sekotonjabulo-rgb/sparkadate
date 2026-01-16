@@ -218,7 +218,7 @@
         const matchData = JSON.parse(localStorage.getItem('sparkCurrentMatch') || '{}');
 
         if (!SparkAPI.auth.isLoggedIn()) {
-            window.location.href = 'landing.html';
+            window.location.href = 'index.html';
         }
 
         requestName.textContent = `${matchData.name || 'Your match'} wants to reveal`;

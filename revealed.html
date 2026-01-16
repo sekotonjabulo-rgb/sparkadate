@@ -218,11 +218,29 @@
         const matchData = JSON.parse(localStorage.getItem('sparkCurrentMatch') || '{}');
 
         if (!SparkAPI.auth.isLoggedIn()) {
-            window.location.href = 'landing.html';
+            window.location.href = 'index.html';
         }
 
         revealedName.textContent = matchData.name || 'Unknown';
         revealedAge.textContent = `${matchData.age || '??'} years old`;
+
+        // Check if partner has left
+        async function checkPartnerStatus() {
+            try {
+                const { match } = await SparkAPI.matches.getCurrent();
+                if (match && match.partner_left) {
+                    window.location.href = 'left.html';
+                    return true;
+                }
+                return false;
+            } catch (error) {
+                console.error('Check partner status error:', error);
+                return false;
+            }
+        }
+
+        // Check on page load
+        checkPartnerStatus();
 
         async function markRevealSeen() {
             try {

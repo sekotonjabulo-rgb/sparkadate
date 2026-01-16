@@ -453,7 +453,7 @@
         }
 
         if (!SparkAPI.auth.isLoggedIn()) {
-            window.location.href = 'landing.html';
+            window.location.href = 'index.html';
         }
 
         // Format last seen time
@@ -526,12 +526,18 @@
         async function checkRevealRequest() {
             try {
                 const { match } = await SparkAPI.matches.getCurrent();
-                
+
                 if (!match) return;
+
+                // Check if partner has left the conversation
+                if (match.partner_left) {
+                    window.location.href = 'left.html';
+                    return;
+                }
 
                 const currentUser = SparkAPI.auth.getCurrentUser();
                 const seenBy = match.revealed_seen_by || [];
-                
+
                 if (match.status === 'revealed') {
                     if (!seenBy.includes(currentUser.id)) {
                         window.location.href = 'revealed.html';

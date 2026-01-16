@@ -61,6 +61,8 @@ router.get('/debug', authenticateToken, async (req, res) => {
 router.get('/current', authenticateToken, async (req, res) => {
     try {
         const userId = req.user.id;
+
+        // First check for active/revealed matches
         const { data: match } = await supabase
             .from('matches')
             .select(`
@@ -74,27 +76,69 @@ router.get('/current', authenticateToken, async (req, res) => {
             .limit(1)
             .single();
 
-        if (!match) {
-            return res.json({ match: null });
+        if (match) {
+            const partner = match.user_a_id === userId ? match.user_b : match.user_a;
+            return res.json({
+                match: {
+                    id: match.id,
+                    partner: {
+                        id: partner.id,
+                        display_name: partner.display_name,
+                        age: partner.age
+                    },
+                    matched_at: match.matched_at,
+                    reveal_available_at: match.reveal_available_at,
+                    reveal_requested_by: match.reveal_requested_by,
+                    reveal_requested_at: match.reveal_requested_at,
+                    revealed_seen_by: match.revealed_seen_by || [],
+                    status: match.status,
+                    partner_left: false
+                }
+            });
         }
 
-        const partner = match.user_a_id === userId ? match.user_b : match.user_a;
-        res.json({
-            match: {
-                id: match.id,
-                partner: {
-                    id: partner.id,
-                    display_name: partner.display_name,
-                    age: partner.age
-                },
-                matched_at: match.matched_at,
-                reveal_available_at: match.reveal_available_at,
-                reveal_requested_by: match.reveal_requested_by,
-                reveal_requested_at: match.reveal_requested_at,
-                revealed_seen_by: match.revealed_seen_by || [],
-                status: match.status
+        // Check if partner left a recent match (within last 24 hours)
+        const { data: exitedMatch } = await supabase
+            .from('matches')
+            .select(`
+                *,
+                user_a:users!matches_user_a_id_fkey(id, display_name, age),
+                user_b:users!matches_user_b_id_fkey(id, display_name, age)
+            `)
+            .or(`user_a_id.eq.${userId},user_b_id.eq.${userId}`)
+            .in('status', ['exited_a', 'exited_b'])
+            .neq('exited_by', userId)
+            .order('exited_at', { ascending: false })
+            .limit(1)
+            .single();
+
+        if (exitedMatch) {
+            // Check if this exit was recent and user hasn't acknowledged it
+            const exitedAt = new Date(exitedMatch.exited_at);
+            const now = new Date();
+            const hoursSinceExit = (now - exitedAt) / (1000 * 60 * 60);
+
+            // Only show partner_left if it was within last 24 hours
+            if (hoursSinceExit < 24) {
+                const partner = exitedMatch.user_a_id === userId ? exitedMatch.user_b : exitedMatch.user_a;
+                return res.json({
+                    match: {
+                        id: exitedMatch.id,
+                        partner: {
+                            id: partner.id,
+                            display_name: partner.display_name,
+                            age: partner.age
+                        },
+                        matched_at: exitedMatch.matched_at,
+                        status: exitedMatch.status,
+                        partner_left: true,
+                        exited_at: exitedMatch.exited_at
+                    }
+                });
             }
-        });
+        }
+
+        return res.json({ match: null });
     } catch (error) {
         console.error('Get current match error:', error);
         res.status(500).json({ error: 'Failed to get match' });
