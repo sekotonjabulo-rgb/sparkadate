@@ -369,9 +369,6 @@
                 </div>
             </header>
             <section class="chat-messages" id="chatMessages">
-                <div class="date-separator">
-                    <span>Today</span>
-                </div>
                 <div class="typing-indicator" id="typingIndicator">
                     <div class="typing-bubble">
                         <div class="typing-dot"></div>
@@ -406,9 +403,54 @@
         const matchData = JSON.parse(localStorage.getItem('sparkCurrentMatch') || '{}');
         let matchId = matchData.id;
         let displayedMessageIds = new Set();
+        let displayedDates = new Set();
+        let lastDisplayedDate = null;
         let isInitialLoad = true;
 
         chatNameElement.textContent = matchData.name || 'Unknown';
+
+        // Format date for separator (Today, Yesterday, or date)
+        function formatDateSeparator(date) {
+            const messageDate = new Date(date);
+            const today = new Date();
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+
+            // Reset times to compare just dates
+            const messageDateOnly = new Date(messageDate.getFullYear(), messageDate.getMonth(), messageDate.getDate());
+            const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+            const yesterdayOnly = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate());
+
+            if (messageDateOnly.getTime() === todayOnly.getTime()) {
+                return 'Today';
+            } else if (messageDateOnly.getTime() === yesterdayOnly.getTime()) {
+                return 'Yesterday';
+            } else {
+                return messageDate.toLocaleDateString(undefined, {
+                    weekday: 'long',
+                    month: 'short',
+                    day: 'numeric'
+                });
+            }
+        }
+
+        // Get date key for comparison (YYYY-MM-DD)
+        function getDateKey(date) {
+            const d = new Date(date);
+            return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+        }
+
+        // Add date separator to UI
+        function addDateSeparator(date) {
+            const dateKey = getDateKey(date);
+            if (displayedDates.has(dateKey)) return;
+
+            displayedDates.add(dateKey);
+            const separator = document.createElement('div');
+            separator.className = 'date-separator';
+            separator.innerHTML = `<span>${formatDateSeparator(date)}</span>`;
+            chatMessages.insertBefore(separator, typingIndicator);
+        }
 
         if (!SparkAPI.auth.isLoggedIn()) {
             window.location.href = 'landing.html';
@@ -533,12 +575,16 @@
         }
 
         function addMessageToUI(content, isSent, animate = true, timestamp = null) {
+            const time = timestamp ? new Date(timestamp) : new Date();
+
+            // Add date separator if this is a new day
+            addDateSeparator(time);
+
             const wrapper = document.createElement('div');
             wrapper.className = `message-wrapper ${isSent ? 'sent' : 'received'}${animate ? '' : ' no-animation'}`;
-            
-            const time = timestamp ? new Date(timestamp) : new Date();
+
             const timeString = time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            
+
             wrapper.innerHTML = `
                 <div class="message ${isSent ? 'sent' : 'received'}">
                     <span>${escapeHtml(content)}</span>
