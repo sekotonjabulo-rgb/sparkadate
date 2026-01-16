@@ -224,7 +224,7 @@
         revealedName.textContent = matchData.name || 'Unknown';
         revealedAge.textContent = `${matchData.age || '??'} years old`;
 
-        // Check if partner has left
+        // Check if partner has left - returns true if they left
         async function checkPartnerStatus() {
             try {
                 const { match } = await SparkAPI.matches.getCurrent();
@@ -284,7 +284,16 @@
         markRevealSeen();
         loadMatchPhoto();
 
-        stayBtn.addEventListener('click', () => {
+        stayBtn.addEventListener('click', async () => {
+            stayBtn.disabled = true;
+            stayBtn.textContent = 'Loading...';
+
+            // Check if partner left before continuing
+            const partnerLeft = await checkPartnerStatus();
+            if (partnerLeft) {
+                return; // checkPartnerStatus will redirect to left.html
+            }
+
             const updatedMatch = { ...matchData, revealed: true };
             localStorage.setItem('sparkCurrentMatch', JSON.stringify(updatedMatch));
             window.location.href = 'chat.html';
