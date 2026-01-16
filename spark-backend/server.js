@@ -7,6 +7,8 @@ import matchesRoutes from './routes/matches.js';
 import messagesRoutes from './routes/messages.js';
 import waitlistRoutes from './routes/waitlist.js';
 import presenceRoutes from './routes/presence.js';
+import typingRoutes from './routes/typing.js';
+import pushRoutes from './routes/push.js';
 
 dotenv.config();
 
@@ -70,6 +72,8 @@ app.use('/api/matches', matchesRoutes);
 app.use('/api/messages', messagesRoutes);
 app.use('/api/waitlist', waitlistRoutes);
 app.use('/api/presence', presenceRoutes);
+app.use('/api/typing', typingRoutes);
+app.use('/api/push', pushRoutes);
 
 // 5. Port Binding for Cloud Deployment
 // Clouds like Render/Fly inject the PORT variable. 0.0.0.0 is required for external access.

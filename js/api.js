@@ -167,15 +167,61 @@ const messages = {
         return apiRequest(`/messages/${matchId}`);
     },
 
-    async send(matchId, content) {
+    async send(matchId, content, replyToId = null) {
         return apiRequest(`/messages/${matchId}`, {
             method: 'POST',
+            body: JSON.stringify({ content, reply_to_id: replyToId })
+        });
+    },
+
+    async edit(matchId, messageId, content) {
+        return apiRequest(`/messages/${matchId}/${messageId}`, {
+            method: 'PATCH',
             body: JSON.stringify({ content })
+        });
+    },
+
+    async delete(matchId, messageId) {
+        return apiRequest(`/messages/${matchId}/${messageId}`, {
+            method: 'DELETE'
         });
     },
 
     async analyzeConversation(matchId) {
         return apiRequest(`/messages/${matchId}/analyze`, { method: 'POST' });
+    }
+};
+
+const typing = {
+    async setTyping(matchId, isTyping) {
+        return apiRequest(`/typing/${matchId}`, {
+            method: 'POST',
+            body: JSON.stringify({ isTyping })
+        });
+    },
+
+    async getPartnerTyping(matchId) {
+        return apiRequest(`/typing/${matchId}`);
+    }
+};
+
+const push = {
+    async getVapidKey() {
+        return apiRequest('/push/vapid-public-key');
+    },
+
+    async subscribe(subscription) {
+        return apiRequest('/push/subscribe', {
+            method: 'POST',
+            body: JSON.stringify({ subscription })
+        });
+    },
+
+    async unsubscribe(endpoint) {
+        return apiRequest('/push/unsubscribe', {
+            method: 'POST',
+            body: JSON.stringify({ endpoint })
+        });
     }
 };
 
@@ -202,5 +248,7 @@ window.SparkAPI = {
     users,
     matches,
     messages,
+    typing,
+    push,
     presence
 };

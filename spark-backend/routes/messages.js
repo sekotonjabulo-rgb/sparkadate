@@ -2,6 +2,7 @@ import express from 'express';
 import { supabase } from '../config/supabase.js';
 import { authenticateToken } from '../middleware/auth.js';
 import { analyzeMessage, analyzeConversation, updatePersonalityProfile } from '../services/gemini.js';
+import { sendPushToUser } from './push.js';
 
 const router = express.Router();
 
@@ -112,7 +113,7 @@ function calculateProfileConfidence(totalMessagesAnalyzed, totalConversationsAna
 router.post('/:matchId', authenticateToken, async (req, res) => {
     try {
         const { matchId } = req.params;
-        const { content } = req.body;
+        const { content, reply_to_id } = req.body;
         const senderId = req.user.id;
 
         // Verify user is part of this match
@@ -144,6 +145,7 @@ router.post('/:matchId', authenticateToken, async (req, res) => {
                 match_id: matchId,
                 sender_id: senderId,
                 content,
+                reply_to_id: reply_to_id || null,
                 sentiment_score: analysis?.sentiment_score,
                 extracted_topics: analysis?.extracted_topics,
                 emotional_tone: analysis?.emotional_tone,
@@ -160,6 +162,24 @@ router.post('/:matchId', authenticateToken, async (req, res) => {
             .from('matches')
             .update({ total_messages: newMessageCount })
             .eq('id', matchId);
+
+        // Send push notification to the other user
+        const recipientId = match.user_a_id === senderId ? match.user_b_id : match.user_a_id;
+
+        // Get sender's name for notification
+        const { data: sender } = await supabase
+            .from('users')
+            .select('display_name')
+            .eq('id', senderId)
+            .single();
+
+        sendPushToUser(recipientId, {
+            title: sender?.display_name || 'New message',
+            body: content.length > 100 ? content.substring(0, 100) + '...' : content,
+            url: '/chat.html',
+            matchId: matchId,
+            tag: `message-${matchId}`
+        });
 
         // Update personality profile every 5 messages
         if (newMessageCount % 5 === 0) {
@@ -237,6 +257,7 @@ router.get('/:matchId', authenticateToken, async (req, res) => {
             .from('messages')
             .select('*')
             .eq('match_id', matchId)
+            .is('deleted_at', null)
             .order('sent_at', { ascending: true });
 
         if (error) throw error;
@@ -245,6 +266,115 @@ router.get('/:matchId', authenticateToken, async (req, res) => {
     } catch (error) {
         console.error('Get messages error:', error);
         res.status(500).json({ error: 'Failed to get messages' });
+    }
+});
+
+// Edit a message
+router.patch('/:matchId/:messageId', authenticateToken, async (req, res) => {
+    try {
+        const { matchId, messageId } = req.params;
+        const { content } = req.body;
+        const userId = req.user.id;
+
+        // Verify user is part of this match
+        const { data: match } = await supabase
+            .from('matches')
+            .select('*')
+            .eq('id', matchId)
+            .single();
+
+        if (!match || (match.user_a_id !== userId && match.user_b_id !== userId)) {
+            return res.status(403).json({ error: 'Not authorized' });
+        }
+
+        // Get the message to verify ownership and store original
+        const { data: existingMessage } = await supabase
+            .from('messages')
+            .select('*')
+            .eq('id', messageId)
+            .eq('match_id', matchId)
+            .single();
+
+        if (!existingMessage) {
+            return res.status(404).json({ error: 'Message not found' });
+        }
+
+        if (existingMessage.sender_id !== userId) {
+            return res.status(403).json({ error: 'Can only edit your own messages' });
+        }
+
+        if (existingMessage.deleted_at) {
+            return res.status(400).json({ error: 'Cannot edit deleted message' });
+        }
+
+        // Store original content if first edit
+        const originalContent = existingMessage.original_content || existingMessage.content;
+
+        const { data: message, error } = await supabase
+            .from('messages')
+            .update({
+                content,
+                original_content: originalContent,
+                edited_at: new Date().toISOString()
+            })
+            .eq('id', messageId)
+            .select()
+            .single();
+
+        if (error) throw error;
+
+        res.json({ message });
+    } catch (error) {
+        console.error('Edit message error:', error);
+        res.status(500).json({ error: 'Failed to edit message' });
+    }
+});
+
+// Delete a message (soft delete)
+router.delete('/:matchId/:messageId', authenticateToken, async (req, res) => {
+    try {
+        const { matchId, messageId } = req.params;
+        const userId = req.user.id;
+
+        // Verify user is part of this match
+        const { data: match } = await supabase
+            .from('matches')
+            .select('*')
+            .eq('id', matchId)
+            .single();
+
+        if (!match || (match.user_a_id !== userId && match.user_b_id !== userId)) {
+            return res.status(403).json({ error: 'Not authorized' });
+        }
+
+        // Verify message exists and belongs to user
+        const { data: existingMessage } = await supabase
+            .from('messages')
+            .select('*')
+            .eq('id', messageId)
+            .eq('match_id', matchId)
+            .single();
+
+        if (!existingMessage) {
+            return res.status(404).json({ error: 'Message not found' });
+        }
+
+        if (existingMessage.sender_id !== userId) {
+            return res.status(403).json({ error: 'Can only delete your own messages' });
+        }
+
+        // Soft delete
+        const { error } = await supabase
+            .from('messages')
+            .update({ deleted_at: new Date().toISOString() })
+            .eq('id', messageId);
+
+        if (error) throw error;
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Delete message error:', error);
+        res.status(500).json({ error: 'Failed to delete message' });
     }
 });
 

@@ -207,9 +207,141 @@
             opacity: 0;
             transition: opacity 0.2s ease;
             padding: 0 4px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
         }
         .message-wrapper:hover .message-time {
             opacity: 1;
+        }
+        .edited-label {
+            font-style: italic;
+        }
+        .message-reply-preview {
+            font-size: 12px;
+            color: var(--color-text-secondary);
+            padding: 6px 10px;
+            margin-bottom: 4px;
+            border-left: 2px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+            max-width: 75%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .message-actions {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            display: none;
+            gap: 4px;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 16px;
+            padding: 4px;
+        }
+        .message-wrapper.sent .message-actions {
+            left: -80px;
+        }
+        .message-wrapper.received .message-actions {
+            right: -80px;
+        }
+        .message-wrapper:hover .message-actions,
+        .message-wrapper.actions-visible .message-actions {
+            display: flex;
+        }
+        .message-content-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .message-action-btn {
+            width: 28px;
+            height: 28px;
+            border: none;
+            background: transparent;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s ease;
+        }
+        .message-action-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .message-action-btn svg {
+            width: 14px;
+            height: 14px;
+            stroke: var(--color-text-secondary);
+        }
+        .reply-preview-bar {
+            display: none;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border-top: 1px solid var(--color-input-border);
+            align-items: center;
+            gap: 12px;
+        }
+        .reply-preview-bar.visible {
+            display: flex;
+        }
+        .reply-preview-content {
+            flex: 1;
+            overflow: hidden;
+        }
+        .reply-preview-label {
+            font-size: 11px;
+            color: var(--color-text-secondary);
+            margin-bottom: 2px;
+        }
+        .reply-preview-text {
+            font-size: 13px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .reply-cancel-btn {
+            width: 24px;
+            height: 24px;
+            border: none;
+            background: transparent;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .reply-cancel-btn svg {
+            width: 16px;
+            height: 16px;
+            stroke: var(--color-text-secondary);
+        }
+        .edit-mode-bar {
+            display: none;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.08);
+            border-top: 1px solid var(--color-input-border);
+            align-items: center;
+            gap: 12px;
+        }
+        .edit-mode-bar.visible {
+            display: flex;
+        }
+        .edit-mode-label {
+            flex: 1;
+            font-size: 13px;
+            color: var(--color-text-secondary);
+        }
+        .edit-cancel-btn {
+            padding: 6px 12px;
+            background: transparent;
+            border: 1px solid var(--color-input-border);
+            border-radius: 16px;
+            color: var(--color-text-secondary);
+            font-family: var(--font-heading);
+            font-size: 12px;
+            cursor: pointer;
         }
         .typing-indicator {
             display: none;
@@ -377,6 +509,21 @@
                     </div>
                 </div>
             </section>
+            <div class="reply-preview-bar" id="replyPreviewBar">
+                <div class="reply-preview-content">
+                    <div class="reply-preview-label">Replying to</div>
+                    <div class="reply-preview-text" id="replyPreviewText"></div>
+                </div>
+                <button class="reply-cancel-btn" id="replyCancelBtn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="edit-mode-bar" id="editModeBar">
+                <span class="edit-mode-label">Editing message</span>
+                <button class="edit-cancel-btn" id="editCancelBtn">Cancel</button>
+            </div>
             <div class="chat-input-container">
                 <div class="chat-input-wrapper">
                     <input type="text" class="chat-input" id="messageInput" placeholder="Type a message...">
@@ -399,13 +546,23 @@
         const typingIndicator = document.getElementById('typingIndicator');
         const revealBtn = document.getElementById('revealBtn');
         const revealNotification = document.getElementById('revealNotification');
+        const replyPreviewBar = document.getElementById('replyPreviewBar');
+        const replyPreviewText = document.getElementById('replyPreviewText');
+        const replyCancelBtn = document.getElementById('replyCancelBtn');
+        const editModeBar = document.getElementById('editModeBar');
+        const editCancelBtn = document.getElementById('editCancelBtn');
 
         const matchData = JSON.parse(localStorage.getItem('sparkCurrentMatch') || '{}');
         let matchId = matchData.id;
         let displayedMessageIds = new Set();
+        let messagesMap = new Map(); // Store messages for reply lookup
         let displayedDates = new Set();
         let lastDisplayedDate = null;
         let isInitialLoad = true;
+        let replyToMessage = null;
+        let editingMessage = null;
+        let typingTimeout = null;
+        let isTyping = false;
 
         chatNameElement.textContent = matchData.name || 'Unknown';
 
@@ -566,11 +723,17 @@
                 const { messages } = await SparkAPI.messages.getAll(matchId);
                 const currentUser = SparkAPI.auth.getCurrentUser();
 
+                // First pass: store all messages in map for reply lookups
+                messages.forEach(msg => {
+                    messagesMap.set(msg.id, msg);
+                });
+
+                // Second pass: display messages
                 messages.forEach(msg => {
                     if (!displayedMessageIds.has(msg.id)) {
                         displayedMessageIds.add(msg.id);
                         const isSent = msg.sender_id === currentUser.id;
-                        addMessageToUI(msg.content, isSent, !isInitialLoad, msg.sent_at);
+                        addMessageToUI(msg.content, isSent, !isInitialLoad, msg.sent_at, msg);
                     }
                 });
 
@@ -580,7 +743,7 @@
             }
         }
 
-        function addMessageToUI(content, isSent, animate = true, timestamp = null) {
+        function addMessageToUI(content, isSent, animate = true, timestamp = null, messageData = null) {
             const time = timestamp ? new Date(timestamp) : new Date();
 
             // Add date separator if this is a new day
@@ -588,18 +751,141 @@
 
             const wrapper = document.createElement('div');
             wrapper.className = `message-wrapper ${isSent ? 'sent' : 'received'}${animate ? '' : ' no-animation'}`;
+            if (messageData) {
+                wrapper.dataset.messageId = messageData.id;
+            }
 
             const timeString = time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const editedLabel = messageData?.edited_at ? '<span class="edited-label">(edited)</span>' : '';
+
+            // Build reply preview if this is a reply
+            let replyPreview = '';
+            if (messageData?.reply_to_id && messagesMap.has(messageData.reply_to_id)) {
+                const originalMsg = messagesMap.get(messageData.reply_to_id);
+                const previewText = originalMsg.content.length > 50
+                    ? originalMsg.content.substring(0, 50) + '...'
+                    : originalMsg.content;
+                replyPreview = `<div class="message-reply-preview">${escapeHtml(previewText)}</div>`;
+            }
+
+            // Build action buttons (only for own messages can edit/delete, everyone can reply)
+            const replyBtn = `
+                <button class="message-action-btn" data-action="reply" title="Reply">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="9 17 4 12 9 7"></polyline>
+                        <path d="M20 18v-2a4 4 0 0 0-4-4H4"></path>
+                    </svg>
+                </button>
+            `;
+
+            let actionButtons = replyBtn;
+            if (isSent && messageData) {
+                actionButtons = `
+                    <button class="message-action-btn" data-action="edit" title="Edit">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                        </svg>
+                    </button>
+                    <button class="message-action-btn" data-action="delete" title="Delete">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        </svg>
+                    </button>
+                    ${replyBtn}
+                `;
+            }
 
             wrapper.innerHTML = `
-                <div class="message ${isSent ? 'sent' : 'received'}">
-                    <span>${escapeHtml(content)}</span>
+                ${replyPreview}
+                <div class="message-content-wrapper">
+                    <div class="message-actions">${actionButtons}</div>
+                    <div class="message ${isSent ? 'sent' : 'received'}">
+                        <span>${escapeHtml(content)}</span>
+                    </div>
                 </div>
-                <span class="message-time">${timeString}</span>
+                <span class="message-time">${timeString} ${editedLabel}</span>
             `;
+
+            // Add event listeners for action buttons
+            if (messageData) {
+                wrapper.querySelectorAll('.message-action-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const action = btn.dataset.action;
+                        handleMessageAction(action, messageData, wrapper);
+                    });
+                });
+            }
+
             chatMessages.insertBefore(wrapper, typingIndicator);
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
+
+        function handleMessageAction(action, messageData, wrapper) {
+            switch (action) {
+                case 'reply':
+                    startReply(messageData);
+                    break;
+                case 'edit':
+                    startEdit(messageData, wrapper);
+                    break;
+                case 'delete':
+                    confirmDelete(messageData, wrapper);
+                    break;
+            }
+        }
+
+        function startReply(messageData) {
+            cancelEdit();
+            replyToMessage = messageData;
+            replyPreviewText.textContent = messageData.content.length > 100
+                ? messageData.content.substring(0, 100) + '...'
+                : messageData.content;
+            replyPreviewBar.classList.add('visible');
+            messageInput.focus();
+        }
+
+        function cancelReply() {
+            replyToMessage = null;
+            replyPreviewBar.classList.remove('visible');
+        }
+
+        function startEdit(messageData, wrapper) {
+            cancelReply();
+            editingMessage = { data: messageData, element: wrapper };
+            messageInput.value = messageData.content;
+            editModeBar.classList.add('visible');
+            sendBtn.classList.add('visible');
+            messageInput.focus();
+        }
+
+        function cancelEdit() {
+            if (editingMessage) {
+                editingMessage = null;
+                messageInput.value = '';
+                editModeBar.classList.remove('visible');
+                sendBtn.classList.remove('visible');
+            }
+        }
+
+        async function confirmDelete(messageData, wrapper) {
+            if (confirm('Delete this message?')) {
+                try {
+                    await SparkAPI.messages.delete(matchId, messageData.id);
+                    wrapper.remove();
+                    displayedMessageIds.delete(messageData.id);
+                    messagesMap.delete(messageData.id);
+                } catch (error) {
+                    console.error('Delete error:', error);
+                    alert('Failed to delete message');
+                }
+            }
+        }
+
+        replyCancelBtn.addEventListener('click', cancelReply);
+        editCancelBtn.addEventListener('click', cancelEdit);
 
         function escapeHtml(text) {
             const div = document.createElement('div');
@@ -607,13 +893,7 @@
             return div.innerHTML;
         }
 
-        messageInput.addEventListener('input', () => {
-            if (messageInput.value.trim()) {
-                sendBtn.classList.add('visible');
-            } else {
-                sendBtn.classList.remove('visible');
-            }
-        });
+        messageInput.addEventListener('input', handleTypingInput);
 
         messageInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && messageInput.value.trim()) {
@@ -627,14 +907,53 @@
             const content = messageInput.value.trim();
             if (!content) return;
 
+            // Handle edit mode
+            if (editingMessage) {
+                try {
+                    const { message } = await SparkAPI.messages.edit(matchId, editingMessage.data.id, content);
+                    // Update the displayed message
+                    const msgElement = editingMessage.element.querySelector('.message span');
+                    if (msgElement) msgElement.textContent = content;
+                    // Add edited label if not already there
+                    const timeElement = editingMessage.element.querySelector('.message-time');
+                    if (timeElement && !timeElement.querySelector('.edited-label')) {
+                        timeElement.innerHTML += ' <span class="edited-label">(edited)</span>';
+                    }
+                    // Update in map
+                    messagesMap.set(message.id, message);
+                    cancelEdit();
+                } catch (error) {
+                    console.error('Edit message error:', error);
+                    alert('Failed to edit message');
+                }
+                return;
+            }
+
             messageInput.value = '';
             sendBtn.classList.remove('visible');
 
-            addMessageToUI(content, true, true);
+            // Create optimistic message data for immediate display
+            const tempId = 'temp-' + Date.now();
+            const tempMessage = {
+                id: tempId,
+                content,
+                reply_to_id: replyToMessage?.id || null
+            };
+            messagesMap.set(tempId, tempMessage);
+
+            addMessageToUI(content, true, true, null, tempMessage);
+
+            const replyId = replyToMessage?.id || null;
+            cancelReply();
 
             try {
-                const { message } = await SparkAPI.messages.send(matchId, content);
+                const { message } = await SparkAPI.messages.send(matchId, content, replyId);
+                // Replace temp ID with real ID
+                messagesMap.delete(tempId);
+                messagesMap.set(message.id, message);
                 displayedMessageIds.add(message.id);
+                // Update typing status
+                setTypingStatus(false);
             } catch (error) {
                 console.error('Send message error:', error);
                 alert('Failed to send message');
@@ -646,11 +965,16 @@
                 const { messages } = await SparkAPI.messages.getAll(matchId);
                 const currentUser = SparkAPI.auth.getCurrentUser();
 
+                // Store in map first for reply lookups
+                messages.forEach(msg => {
+                    messagesMap.set(msg.id, msg);
+                });
+
                 messages.forEach(msg => {
                     if (!displayedMessageIds.has(msg.id)) {
                         displayedMessageIds.add(msg.id);
                         const isSent = msg.sender_id === currentUser.id;
-                        addMessageToUI(msg.content, isSent, true, msg.sent_at);
+                        addMessageToUI(msg.content, isSent, true, msg.sent_at, msg);
                     }
                 });
             } catch (error) {
@@ -658,23 +982,136 @@
             }
         }
 
+        // Typing indicator functions
+        async function setTypingStatus(typing) {
+            if (isTyping === typing) return;
+            isTyping = typing;
+            try {
+                await SparkAPI.typing.setTyping(matchId, typing);
+            } catch (error) {
+                console.error('Set typing error:', error);
+            }
+        }
+
+        async function checkPartnerTyping() {
+            try {
+                const { isTyping: partnerTyping } = await SparkAPI.typing.getPartnerTyping(matchId);
+                if (partnerTyping) {
+                    typingIndicator.classList.add('visible');
+                } else {
+                    typingIndicator.classList.remove('visible');
+                }
+            } catch (error) {
+                console.error('Check typing error:', error);
+            }
+        }
+
+        // Handle typing detection
+        function handleTypingInput() {
+            // Show send button
+            if (messageInput.value.trim()) {
+                sendBtn.classList.add('visible');
+            } else {
+                sendBtn.classList.remove('visible');
+            }
+
+            // Set typing status
+            setTypingStatus(true);
+
+            // Clear existing timeout
+            if (typingTimeout) {
+                clearTimeout(typingTimeout);
+            }
+
+            // Set timeout to clear typing status after 3 seconds of inactivity
+            typingTimeout = setTimeout(() => {
+                setTypingStatus(false);
+            }, 3000);
+        }
+
         // Load everything in parallel immediately when page opens
         Promise.all([
             sendHeartbeat(),
             updatePartnerStatus(),
             loadMessages(),
-            checkRevealRequest()
+            checkRevealRequest(),
+            checkPartnerTyping()
         ]).then(() => {
             // Start polling
             setInterval(pollMessages, 3000);
             setInterval(checkRevealRequest, 5000);
             setInterval(sendHeartbeat, 30000);
-            setInterval(updatePartnerStatus, 30000); // Check partner status every 30 seconds
+            setInterval(updatePartnerStatus, 30000);
+            setInterval(checkPartnerTyping, 2000); // Check typing status every 2 seconds
         });
 
         // Handle page unload
         window.addEventListener('beforeunload', handlePageUnload);
         window.addEventListener('pagehide', handlePageUnload);
+
+        // Push notification setup
+        async function setupPushNotifications() {
+            if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+                console.log('Push notifications not supported');
+                return;
+            }
+
+            try {
+                // Check if already subscribed
+                const registration = await navigator.serviceWorker.ready;
+                let subscription = await registration.pushManager.getSubscription();
+
+                if (subscription) {
+                    // Already subscribed
+                    return;
+                }
+
+                // Request permission
+                const permission = await Notification.requestPermission();
+                if (permission !== 'granted') {
+                    console.log('Notification permission denied');
+                    return;
+                }
+
+                // Get VAPID public key
+                const { publicKey } = await SparkAPI.push.getVapidKey();
+                if (!publicKey) {
+                    console.log('VAPID key not available');
+                    return;
+                }
+
+                // Subscribe to push
+                subscription = await registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: urlBase64ToUint8Array(publicKey)
+                });
+
+                // Send subscription to server
+                await SparkAPI.push.subscribe(subscription);
+                console.log('Push notification subscription successful');
+            } catch (error) {
+                console.error('Push subscription error:', error);
+            }
+        }
+
+        // Helper function to convert VAPID key
+        function urlBase64ToUint8Array(base64String) {
+            const padding = '='.repeat((4 - base64String.length % 4) % 4);
+            const base64 = (base64String + padding)
+                .replace(/-/g, '+')
+                .replace(/_/g, '/');
+            const rawData = window.atob(base64);
+            const outputArray = new Uint8Array(rawData.length);
+            for (let i = 0; i < rawData.length; ++i) {
+                outputArray[i] = rawData.charCodeAt(i);
+            }
+            return outputArray;
+        }
+
+        // Request push notification permission after user has been chatting for a bit
+        setTimeout(() => {
+            setupPushNotifications();
+        }, 10000); // Ask after 10 seconds
     </script>
 </body>
 </html>
