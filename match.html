@@ -207,8 +207,9 @@
             try {
                 // Check for existing match first
                 const { match: existingMatch } = await SparkAPI.matches.getCurrent();
-                
-                if (existingMatch) {
+
+                // Only use existing match if partner hasn't left
+                if (existingMatch && !existingMatch.partner_left) {
                     showMatch(existingMatch.partner);
                     localStorage.setItem('sparkCurrentMatch', JSON.stringify({
                         id: existingMatch.id,
@@ -218,7 +219,7 @@
                     }));
                     return;
                 }
-    
+
                 // Find new match
                 const { match, queued } = await SparkAPI.matches.findNew();
     
