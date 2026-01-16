@@ -522,7 +522,7 @@
                     if (!displayedMessageIds.has(msg.id)) {
                         displayedMessageIds.add(msg.id);
                         const isSent = msg.sender_id === currentUser.id;
-                        addMessageToUI(msg.content, isSent, !isInitialLoad, msg.created_at);
+                        addMessageToUI(msg.content, isSent, !isInitialLoad, msg.sent_at);
                     }
                 });
 
@@ -598,7 +598,7 @@
                     if (!displayedMessageIds.has(msg.id)) {
                         displayedMessageIds.add(msg.id);
                         const isSent = msg.sender_id === currentUser.id;
-                        addMessageToUI(msg.content, isSent, true, msg.created_at);
+                        addMessageToUI(msg.content, isSent, true, msg.sent_at);
                     }
                 });
             } catch (error) {
