@@ -106,6 +106,22 @@
             font-size: 12px;
             color: var(--color-text-secondary);
             margin-top: 1px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--color-text-secondary);
+            transition: background-color 0.3s ease;
+        }
+        .status-indicator.online {
+            background-color: #34C759;
+        }
+        .status-indicator.offline {
+            background-color: var(--color-text-secondary);
         }
         .chat-actions {
             display: flex;
@@ -350,7 +366,10 @@
             <header class="chat-header">
                 <div class="chat-user">
                     <span class="chat-name" id="chatName"></span>
-                    <span class="chat-status" id="chatStatus">Online</span>
+                    <span class="chat-status" id="chatStatus">
+                        <span class="status-indicator" id="statusIndicator"></span>
+                        <span id="statusText">Checking...</span>
+                    </span>
                 </div>
                 <div class="chat-actions">
                     <a href="timer.html" class="btn-icon" title="View timer">
@@ -396,6 +415,8 @@
     <script>
         const chatNameElement = document.getElementById('chatName');
         const chatStatus = document.getElementById('chatStatus');
+        const statusIndicator = document.getElementById('statusIndicator');
+        const statusText = document.getElementById('statusText');
         const chatMessages = document.getElementById('chatMessages');
         const messageInput = document.getElementById('messageInput');
         const sendBtn = document.getElementById('sendBtn');
@@ -412,6 +433,79 @@
 
         if (!SparkAPI.auth.isLoggedIn()) {
             window.location.href = 'landing.html';
+        }
+
+        // Format last seen time
+        function formatLastSeen(lastSeenDate) {
+            const now = new Date();
+            const lastSeen = new Date(lastSeenDate);
+            const diffMs = now - lastSeen;
+            const diffMinutes = Math.floor(diffMs / (1000 * 60));
+            const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+            const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+            if (diffMinutes < 1) {
+                return 'Just now';
+            } else if (diffMinutes < 60) {
+                return `${diffMinutes}m ago`;
+            } else if (diffHours < 24) {
+                return `${diffHours}h ago`;
+            } else if (diffDays === 1) {
+                return 'Yesterday';
+            } else if (diffDays < 7) {
+                return `${diffDays}d ago`;
+            } else {
+                return lastSeen.toLocaleDateString();
+            }
+        }
+
+        // Update the status indicator UI
+        function updateStatusUI(isOnline, lastSeen) {
+            if (isOnline) {
+                statusIndicator.classList.add('online');
+                statusIndicator.classList.remove('offline');
+                statusText.textContent = 'Online';
+            } else {
+                statusIndicator.classList.remove('online');
+                statusIndicator.classList.add('offline');
+                if (lastSeen) {
+                    statusText.textContent = `Last seen ${formatLastSeen(lastSeen)}`;
+                } else {
+                    statusText.textContent = 'Offline';
+                }
+            }
+        }
+
+        // Fetch and update partner's online status
+        async function updatePartnerStatus() {
+            try {
+                const { isOnline, lastSeen } = await SparkAPI.presence.getMatchStatus(matchId);
+                updateStatusUI(isOnline, lastSeen);
+            } catch (error) {
+                console.error('Status check error:', error);
+                updateStatusUI(false, null);
+            }
+        }
+
+        // Send heartbeat to indicate user is online
+        async function sendHeartbeat() {
+            try {
+                await SparkAPI.presence.heartbeat();
+            } catch (error) {
+                console.error('Heartbeat error:', error);
+            }
+        }
+
+        // Set user offline when leaving the page
+        function handlePageUnload() {
+            // Use sendBeacon for reliable delivery on page unload
+            const token = localStorage.getItem('sparkToken');
+            if (token) {
+                navigator.sendBeacon(
+                    'https://sparkadate-1n.onrender.com/api/presence/offline',
+                    new Blob([JSON.stringify({})], { type: 'application/json' })
+                );
+            }
         }
 
         async function checkRevealRequest() {
@@ -539,12 +633,29 @@
             }
         }
 
+        // Initialize presence tracking
+        sendHeartbeat(); // Send initial heartbeat
+        updatePartnerStatus(); // Get initial partner status
         checkRevealRequest();
 
         loadMessages().then(() => {
             setInterval(pollMessages, 3000);
             setInterval(checkRevealRequest, 5000);
+            setInterval(sendHeartbeat, 30000); // Send heartbeat every 30 seconds
+            setInterval(updatePartnerStatus, 15000); // Check partner status every 15 seconds
         });
+
+        // Handle page visibility changes
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                sendHeartbeat();
+                updatePartnerStatus();
+            }
+        });
+
+        // Handle page unload
+        window.addEventListener('beforeunload', handlePageUnload);
+        window.addEventListener('pagehide', handlePageUnload);
     </script>
 </body>
 </html>
