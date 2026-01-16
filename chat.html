@@ -230,9 +230,18 @@
             text-overflow: ellipsis;
             white-space: nowrap;
         }
+        .message-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            position: relative;
+        }
+        .message-wrapper.sent .message-row {
+            flex-direction: row-reverse;
+        }
         .message-menu-btn {
-            width: 24px;
-            height: 24px;
+            width: 28px;
+            height: 28px;
             border: none;
             background: transparent;
             border-radius: 50%;
@@ -249,32 +258,27 @@
             opacity: 1;
         }
         .message-menu-btn:hover {
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.15);
         }
         .message-menu-btn svg {
-            width: 16px;
-            height: 16px;
+            width: 18px;
+            height: 18px;
             fill: var(--color-text-secondary);
-        }
-        .message-row {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .message-wrapper.sent .message-row {
-            flex-direction: row-reverse;
         }
         .message-dropdown {
             position: absolute;
-            background: rgba(30, 30, 30, 0.95);
+            top: 100%;
+            margin-top: 4px;
+            background: rgba(30, 30, 30, 0.98);
             border: 1px solid var(--color-input-border);
             border-radius: 12px;
             padding: 4px;
-            min-width: 120px;
-            z-index: 100;
+            min-width: 130px;
+            z-index: 1000;
             display: none;
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
         }
         .message-dropdown.visible {
             display: block;
@@ -283,7 +287,8 @@
             right: 0;
         }
         .message-wrapper.received .message-dropdown {
-            left: 0;
+            left: auto;
+            right: 0;
         }
         .message-dropdown-item {
             display: flex;
@@ -299,6 +304,7 @@
             cursor: pointer;
             border-radius: 8px;
             transition: background-color 0.15s ease;
+            text-align: left;
         }
         .message-dropdown-item:hover {
             background: rgba(255, 255, 255, 0.1);
@@ -845,16 +851,16 @@
             wrapper.innerHTML = `
                 ${replyPreview}
                 <div class="message-row">
-                    <button class="message-menu-btn">
+                    <div class="message ${isSent ? 'sent' : 'received'}">
+                        <span>${escapeHtml(content)}</span>
+                    </div>
+                    <button class="message-menu-btn" type="button">
                         <svg viewBox="0 0 24 24">
                             <circle cx="12" cy="5" r="2"/>
                             <circle cx="12" cy="12" r="2"/>
                             <circle cx="12" cy="19" r="2"/>
                         </svg>
                     </button>
-                    <div class="message ${isSent ? 'sent' : 'received'}">
-                        <span>${escapeHtml(content)}</span>
-                    </div>
                     <div class="message-dropdown">${dropdownItems}</div>
                 </div>
                 <span class="message-time">${timeString} ${editedLabel}</span>
