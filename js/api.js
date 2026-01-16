@@ -179,9 +179,28 @@ const messages = {
     }
 };
 
+const presence = {
+    async heartbeat() {
+        return apiRequest('/presence/heartbeat', { method: 'POST' });
+    },
+
+    async setOffline() {
+        return apiRequest('/presence/offline', { method: 'POST' });
+    },
+
+    async getStatus(userId) {
+        return apiRequest(`/presence/${userId}`);
+    },
+
+    async getMatchStatus(matchId) {
+        return apiRequest(`/presence/match/${matchId}`);
+    }
+};
+
 window.SparkAPI = {
     auth,
     users,
     matches,
-    messages
+    messages,
+    presence
 };
