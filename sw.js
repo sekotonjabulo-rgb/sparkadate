@@ -33,3 +33,61 @@ self.addEventListener('fetch', event => {
             .then(response => response || fetch(event.request))
     );
 });
+
+// Push notification handling
+self.addEventListener('push', event => {
+    if (!event.data) return;
+
+    const data = event.data.json();
+    const options = {
+        body: data.body || 'You have a new message',
+        icon: '/blueocean.jpeg',
+        badge: '/blueocean.jpeg',
+        vibrate: [100, 50, 100],
+        data: {
+            url: data.url || '/chat.html',
+            matchId: data.matchId
+        },
+        actions: [
+            { action: 'open', title: 'Open' },
+            { action: 'dismiss', title: 'Dismiss' }
+        ],
+        tag: data.tag || 'spark-notification',
+        renotify: true
+    };
+
+    event.waitUntil(
+        self.registration.showNotification(data.title || 'Spark', options)
+    );
+});
+
+// Handle notification click
+self.addEventListener('notificationclick', event => {
+    event.notification.close();
+
+    if (event.action === 'dismiss') return;
+
+    const urlToOpen = event.notification.data?.url || '/chat.html';
+
+    event.waitUntil(
+        clients.matchAll({ type: 'window', includeUncontrolled: true })
+            .then(windowClients => {
+                // Check if there's already a window open
+                for (const client of windowClients) {
+                    if (client.url.includes('sparkadate') && 'focus' in client) {
+                        client.navigate(urlToOpen);
+                        return client.focus();
+                    }
+                }
+                // If no window is open, open a new one
+                if (clients.openWindow) {
+                    return clients.openWindow(urlToOpen);
+                }
+            })
+    );
+});
+
+// Handle notification close
+self.addEventListener('notificationclose', event => {
+    // Analytics or cleanup can be done here
+});
