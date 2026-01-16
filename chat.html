@@ -230,34 +230,9 @@
             text-overflow: ellipsis;
             white-space: nowrap;
         }
-        .message-actions {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            display: none;
-            gap: 4px;
-            background: rgba(0, 0, 0, 0.8);
-            border-radius: 16px;
-            padding: 4px;
-        }
-        .message-wrapper.sent .message-actions {
-            left: -80px;
-        }
-        .message-wrapper.received .message-actions {
-            right: -80px;
-        }
-        .message-wrapper:hover .message-actions,
-        .message-wrapper.actions-visible .message-actions {
-            display: flex;
-        }
-        .message-content-wrapper {
-            position: relative;
-            display: flex;
-            align-items: center;
-        }
-        .message-action-btn {
-            width: 28px;
-            height: 28px;
+        .message-menu-btn {
+            width: 24px;
+            height: 24px;
             border: none;
             background: transparent;
             border-radius: 50%;
@@ -265,15 +240,77 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: background-color 0.2s ease;
+            opacity: 0;
+            transition: opacity 0.2s ease, background-color 0.2s ease;
+            flex-shrink: 0;
         }
-        .message-action-btn:hover {
+        .message-wrapper:hover .message-menu-btn,
+        .message-menu-btn.active {
+            opacity: 1;
+        }
+        .message-menu-btn:hover {
             background: rgba(255, 255, 255, 0.1);
         }
-        .message-action-btn svg {
-            width: 14px;
-            height: 14px;
-            stroke: var(--color-text-secondary);
+        .message-menu-btn svg {
+            width: 16px;
+            height: 16px;
+            fill: var(--color-text-secondary);
+        }
+        .message-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .message-wrapper.sent .message-row {
+            flex-direction: row-reverse;
+        }
+        .message-dropdown {
+            position: absolute;
+            background: rgba(30, 30, 30, 0.95);
+            border: 1px solid var(--color-input-border);
+            border-radius: 12px;
+            padding: 4px;
+            min-width: 120px;
+            z-index: 100;
+            display: none;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        .message-dropdown.visible {
+            display: block;
+        }
+        .message-wrapper.sent .message-dropdown {
+            right: 0;
+        }
+        .message-wrapper.received .message-dropdown {
+            left: 0;
+        }
+        .message-dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border: none;
+            background: transparent;
+            width: 100%;
+            color: var(--color-text-primary);
+            font-family: var(--font-heading);
+            font-size: 14px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: background-color 0.15s ease;
+        }
+        .message-dropdown-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .message-dropdown-item.delete {
+            color: #FF453A;
+        }
+        .message-dropdown-item svg {
+            width: 16px;
+            height: 16px;
+            stroke: currentColor;
+            flex-shrink: 0;
         }
         .reply-preview-bar {
             display: none;
@@ -768,51 +805,84 @@
                 replyPreview = `<div class="message-reply-preview">${escapeHtml(previewText)}</div>`;
             }
 
-            // Build action buttons (only for own messages can edit/delete, everyone can reply)
-            const replyBtn = `
-                <button class="message-action-btn" data-action="reply" title="Reply">
+            // Build dropdown menu items
+            let dropdownItems = `
+                <button class="message-dropdown-item" data-action="reply">
                     <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <polyline points="9 17 4 12 9 7"></polyline>
                         <path d="M20 18v-2a4 4 0 0 0-4-4H4"></path>
                     </svg>
+                    Reply
                 </button>
             `;
 
-            let actionButtons = replyBtn;
             if (isSent && messageData) {
-                actionButtons = `
-                    <button class="message-action-btn" data-action="edit" title="Edit">
+                dropdownItems = `
+                    <button class="message-dropdown-item" data-action="reply">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="9 17 4 12 9 7"></polyline>
+                            <path d="M20 18v-2a4 4 0 0 0-4-4H4"></path>
+                        </svg>
+                        Reply
+                    </button>
+                    <button class="message-dropdown-item" data-action="edit">
                         <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                         </svg>
+                        Edit
                     </button>
-                    <button class="message-action-btn" data-action="delete" title="Delete">
+                    <button class="message-dropdown-item delete" data-action="delete">
                         <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <polyline points="3 6 5 6 21 6"></polyline>
                             <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                         </svg>
+                        Delete
                     </button>
-                    ${replyBtn}
                 `;
             }
 
             wrapper.innerHTML = `
                 ${replyPreview}
-                <div class="message-content-wrapper">
-                    <div class="message-actions">${actionButtons}</div>
+                <div class="message-row">
+                    <button class="message-menu-btn">
+                        <svg viewBox="0 0 24 24">
+                            <circle cx="12" cy="5" r="2"/>
+                            <circle cx="12" cy="12" r="2"/>
+                            <circle cx="12" cy="19" r="2"/>
+                        </svg>
+                    </button>
                     <div class="message ${isSent ? 'sent' : 'received'}">
                         <span>${escapeHtml(content)}</span>
                     </div>
+                    <div class="message-dropdown">${dropdownItems}</div>
                 </div>
                 <span class="message-time">${timeString} ${editedLabel}</span>
             `;
 
-            // Add event listeners for action buttons
+            // Add event listeners for dropdown
             if (messageData) {
-                wrapper.querySelectorAll('.message-action-btn').forEach(btn => {
+                const menuBtn = wrapper.querySelector('.message-menu-btn');
+                const dropdown = wrapper.querySelector('.message-dropdown');
+
+                menuBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    // Close any other open dropdowns
+                    document.querySelectorAll('.message-dropdown.visible').forEach(d => {
+                        if (d !== dropdown) d.classList.remove('visible');
+                    });
+                    document.querySelectorAll('.message-menu-btn.active').forEach(b => {
+                        if (b !== menuBtn) b.classList.remove('active');
+                    });
+                    dropdown.classList.toggle('visible');
+                    menuBtn.classList.toggle('active');
+                });
+
+                wrapper.querySelectorAll('.message-dropdown-item').forEach(btn => {
                     btn.addEventListener('click', (e) => {
                         e.stopPropagation();
+                        dropdown.classList.remove('visible');
+                        menuBtn.classList.remove('active');
                         const action = btn.dataset.action;
                         handleMessageAction(action, messageData, wrapper);
                     });
@@ -822,6 +892,12 @@
             chatMessages.insertBefore(wrapper, typingIndicator);
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', () => {
+            document.querySelectorAll('.message-dropdown.visible').forEach(d => d.classList.remove('visible'));
+            document.querySelectorAll('.message-menu-btn.active').forEach(b => b.classList.remove('active'));
+        });
 
         function handleMessageAction(action, messageData, wrapper) {
             switch (action) {

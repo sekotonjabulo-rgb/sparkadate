@@ -12,6 +12,72 @@ function removeToken() {
     localStorage.removeItem('sparkToken');
 }
 
+// Check token expiration and refresh if needed
+async function checkAndRefreshToken() {
+    const token = getToken();
+    if (!token) return false;
+
+    try {
+        // Decode JWT to check expiration (without verifying signature)
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const expiresAt = payload.exp * 1000; // Convert to milliseconds
+        const now = Date.now();
+        const daysUntilExpiry = (expiresAt - now) / (1000 * 60 * 60 * 24);
+
+        // Refresh if less than 7 days until expiry
+        if (daysUntilExpiry < 7 && daysUntilExpiry > 0) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    setToken(data.token);
+                    localStorage.setItem('sparkUser', JSON.stringify(data.user));
+                    return true;
+                }
+            } catch (refreshError) {
+                console.error('Token refresh failed:', refreshError);
+            }
+        }
+
+        // Token is still valid
+        if (expiresAt > now) {
+            return true;
+        }
+
+        // Token expired, try to refresh anyway
+        try {
+            const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setToken(data.token);
+                localStorage.setItem('sparkUser', JSON.stringify(data.user));
+                return true;
+            }
+        } catch (refreshError) {
+            console.error('Token refresh failed:', refreshError);
+        }
+
+        return false;
+    } catch (error) {
+        console.error('Token check error:', error);
+        return false;
+    }
+}
+
 async function apiRequest(endpoint, options = {}) {
     const token = getToken();
 
@@ -26,6 +92,21 @@ async function apiRequest(endpoint, options = {}) {
     try {
         const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
         const data = await response.json();
+
+        // If unauthorized, try to refresh token
+        if (response.status === 401 && token) {
+            const refreshed = await checkAndRefreshToken();
+            if (refreshed) {
+                // Retry the request with new token
+                config.headers['Authorization'] = `Bearer ${getToken()}`;
+                const retryResponse = await fetch(`${API_BASE_URL}${endpoint}`, config);
+                const retryData = await retryResponse.json();
+                if (!retryResponse.ok) {
+                    throw new Error(retryData.error || 'Request failed');
+                }
+                return retryData;
+            }
+        }
 
         if (!response.ok) {
             throw new Error(data.error || 'Request failed');
@@ -68,7 +149,22 @@ const auth = {
     },
 
     isLoggedIn() {
-        return !!getToken();
+        const token = getToken();
+        if (!token) return false;
+
+        try {
+            // Decode JWT to check expiration
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            const expiresAt = payload.exp * 1000;
+            return Date.now() < expiresAt;
+        } catch {
+            return false;
+        }
+    },
+
+    async checkSession() {
+        // Check and refresh token if needed
+        return await checkAndRefreshToken();
     },
 
     getCurrentUser() {

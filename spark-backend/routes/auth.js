@@ -177,7 +177,7 @@ router.post('/signup', async (req, res) => {
         // Process match queue for new user
         const queueMatch = await processMatchQueue(user);
 
-        const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '7d' });
+        const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '30d' });
 
         res.status(201).json({
             user: { id: user.id, email: user.email, display_name: user.display_name },
@@ -206,7 +206,7 @@ router.post('/login', async (req, res) => {
         const isMatch = await bcrypt.compare(password, user.password_hash);
         if (!isMatch) return res.status(401).json({ error: 'Invalid email or password' });
 
-        const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '7d' });
+        const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '30d' });
 
         res.json({
             user: { id: user.id, email: user.email, display_name: user.display_name },
@@ -215,6 +215,47 @@ router.post('/login', async (req, res) => {
     } catch (error) {
         console.error('Login error:', error);
         res.status(500).json({ error: 'Login failed' });
+    }
+});
+
+// REFRESH TOKEN ROUTE
+router.post('/refresh', async (req, res) => {
+    try {
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return res.status(401).json({ error: 'No token provided' });
+        }
+
+        const token = authHeader.split(' ')[1];
+
+        try {
+            // Verify the token (even if expired, we still decode it)
+            const decoded = jwt.verify(token, process.env.JWT_SECRET, { ignoreExpiration: true });
+
+            // Check if user still exists
+            const { data: user, error } = await supabase
+                .from('users')
+                .select('id, email, display_name')
+                .eq('id', decoded.id)
+                .single();
+
+            if (error || !user) {
+                return res.status(401).json({ error: 'User not found' });
+            }
+
+            // Issue a new token
+            const newToken = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '30d' });
+
+            res.json({
+                user: { id: user.id, email: user.email, display_name: user.display_name },
+                token: newToken
+            });
+        } catch (jwtError) {
+            return res.status(401).json({ error: 'Invalid token' });
+        }
+    } catch (error) {
+        console.error('Token refresh error:', error);
+        res.status(500).json({ error: 'Token refresh failed' });
     }
 });
 
