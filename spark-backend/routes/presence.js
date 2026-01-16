@@ -118,11 +118,20 @@ router.get('/match/:matchId', authenticateToken, async (req, res) => {
 
         if (userError) throw userError;
 
+        // Handle case where presence columns might not exist or be null
+        if (!partner.last_seen) {
+            return res.json({
+                partnerId: partner.id,
+                isOnline: false,
+                lastSeen: null
+            });
+        }
+
         // Calculate if partner is truly online
         const lastSeen = new Date(partner.last_seen);
         const now = new Date();
         const diffMinutes = (now - lastSeen) / (1000 * 60);
-        const isOnline = partner.is_online && diffMinutes < 2;
+        const isOnline = partner.is_online === true && diffMinutes < 2;
 
         res.json({
             partnerId: partner.id,

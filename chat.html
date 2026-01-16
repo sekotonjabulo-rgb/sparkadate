@@ -665,10 +665,11 @@
             loadMessages(),
             checkRevealRequest()
         ]).then(() => {
-            // Start polling for new messages only
+            // Start polling
             setInterval(pollMessages, 3000);
             setInterval(checkRevealRequest, 5000);
             setInterval(sendHeartbeat, 30000);
+            setInterval(updatePartnerStatus, 30000); // Check partner status every 30 seconds
         });
 
         // Handle page unload
