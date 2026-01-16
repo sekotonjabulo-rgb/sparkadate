@@ -533,31 +533,13 @@
             const removeBtn = slot.querySelector('.photo-remove');
             const index = parseInt(slot.dataset.index);
 
-            // Handle slot tap/click - more reliable for mobile
+            // Handle slot click to open file picker
             slot.addEventListener('click', (e) => {
                 // Ignore if clicking remove button
                 if (e.target === removeBtn || removeBtn.contains(e.target)) {
                     return;
                 }
-                e.preventDefault();
-                e.stopPropagation();
-                
-                // Small delay helps iOS Safari register the input click
-                setTimeout(() => {
-                    input.click();
-                }, 10);
-            });
-
-            // Also add touch event for better mobile support
-            slot.addEventListener('touchend', (e) => {
-                if (e.target === removeBtn || removeBtn.contains(e.target)) {
-                    return;
-                }
-                e.preventDefault();
-                
-                setTimeout(() => {
-                    input.click();
-                }, 10);
+                input.click();
             });
 
             input.addEventListener('change', (e) => {
@@ -566,7 +548,7 @@
                     const reader = new FileReader();
                     reader.onload = (event) => {
                         userData.photos[index] = event.target.result;
-                        
+
                         let img = slot.querySelector('img');
                         if (!img) {
                             img = document.createElement('img');
