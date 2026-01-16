@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <meta name="apple-mobile-web-app-title" content="Spark">
     <link rel="apple-touch-icon" href="blueocean.jpeg">
-    <title>Spark – Left Conversation</title>
+    <title>Spark – Connection Ended</title>
     <style>
         @font-face {
             font-family: 'CabinetGrotesk-Medium';
@@ -48,7 +48,7 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        .exit-screen {
+        .left-screen {
             height: 100dvh;
             display: flex;
             flex-direction: column;
@@ -58,7 +58,7 @@
             animation: blurFadeIn 0.6s ease-out forwards;
         }
 
-        .exit-content {
+        .left-content {
             flex: 1;
             display: flex;
             flex-direction: column;
@@ -67,33 +67,41 @@
             text-align: center;
         }
 
-        .exit-label {
-            font-size: 14px;
-            color: var(--color-text-secondary);
-            margin-bottom: 8px;
+        .left-icon {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 24px;
+            opacity: 0.6;
         }
 
-        .exit-name {
-            font-size: 28px;
+        .left-icon svg {
+            width: 100%;
+            height: 100%;
+            stroke: var(--color-text-secondary);
+        }
+
+        .left-title {
+            font-size: 24px;
             font-weight: 500;
             letter-spacing: -0.02em;
-            margin-bottom: 4px;
+            margin-bottom: 12px;
         }
 
-        .exit-age {
-            font-size: 16px;
+        .left-name {
+            font-size: 20px;
+            font-weight: 500;
             color: var(--color-text-secondary);
-            margin-bottom: 32px;
+            margin-bottom: 24px;
         }
 
-        .exit-message {
+        .left-message {
             font-size: 15px;
             color: var(--color-text-secondary);
             line-height: 1.5;
-            max-width: 260px;
+            max-width: 280px;
         }
 
-        .exit-actions {
+        .left-actions {
             width: 100%;
         }
 
@@ -115,6 +123,11 @@
             opacity: 0.85;
         }
 
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
         @keyframes blurFadeIn {
             0% {
                 opacity: 0;
@@ -128,48 +141,45 @@
     </style>
 </head>
 <body>
-    <main class="exit-screen">
-        <section class="exit-content">
-            <p class="exit-label">You left behind</p>
-            <h1 class="exit-name" id="exitName"></h1>
-            <p class="exit-age" id="exitAge"></p>
-            <p class="exit-message">Take a moment to reflect. When you're ready, we'll find someone new.</p>
+    <main class="left-screen">
+        <section class="left-content">
+            <div class="left-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 6L6 18M6 6l12 12"/>
+                </svg>
+            </div>
+            <h1 class="left-title">They moved on</h1>
+            <p class="left-name" id="leftName"></p>
+            <p class="left-message">Sometimes connections don't work out, and that's okay. When you're ready, we'll help you find someone new.</p>
         </section>
 
-        <div class="exit-actions">
+        <div class="left-actions">
             <button class="btn-primary" id="nextBtn">Find new match</button>
         </div>
     </main>
 
     <script src="js/api.js"></script>
     <script>
-        const exitName = document.getElementById('exitName');
-        const exitAge = document.getElementById('exitAge');
+        const leftName = document.getElementById('leftName');
         const nextBtn = document.getElementById('nextBtn');
-    
+
         const matchData = JSON.parse(localStorage.getItem('sparkCurrentMatch') || '{}');
-    
-        exitName.textContent = matchData.name || 'Unknown';
-        exitAge.textContent = `${matchData.age || '??'} years old`;
-    
+
+        leftName.textContent = matchData.name ? `${matchData.name} has left the conversation` : 'Your match has left';
+
         if (!SparkAPI.auth.isLoggedIn()) {
             window.location.href = 'index.html';
         }
-    
+
         nextBtn.addEventListener('click', async () => {
             nextBtn.disabled = true;
             nextBtn.textContent = 'Finding match...';
-    
+
             try {
-                // Exit current match if not already exited
-                if (matchData.id) {
-                    await SparkAPI.matches.exit(matchData.id);
-                }
-    
                 localStorage.removeItem('sparkCurrentMatch');
                 window.location.href = 'match.html';
             } catch (error) {
-                console.error('Exit error:', error);
+                console.error('Error:', error);
                 localStorage.removeItem('sparkCurrentMatch');
                 window.location.href = 'match.html';
             }
