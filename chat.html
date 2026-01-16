@@ -106,22 +106,6 @@
             font-size: 12px;
             color: var(--color-text-secondary);
             margin-top: 1px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .status-indicator {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background-color: var(--color-text-secondary);
-            transition: background-color 0.3s ease;
-        }
-        .status-indicator.online {
-            background-color: #34C759;
-        }
-        .status-indicator.offline {
-            background-color: var(--color-text-secondary);
         }
         .chat-actions {
             display: flex;
@@ -366,10 +350,7 @@
             <header class="chat-header">
                 <div class="chat-user">
                     <span class="chat-name" id="chatName"></span>
-                    <span class="chat-status" id="chatStatus">
-                        <span class="status-indicator" id="statusIndicator"></span>
-                        <span id="statusText">Checking...</span>
-                    </span>
+                    <span class="chat-status" id="chatStatus"></span>
                 </div>
                 <div class="chat-actions">
                     <a href="timer.html" class="btn-icon" title="View timer">
@@ -415,8 +396,6 @@
     <script>
         const chatNameElement = document.getElementById('chatName');
         const chatStatus = document.getElementById('chatStatus');
-        const statusIndicator = document.getElementById('statusIndicator');
-        const statusText = document.getElementById('statusText');
         const chatMessages = document.getElementById('chatMessages');
         const messageInput = document.getElementById('messageInput');
         const sendBtn = document.getElementById('sendBtn');
@@ -459,20 +438,14 @@
             }
         }
 
-        // Update the status indicator UI
+        // Update the status text
         function updateStatusUI(isOnline, lastSeen) {
             if (isOnline) {
-                statusIndicator.classList.add('online');
-                statusIndicator.classList.remove('offline');
-                statusText.textContent = 'Online';
+                chatStatus.textContent = 'Online';
+            } else if (lastSeen) {
+                chatStatus.textContent = `Last seen ${formatLastSeen(lastSeen)}`;
             } else {
-                statusIndicator.classList.remove('online');
-                statusIndicator.classList.add('offline');
-                if (lastSeen) {
-                    statusText.textContent = `Last seen ${formatLastSeen(lastSeen)}`;
-                } else {
-                    statusText.textContent = 'Offline';
-                }
+                chatStatus.textContent = 'Offline';
             }
         }
 
@@ -633,24 +606,17 @@
             }
         }
 
-        // Initialize presence tracking
-        sendHeartbeat(); // Send initial heartbeat
-        updatePartnerStatus(); // Get initial partner status
-        checkRevealRequest();
-
-        loadMessages().then(() => {
+        // Load everything in parallel immediately when page opens
+        Promise.all([
+            sendHeartbeat(),
+            updatePartnerStatus(),
+            loadMessages(),
+            checkRevealRequest()
+        ]).then(() => {
+            // Start polling for new messages only
             setInterval(pollMessages, 3000);
             setInterval(checkRevealRequest, 5000);
-            setInterval(sendHeartbeat, 30000); // Send heartbeat every 30 seconds
-            setInterval(updatePartnerStatus, 15000); // Check partner status every 15 seconds
-        });
-
-        // Handle page visibility changes
-        document.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'visible') {
-                sendHeartbeat();
-                updatePartnerStatus();
-            }
+            setInterval(sendHeartbeat, 30000);
         });
 
         // Handle page unload
