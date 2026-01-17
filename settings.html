@@ -29,6 +29,7 @@
             --color-input-bg: rgba(255, 255, 255, 0.08);
             --color-input-border: rgba(255, 255, 255, 0.12);
             --color-danger: #FF453A;
+            --color-success: #30D158;
             --radius-pill: 28px;
             --font-heading: 'CabinetGrotesk-Medium', -apple-system, BlinkMacSystemFont, sans-serif;
         }
@@ -41,7 +42,6 @@
 
         html, body {
             height: 100%;
-            overflow-x: hidden;
         }
 
         body {
@@ -69,7 +69,7 @@
         .settings-screen {
             width: 100%;
             max-width: 480px;
-            min-height: 100%;
+            height: 100dvh;
             display: flex;
             flex-direction: column;
             animation: blurFadeIn 0.6s ease-out forwards;
@@ -84,7 +84,6 @@
                 border-radius: 0;
                 border: none;
                 background: transparent;
-                min-height: 100dvh;
             }
         }
 
@@ -97,6 +96,7 @@
             background: rgba(0, 0, 0, 0.4);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
+            flex-shrink: 0;
         }
 
         .back-btn {
@@ -135,27 +135,45 @@
             overflow-y: auto;
         }
 
-        .profile-section {
+        .settings-section {
+            margin-bottom: 28px;
+        }
+
+        .section-title {
+            font-size: 12px;
+            color: var(--color-text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 12px;
+            padding-left: 4px;
+        }
+
+        .settings-group {
+            background: var(--color-input-bg);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        /* Profile Section */
+        .profile-header {
             display: flex;
             align-items: center;
             gap: 16px;
             padding: 16px;
-            background: var(--color-input-bg);
-            border-radius: 16px;
-            margin-bottom: 24px;
         }
 
         .profile-avatar {
-            width: 60px;
-            height: 60px;
+            width: 70px;
+            height: 70px;
             border-radius: 50%;
             background: rgba(255, 255, 255, 0.15);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
+            font-size: 28px;
             font-weight: 500;
             overflow: hidden;
+            flex-shrink: 0;
         }
 
         .profile-avatar img {
@@ -166,38 +184,338 @@
 
         .profile-info {
             flex: 1;
+            min-width: 0;
         }
 
-        .profile-name {
-            font-size: 18px;
+        .profile-name-display {
+            font-size: 20px;
             font-weight: 500;
-            margin-bottom: 2px;
+            margin-bottom: 4px;
         }
 
         .profile-email {
             font-size: 13px;
             color: var(--color-text-secondary);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
-        .settings-section {
-            margin-bottom: 24px;
+        .pro-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            color: #000;
+            font-size: 10px;
+            font-weight: 500;
+            border-radius: 10px;
+            margin-left: 8px;
+            vertical-align: middle;
         }
 
-        .section-title {
+        /* Form Fields */
+        .form-field {
+            padding: 14px 16px;
+            border-top: 1px solid var(--color-input-border);
+        }
+
+        .form-field:first-child {
+            border-top: none;
+        }
+
+        .form-label {
+            display: block;
             font-size: 12px;
             color: var(--color-text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 8px;
-            padding-left: 4px;
+            margin-bottom: 6px;
         }
 
-        .settings-group {
-            background: var(--color-input-bg);
-            border-radius: 16px;
+        .form-input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: var(--color-text-primary);
+            font-family: var(--font-heading);
+            font-size: 15px;
+            outline: none;
+        }
+
+        .form-input::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Photo Grid */
+        .photo-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            padding: 16px;
+        }
+
+        .photo-slot {
+            aspect-ratio: 1;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px dashed rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
             overflow: hidden;
+            transition: border-color 0.2s ease;
         }
 
+        .photo-slot:hover {
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .photo-slot.has-photo {
+            border: none;
+        }
+
+        .photo-slot img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .photo-slot svg {
+            width: 24px;
+            height: 24px;
+            stroke: var(--color-text-secondary);
+        }
+
+        .photo-delete {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            width: 24px;
+            height: 24px;
+            background: rgba(0, 0, 0, 0.7);
+            border: none;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .photo-slot:hover .photo-delete {
+            opacity: 1;
+        }
+
+        .photo-delete svg {
+            width: 14px;
+            height: 14px;
+            stroke: white;
+        }
+
+        .photo-primary-badge {
+            position: absolute;
+            bottom: 6px;
+            left: 6px;
+            padding: 2px 6px;
+            background: var(--color-surface);
+            color: var(--color-background);
+            font-size: 9px;
+            font-weight: 500;
+            border-radius: 4px;
+        }
+
+        /* Range Slider */
+        .range-field {
+            padding: 14px 16px;
+            border-top: 1px solid var(--color-input-border);
+        }
+
+        .range-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .range-label {
+            font-size: 14px;
+        }
+
+        .range-value {
+            font-size: 14px;
+            color: var(--color-text-secondary);
+        }
+
+        .range-slider {
+            width: 100%;
+            height: 4px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            outline: none;
+        }
+
+        .range-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: var(--color-surface);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .range-slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: var(--color-surface);
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+        }
+
+        /* Double Range for Age */
+        .double-range {
+            position: relative;
+            height: 20px;
+        }
+
+        .double-range input {
+            position: absolute;
+            width: 100%;
+            pointer-events: none;
+            -webkit-appearance: none;
+            appearance: none;
+            background: transparent;
+        }
+
+        .double-range input::-webkit-slider-thumb {
+            pointer-events: all;
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: var(--color-surface);
+            border-radius: 50%;
+            cursor: pointer;
+            position: relative;
+            z-index: 2;
+        }
+
+        .double-range input::-moz-range-thumb {
+            pointer-events: all;
+            width: 20px;
+            height: 20px;
+            background: var(--color-surface);
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+        }
+
+        .range-track {
+            position: absolute;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            width: 100%;
+            top: 8px;
+        }
+
+        .range-track-fill {
+            position: absolute;
+            height: 4px;
+            background: var(--color-surface);
+            border-radius: 2px;
+            top: 8px;
+        }
+
+        /* Select Field */
+        .select-field {
+            padding: 14px 16px;
+            border-top: 1px solid var(--color-input-border);
+        }
+
+        .select-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--color-input-border);
+            border-radius: 10px;
+            color: var(--color-text-primary);
+            font-family: var(--font-heading);
+            font-size: 14px;
+            padding: 10px 12px;
+            outline: none;
+            cursor: pointer;
+            margin-top: 6px;
+        }
+
+        .select-input option {
+            background: #1a1a1a;
+            color: var(--color-text-primary);
+        }
+
+        /* Toggle Switch */
+        .toggle-field {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 16px;
+            border-top: 1px solid var(--color-input-border);
+        }
+
+        .toggle-field:first-child {
+            border-top: none;
+        }
+
+        .toggle-info {
+            flex: 1;
+        }
+
+        .toggle-label {
+            font-size: 14px;
+            margin-bottom: 2px;
+        }
+
+        .toggle-description {
+            font-size: 12px;
+            color: var(--color-text-secondary);
+        }
+
+        .toggle-switch {
+            width: 50px;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            position: relative;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            flex-shrink: 0;
+            margin-left: 12px;
+        }
+
+        .toggle-switch.active {
+            background: var(--color-success);
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            width: 26px;
+            height: 26px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.2s ease;
+        }
+
+        .toggle-switch.active::after {
+            transform: translateX(20px);
+        }
+
+        /* Settings Item Button */
         .settings-item {
             display: flex;
             align-items: center;
@@ -213,14 +531,15 @@
             text-decoration: none;
             transition: background-color 0.15s ease;
             text-align: left;
+            border-top: 1px solid var(--color-input-border);
+        }
+
+        .settings-item:first-child {
+            border-top: none;
         }
 
         .settings-item:hover {
             background: rgba(255, 255, 255, 0.05);
-        }
-
-        .settings-item + .settings-item {
-            border-top: 1px solid var(--color-input-border);
         }
 
         .settings-item svg {
@@ -232,16 +551,6 @@
 
         .settings-item-content {
             flex: 1;
-        }
-
-        .settings-item-label {
-            display: block;
-        }
-
-        .settings-item-sublabel {
-            font-size: 12px;
-            color: var(--color-text-secondary);
-            margin-top: 2px;
         }
 
         .settings-item-arrow {
@@ -258,22 +567,61 @@
             stroke: var(--color-danger);
         }
 
-        .pro-badge {
-            display: inline-block;
-            padding: 2px 8px;
-            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
-            color: #000;
-            font-size: 10px;
-            font-weight: 500;
-            border-radius: 10px;
-            margin-left: 8px;
+        /* Save Button */
+        .save-bar {
+            padding: 16px 20px;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-top: 1px solid var(--color-input-border);
+            display: none;
+            flex-shrink: 0;
         }
 
+        .save-bar.visible {
+            display: block;
+        }
+
+        .save-btn {
+            width: 100%;
+            height: 48px;
+            background: var(--color-surface);
+            color: var(--color-background);
+            border: none;
+            border-radius: var(--radius-pill);
+            font-family: var(--font-heading);
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+        }
+
+        .save-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .save-btn:active:not(:disabled) {
+            opacity: 0.85;
+        }
+
+        /* Photo Upload Input */
+        .photo-upload-input {
+            display: none;
+        }
+
+        /* Version */
         .version-info {
             text-align: center;
             padding: 20px;
             color: var(--color-text-secondary);
             font-size: 12px;
+        }
+
+        /* Loading state */
+        .loading {
+            opacity: 0.5;
+            pointer-events: none;
         }
 
         @keyframes blurFadeIn {
@@ -301,44 +649,108 @@
             </header>
 
             <div class="settings-content">
-                <div class="profile-section" id="profileSection">
-                    <div class="profile-avatar" id="profileAvatar"></div>
-                    <div class="profile-info">
-                        <div class="profile-name" id="profileName">Loading...</div>
-                        <div class="profile-email" id="profileEmail"></div>
+                <!-- Profile Section -->
+                <div class="settings-section">
+                    <div class="section-title">Profile</div>
+                    <div class="settings-group">
+                        <div class="profile-header">
+                            <div class="profile-avatar" id="profileAvatar"></div>
+                            <div class="profile-info">
+                                <div class="profile-name-display" id="profileNameDisplay">Loading...<span class="pro-badge" id="proBadge" style="display: none;">PRO</span></div>
+                                <div class="profile-email" id="profileEmail"></div>
+                            </div>
+                        </div>
+                        <div class="form-field">
+                            <label class="form-label">Display Name</label>
+                            <input type="text" class="form-input" id="displayNameInput" placeholder="Your name">
+                        </div>
+                        <div class="form-field">
+                            <label class="form-label">Location</label>
+                            <input type="text" class="form-input" id="locationInput" placeholder="City, Country">
+                        </div>
                     </div>
                 </div>
 
+                <!-- Photos Section -->
                 <div class="settings-section">
-                    <div class="section-title">Account</div>
+                    <div class="section-title">Photos</div>
+                    <div class="settings-group">
+                        <div class="photo-grid" id="photoGrid">
+                            <!-- Photos will be dynamically added -->
+                        </div>
+                    </div>
+                    <input type="file" class="photo-upload-input" id="photoUploadInput" accept="image/*">
+                </div>
+
+                <!-- Match Preferences Section -->
+                <div class="settings-section">
+                    <div class="section-title">Match Preferences</div>
+                    <div class="settings-group">
+                        <div class="range-field">
+                            <div class="range-header">
+                                <span class="range-label">Age Range</span>
+                                <span class="range-value" id="ageRangeValue">18 - 30</span>
+                            </div>
+                            <div class="double-range">
+                                <div class="range-track"></div>
+                                <div class="range-track-fill" id="ageTrackFill"></div>
+                                <input type="range" min="18" max="65" value="18" id="ageMinSlider">
+                                <input type="range" min="18" max="65" value="30" id="ageMaxSlider">
+                            </div>
+                        </div>
+                        <div class="range-field">
+                            <div class="range-header">
+                                <span class="range-label">Maximum Distance</span>
+                                <span class="range-value" id="distanceValue">50 km</span>
+                            </div>
+                            <input type="range" class="range-slider" min="5" max="200" value="50" id="distanceSlider">
+                        </div>
+                        <div class="select-field">
+                            <label class="form-label">Looking For</label>
+                            <select class="select-input" id="relationshipIntent">
+                                <option value="casual">Something casual</option>
+                                <option value="serious">Something serious</option>
+                                <option value="friends">New friends</option>
+                                <option value="unsure">Not sure yet</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notifications Section -->
+                <div class="settings-section">
+                    <div class="section-title">Notifications</div>
+                    <div class="settings-group">
+                        <div class="toggle-field">
+                            <div class="toggle-info">
+                                <div class="toggle-label">Push Notifications</div>
+                                <div class="toggle-description">Get notified about new messages</div>
+                            </div>
+                            <div class="toggle-switch" id="pushToggle"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Support Section -->
+                <div class="settings-section">
+                    <div class="section-title">Support</div>
                     <div class="settings-group">
                         <a href="plan.html" class="settings-item">
                             <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
                             </svg>
-                            <span class="settings-item-content">
-                                <span class="settings-item-label">Subscription<span class="pro-badge" id="proBadge" style="display: none;">PRO</span></span>
-                                <span class="settings-item-sublabel" id="subscriptionStatus">Free plan</span>
-                            </span>
+                            <span class="settings-item-content">Upgrade to Pro</span>
                             <svg class="settings-item-arrow" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M9 18l6-6-6-6"/>
                             </svg>
                         </a>
-                    </div>
-                </div>
-
-                <div class="settings-section">
-                    <div class="section-title">Support</div>
-                    <div class="settings-group">
                         <a href="support.html" class="settings-item">
                             <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <circle cx="12" cy="12" r="10"/>
                                 <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
                                 <line x1="12" y1="17" x2="12.01" y2="17"/>
                             </svg>
-                            <span class="settings-item-content">
-                                <span class="settings-item-label">Help & Support</span>
-                            </span>
+                            <span class="settings-item-content">Help & Support</span>
                             <svg class="settings-item-arrow" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M9 18l6-6-6-6"/>
                             </svg>
@@ -347,9 +759,7 @@
                             <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                             </svg>
-                            <span class="settings-item-content">
-                                <span class="settings-item-label">Privacy Policy</span>
-                            </span>
+                            <span class="settings-item-content">Privacy Policy</span>
                             <svg class="settings-item-arrow" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M9 18l6-6-6-6"/>
                             </svg>
@@ -357,8 +767,9 @@
                     </div>
                 </div>
 
+                <!-- Account Actions -->
                 <div class="settings-section">
-                    <div class="section-title">Account Actions</div>
+                    <div class="section-title">Account</div>
                     <div class="settings-group">
                         <button class="settings-item danger" id="logoutBtn">
                             <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -366,9 +777,7 @@
                                 <polyline points="16 17 21 12 16 7"/>
                                 <line x1="21" y1="12" x2="9" y2="12"/>
                             </svg>
-                            <span class="settings-item-content">
-                                <span class="settings-item-label">Log out</span>
-                            </span>
+                            <span class="settings-item-content">Log out</span>
                         </button>
                     </div>
                 </div>
@@ -377,59 +786,330 @@
                     Spark v1.0.0
                 </div>
             </div>
+
+            <div class="save-bar" id="saveBar">
+                <button class="save-btn" id="saveBtn">Save Changes</button>
+            </div>
         </main>
     </div>
 
     <script src="js/api.js"></script>
     <script>
+        // Elements
         const profileAvatar = document.getElementById('profileAvatar');
-        const profileName = document.getElementById('profileName');
+        const profileNameDisplay = document.getElementById('profileNameDisplay');
         const profileEmail = document.getElementById('profileEmail');
         const proBadge = document.getElementById('proBadge');
-        const subscriptionStatus = document.getElementById('subscriptionStatus');
+        const displayNameInput = document.getElementById('displayNameInput');
+        const locationInput = document.getElementById('locationInput');
+        const photoGrid = document.getElementById('photoGrid');
+        const photoUploadInput = document.getElementById('photoUploadInput');
+        const ageMinSlider = document.getElementById('ageMinSlider');
+        const ageMaxSlider = document.getElementById('ageMaxSlider');
+        const ageRangeValue = document.getElementById('ageRangeValue');
+        const ageTrackFill = document.getElementById('ageTrackFill');
+        const distanceSlider = document.getElementById('distanceSlider');
+        const distanceValue = document.getElementById('distanceValue');
+        const relationshipIntent = document.getElementById('relationshipIntent');
+        const pushToggle = document.getElementById('pushToggle');
+        const saveBar = document.getElementById('saveBar');
+        const saveBtn = document.getElementById('saveBtn');
         const logoutBtn = document.getElementById('logoutBtn');
+
+        // State
+        let userData = null;
+        let userPhotos = [];
+        let userPreferences = null;
+        let hasChanges = false;
+        let uploadingPhotoSlot = null;
 
         if (!SparkAPI.auth.isLoggedIn()) {
             window.location.href = 'index.html';
         } else {
-            // Save current page for PWA session restoration
             SparkAPI.navigation.saveCurrentPage();
         }
 
+        // Track changes
+        function markChanged() {
+            hasChanges = true;
+            saveBar.classList.add('visible');
+        }
+
+        // Load profile data
         async function loadProfile() {
             try {
                 const { user } = await SparkAPI.users.getProfile();
+                userData = user;
+                userPhotos = user.user_photos || [];
+                userPreferences = user.user_preferences?.[0] || {};
 
-                // Set name
-                profileName.textContent = user.display_name || 'User';
+                // Profile header
+                const initial = (user.display_name || 'U').charAt(0).toUpperCase();
+                const primaryPhoto = userPhotos.find(p => p.is_primary) || userPhotos[0];
+                if (primaryPhoto) {
+                    profileAvatar.innerHTML = `<img src="${primaryPhoto.photo_url}" alt="Profile">`;
+                } else {
+                    profileAvatar.textContent = initial;
+                }
 
-                // Set email
+                profileNameDisplay.innerHTML = user.display_name || 'User';
+                if (user.subscription_tier === 'pro') {
+                    profileNameDisplay.innerHTML += '<span class="pro-badge">PRO</span>';
+                }
                 profileEmail.textContent = user.email || '';
 
-                // Set avatar (first letter of name)
-                const initial = (user.display_name || 'U').charAt(0).toUpperCase();
-                profileAvatar.textContent = initial;
+                // Form fields
+                displayNameInput.value = user.display_name || '';
+                locationInput.value = user.location || '';
 
-                // Check subscription status
-                if (user.subscription_tier === 'pro') {
-                    proBadge.style.display = 'inline-block';
-                    subscriptionStatus.textContent = 'Pro plan active';
-                } else {
-                    proBadge.style.display = 'none';
-                    subscriptionStatus.textContent = 'Free plan';
+                // Preferences
+                if (userPreferences) {
+                    ageMinSlider.value = userPreferences.age_min || 18;
+                    ageMaxSlider.value = userPreferences.age_max || 30;
+                    distanceSlider.value = userPreferences.max_distance_km || 50;
+                    relationshipIntent.value = userPreferences.relationship_intent || 'unsure';
                 }
+                updateAgeRange();
+                updateDistance();
+
+                // Photos
+                renderPhotos();
+
+                // Push notifications
+                checkPushStatus();
+
             } catch (error) {
                 console.error('Failed to load profile:', error);
-                profileName.textContent = 'Error loading profile';
             }
         }
 
+        // Render photo grid
+        function renderPhotos() {
+            photoGrid.innerHTML = '';
+            const maxPhotos = 6;
+
+            for (let i = 0; i < maxPhotos; i++) {
+                const photo = userPhotos[i];
+                const slot = document.createElement('div');
+                slot.className = 'photo-slot' + (photo ? ' has-photo' : '');
+                slot.dataset.index = i;
+
+                if (photo) {
+                    slot.innerHTML = `
+                        <img src="${photo.photo_url}" alt="Photo ${i + 1}">
+                        ${photo.is_primary ? '<span class="photo-primary-badge">Main</span>' : ''}
+                        <button class="photo-delete" data-photo-id="${photo.id}">
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="18" y1="6" x2="6" y2="18"/>
+                                <line x1="6" y1="6" x2="18" y2="18"/>
+                            </svg>
+                        </button>
+                    `;
+                } else {
+                    slot.innerHTML = `
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="12" y1="5" x2="12" y2="19"/>
+                            <line x1="5" y1="12" x2="19" y2="12"/>
+                        </svg>
+                    `;
+                }
+
+                slot.addEventListener('click', (e) => {
+                    if (e.target.closest('.photo-delete')) {
+                        const photoId = e.target.closest('.photo-delete').dataset.photoId;
+                        deletePhoto(photoId);
+                    } else if (!photo) {
+                        uploadingPhotoSlot = i;
+                        photoUploadInput.click();
+                    }
+                });
+
+                photoGrid.appendChild(slot);
+            }
+        }
+
+        // Upload photo
+        photoUploadInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            try {
+                const slot = photoGrid.querySelector(`[data-index="${uploadingPhotoSlot}"]`);
+                slot.classList.add('loading');
+                slot.innerHTML = '<span style="color: var(--color-text-secondary); font-size: 12px;">Uploading...</span>';
+
+                const reader = new FileReader();
+                reader.onload = async (event) => {
+                    try {
+                        const { photo } = await SparkAPI.users.uploadPhoto(event.target.result, uploadingPhotoSlot);
+                        userPhotos.push(photo);
+                        renderPhotos();
+                    } catch (error) {
+                        console.error('Upload error:', error);
+                        alert('Failed to upload photo');
+                        renderPhotos();
+                    }
+                };
+                reader.readAsDataURL(file);
+            } catch (error) {
+                console.error('Upload error:', error);
+            }
+
+            photoUploadInput.value = '';
+        });
+
+        // Delete photo
+        async function deletePhoto(photoId) {
+            if (!confirm('Delete this photo?')) return;
+
+            try {
+                await SparkAPI.users.deletePhoto(photoId);
+                userPhotos = userPhotos.filter(p => p.id !== photoId);
+                renderPhotos();
+            } catch (error) {
+                console.error('Delete photo error:', error);
+                alert('Failed to delete photo');
+            }
+        }
+
+        // Age range slider
+        function updateAgeRange() {
+            const min = parseInt(ageMinSlider.value);
+            const max = parseInt(ageMaxSlider.value);
+
+            if (min > max) {
+                ageMinSlider.value = max;
+            }
+
+            const minVal = parseInt(ageMinSlider.value);
+            const maxVal = parseInt(ageMaxSlider.value);
+            ageRangeValue.textContent = `${minVal} - ${maxVal}`;
+
+            const percent1 = ((minVal - 18) / (65 - 18)) * 100;
+            const percent2 = ((maxVal - 18) / (65 - 18)) * 100;
+            ageTrackFill.style.left = percent1 + '%';
+            ageTrackFill.style.width = (percent2 - percent1) + '%';
+        }
+
+        ageMinSlider.addEventListener('input', () => {
+            updateAgeRange();
+            markChanged();
+        });
+        ageMaxSlider.addEventListener('input', () => {
+            updateAgeRange();
+            markChanged();
+        });
+
+        // Distance slider
+        function updateDistance() {
+            distanceValue.textContent = distanceSlider.value + ' km';
+        }
+
+        distanceSlider.addEventListener('input', () => {
+            updateDistance();
+            markChanged();
+        });
+
+        // Relationship intent
+        relationshipIntent.addEventListener('change', markChanged);
+
+        // Profile inputs
+        displayNameInput.addEventListener('input', markChanged);
+        locationInput.addEventListener('input', markChanged);
+
+        // Push notifications
+        async function checkPushStatus() {
+            if ('Notification' in window && Notification.permission === 'granted') {
+                pushToggle.classList.add('active');
+            }
+        }
+
+        pushToggle.addEventListener('click', async () => {
+            if (!('Notification' in window)) {
+                alert('Push notifications are not supported in this browser');
+                return;
+            }
+
+            if (pushToggle.classList.contains('active')) {
+                // Disable - just remove the active class (can't truly revoke)
+                pushToggle.classList.remove('active');
+            } else {
+                // Enable
+                try {
+                    const permission = await Notification.requestPermission();
+                    if (permission === 'granted') {
+                        pushToggle.classList.add('active');
+
+                        // Subscribe to push
+                        if ('serviceWorker' in navigator) {
+                            const registration = await navigator.serviceWorker.ready;
+                            const { key } = await SparkAPI.push.getVapidKey();
+
+                            const subscription = await registration.pushManager.subscribe({
+                                userVisibleOnly: true,
+                                applicationServerKey: key
+                            });
+
+                            await SparkAPI.push.subscribe(subscription);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Push subscription error:', error);
+                }
+            }
+        });
+
+        // Save changes
+        saveBtn.addEventListener('click', async () => {
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'Saving...';
+
+            try {
+                // Update profile
+                await SparkAPI.users.updateProfile({
+                    display_name: displayNameInput.value,
+                    location: locationInput.value
+                });
+
+                // Update preferences
+                await SparkAPI.users.updatePreferences({
+                    age_min: parseInt(ageMinSlider.value),
+                    age_max: parseInt(ageMaxSlider.value),
+                    max_distance_km: parseInt(distanceSlider.value),
+                    relationship_intent: relationshipIntent.value
+                });
+
+                hasChanges = false;
+                saveBar.classList.remove('visible');
+                saveBtn.textContent = 'Saved!';
+
+                // Update display name in header
+                profileNameDisplay.innerHTML = displayNameInput.value || 'User';
+                if (userData?.subscription_tier === 'pro') {
+                    profileNameDisplay.innerHTML += '<span class="pro-badge">PRO</span>';
+                }
+
+                setTimeout(() => {
+                    saveBtn.textContent = 'Save Changes';
+                    saveBtn.disabled = false;
+                }, 1500);
+
+            } catch (error) {
+                console.error('Save error:', error);
+                alert('Failed to save changes');
+                saveBtn.textContent = 'Save Changes';
+                saveBtn.disabled = false;
+            }
+        });
+
+        // Logout
         logoutBtn.addEventListener('click', () => {
             if (confirm('Are you sure you want to log out?')) {
                 SparkAPI.auth.logout();
             }
         });
 
+        // Initialize
         loadProfile();
     </script>
 </body>
