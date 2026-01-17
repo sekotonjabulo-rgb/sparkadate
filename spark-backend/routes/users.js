@@ -68,15 +68,15 @@ router.patch('/me/preferences', authenticateToken, async (req, res) => {
         console.log('User ID:', req.user.id);
         console.log('Request body:', JSON.stringify(req.body));
 
-        const { age_min, age_max, max_distance_km, relationship_intent, dealbreakers } = req.body;
+        const { age_min, age_max, relationship_intent } = req.body;
 
         // Build update object with only defined values
+        // Note: Database schema has: id, user_id, age_min, age_max, relationship_intent, dealbreakers, updated_at
+        // We only update: age_min, age_max, relationship_intent (dealbreakers not used)
         const updates = { updated_at: new Date().toISOString() };
         if (age_min !== undefined) updates.age_min = age_min;
         if (age_max !== undefined) updates.age_max = age_max;
-        if (max_distance_km !== undefined) updates.max_distance_km = max_distance_km;
         if (relationship_intent !== undefined) updates.relationship_intent = relationship_intent;
-        if (dealbreakers !== undefined) updates.dealbreakers = dealbreakers;
 
         console.log('Updates object:', JSON.stringify(updates));
 
@@ -126,11 +126,10 @@ router.patch('/me/preferences', authenticateToken, async (req, res) => {
         // If still failed, try with only basic numeric fields
         if (result.error) {
             console.log('Second attempt failed with error:', result.error.message);
-            console.log('Retrying with only basic fields (age_min, age_max, max_distance_km)...');
+            console.log('Retrying with only basic fields (age_min, age_max)...');
             const basicUpdates = { updated_at: new Date().toISOString() };
             if (age_min !== undefined) basicUpdates.age_min = age_min;
             if (age_max !== undefined) basicUpdates.age_max = age_max;
-            if (max_distance_km !== undefined) basicUpdates.max_distance_km = max_distance_km;
             result = await upsertPreferences(basicUpdates);
         }
 
