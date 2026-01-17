@@ -21,43 +21,6 @@ function hasProfileData(profile) {
            profile.formality_score !== null;
 }
 
-router.get('/debug', authenticateToken, async (req, res) => {
-    const userId = req.user.id;
-
-    const { data: user } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-    const { data: candidates } = await supabase
-        .from('users')
-        .select('*')
-        .neq('id', userId);
-
-    const genderMap = { man: 'men', woman: 'women' };
-
-    const results = candidates.map(c => {
-        const distance = calculateDistanceKm(user.latitude, user.longitude, c.latitude, c.longitude);
-        return {
-            name: c.display_name,
-            gender: c.gender,
-            seeking: c.seeking,
-            distance_km: distance ? Math.round(distance) : null,
-            userSeeks: user.seeking === 'everyone' || user.seeking === genderMap[c.gender],
-            candidateSeeks: c.seeking === 'everyone' || c.seeking === genderMap[user.gender],
-            wouldMatch: (user.seeking === 'everyone' || user.seeking === genderMap[c.gender]) &&
-                (c.seeking === 'everyone' || c.seeking === genderMap[user.gender]) &&
-                (distance === null || distance <= 80)
-        };
-    });
-
-    res.json({
-        currentUser: { gender: user.gender, seeking: user.seeking, latitude: user.latitude, longitude: user.longitude },
-        candidates: results
-    });
-});
-
 router.get('/current', authenticateToken, async (req, res) => {
     try {
         const userId = req.user.id;

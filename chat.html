@@ -229,17 +229,17 @@
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            background: var(--color-primary);
-            border: none;
+            background: #1a1a1a;
+            border: 1px solid rgba(255, 255, 255, 0.2);
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
             opacity: 0;
             visibility: hidden;
-            transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
-            z-index: 50;
+            transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease, background-color 0.2s ease;
+            z-index: 500;
         }
         .scroll-to-bottom-btn.visible {
             opacity: 1;
@@ -247,16 +247,18 @@
             transform: translateX(-50%) scale(1);
         }
         .scroll-to-bottom-btn:hover {
-            background: var(--color-primary-hover, #ff6b8a);
+            background: #2a2a2a;
+            border-color: rgba(255, 255, 255, 0.3);
             transform: translateX(-50%) scale(1.05);
         }
         .scroll-to-bottom-btn:active {
             transform: translateX(-50%) scale(0.95);
+            background: #0f0f0f;
         }
         .scroll-to-bottom-btn svg {
             width: 20px;
             height: 20px;
-            stroke: white;
+            stroke: rgba(255, 255, 255, 0.9);
             fill: none;
         }
         .date-separator {
@@ -729,6 +731,7 @@
         </main>
     </div>
     <script src="js/api.js"></script>
+    <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
     <script>
         const chatNameElement = document.getElementById('chatName');
         const chatStatus = document.getElementById('chatStatus');
@@ -759,8 +762,80 @@
         let editingMessage = null;
         let typingTimeout = null;
         let isTyping = false;
+        let socket = null;
+        let useWebSocket = true;
 
         chatNameElement.textContent = matchData.name || 'Unknown';
+
+        // WebSocket connection
+        function initWebSocket() {
+            const token = localStorage.getItem('sparkToken');
+            if (!token || typeof io === 'undefined') {
+                console.log('WebSocket not available, using polling');
+                useWebSocket = false;
+                return;
+            }
+
+            try {
+                socket = io(SparkAPI.config.baseUrl.replace('/api', ''), {
+                    auth: { token },
+                    transports: ['websocket', 'polling'],
+                    reconnection: true,
+                    reconnectionDelay: 1000,
+                    reconnectionAttempts: 5
+                });
+
+                socket.on('connect', () => {
+                    console.log('WebSocket connected');
+                    useWebSocket = true;
+                    socket.emit('join-match', matchId);
+                });
+
+                socket.on('disconnect', () => {
+                    console.log('WebSocket disconnected, falling back to polling');
+                    useWebSocket = false;
+                });
+
+                socket.on('connect_error', (error) => {
+                    console.log('WebSocket connection error:', error.message);
+                    useWebSocket = false;
+                });
+
+                socket.on('new-message', (msg) => {
+                    const currentUser = SparkAPI.auth.getCurrentUser();
+                    if (!displayedMessageIds.has(msg.id) && msg.sender_id !== currentUser.id) {
+                        displayedMessageIds.add(msg.id);
+                        messagesMap.set(msg.id, msg);
+                        addMessageToUI(msg.content, false, true, msg.sent_at, msg);
+                    }
+                });
+
+                socket.on('message-confirmed', (msg) => {
+                    // Update temp message with real ID
+                    messagesMap.set(msg.id, msg);
+                    displayedMessageIds.add(msg.id);
+                });
+
+                socket.on('partner-typing', ({ isTyping: partnerTyping }) => {
+                    if (partnerTyping) {
+                        typingIndicator.classList.add('visible');
+                    } else {
+                        typingIndicator.classList.remove('visible');
+                    }
+                });
+
+                socket.on('partner-online', ({ isOnline }) => {
+                    updateStatusUI(isOnline, isOnline ? null : new Date().toISOString());
+                });
+
+                socket.on('error', (error) => {
+                    console.error('WebSocket error:', error);
+                });
+            } catch (error) {
+                console.error('WebSocket init error:', error);
+                useWebSocket = false;
+            }
+        }
 
         // Format date for separator (Today, Yesterday, or date)
         function formatDateSeparator(date) {
@@ -1268,6 +1343,13 @@
         async function setTypingStatus(typing) {
             if (isTyping === typing) return;
             isTyping = typing;
+
+            // Use WebSocket if available
+            if (useWebSocket && socket?.connected) {
+                socket.emit('typing', { matchId, isTyping: typing });
+                return;
+            }
+
             try {
                 await SparkAPI.typing.setTyping(matchId, typing);
             } catch (error) {
@@ -1276,6 +1358,9 @@
         }
 
         async function checkPartnerTyping() {
+            // Skip if using WebSocket - handled by socket events
+            if (useWebSocket && socket?.connected) return;
+
             try {
                 const { isTyping: partnerTyping } = await SparkAPI.typing.getPartnerTyping(matchId);
                 if (partnerTyping) {
@@ -1313,18 +1398,43 @@
 
         // Load content immediately for fast UI
         function startLoadingContent() {
+            // Initialize WebSocket connection
+            initWebSocket();
+
             // Load messages and status immediately - don't wait
             loadMessages();
             updatePartnerStatus();
             sendHeartbeat();
             checkPartnerTyping();
 
-            // Start polling immediately
-            setInterval(pollMessages, 3000);
+            // Start polling - reduced frequency when WebSocket is connected
+            setInterval(() => {
+                if (!useWebSocket || !socket?.connected) {
+                    pollMessages();
+                }
+            }, 3000);
+
             setInterval(checkRevealRequest, 5000);
-            setInterval(sendHeartbeat, 30000);
-            setInterval(updatePartnerStatus, 30000);
-            setInterval(checkPartnerTyping, 2000);
+
+            setInterval(() => {
+                if (useWebSocket && socket?.connected) {
+                    socket.emit('heartbeat');
+                } else {
+                    sendHeartbeat();
+                }
+            }, 30000);
+
+            setInterval(() => {
+                if (!useWebSocket || !socket?.connected) {
+                    updatePartnerStatus();
+                }
+            }, 30000);
+
+            setInterval(() => {
+                if (!useWebSocket || !socket?.connected) {
+                    checkPartnerTyping();
+                }
+            }, 2000);
         }
 
         // Verify match status in background (redirect if invalid)

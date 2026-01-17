@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import { createServer } from 'http';
 import authRoutes from './routes/auth.js';
 import usersRoutes from './routes/users.js';
 import matchesRoutes from './routes/matches.js';
@@ -9,6 +10,7 @@ import waitlistRoutes from './routes/waitlist.js';
 import presenceRoutes from './routes/presence.js';
 import typingRoutes from './routes/typing.js';
 import pushRoutes from './routes/push.js';
+import { initializeWebSocket } from './services/websocket.js';
 
 dotenv.config();
 
@@ -79,9 +81,16 @@ app.use('/api/push', pushRoutes);
 // Clouds like Render/Fly inject the PORT variable. 0.0.0.0 is required for external access.
 const PORT = process.env.PORT || 3000;
 
-const server = app.listen(PORT, '0.0.0.0', () => {
+// Create HTTP server for both Express and WebSocket
+const httpServer = createServer(app);
+
+// Initialize WebSocket server
+initializeWebSocket(httpServer, allowedOrigins);
+
+const server = httpServer.listen(PORT, '0.0.0.0', () => {
     console.log('========================================');
     console.log(`Spark backend running on port ${PORT}`);
+    console.log(`WebSocket server enabled`);
     console.log(`Health check: /api/health`);
     console.log('========================================');
 });
