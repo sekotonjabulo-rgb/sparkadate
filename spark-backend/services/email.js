@@ -4,7 +4,7 @@ import crypto from 'crypto';
 // Supports multiple providers: Resend, SendGrid, or SMTP
 // Configure via environment variables
 
-const EMAIL_PROVIDER = process.env.EMAIL_PROVIDER || 'console'; // 'resend', 'sendgrid', 'smtp', or 'console'
+const EMAIL_PROVIDER = process.env.EMAIL_PROVIDER || 'resend'; // 'resend', 'sendgrid', 'smtp', or 'console'
 const APP_URL = process.env.APP_URL || 'https://sparkadate.online';
 
 // Generate a secure token
