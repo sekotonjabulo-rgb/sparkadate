@@ -93,12 +93,20 @@
         <img src="spark-icon.png" alt="Spark logo" class="logo">
         <h1 class="wordmark">Spark</h1>
     </main>
+    <script src="js/api.js"></script>
     <script>
         setTimeout(() => {
             // Check if user is logged in
-            if (localStorage.getItem('sparkToken')) {
-                // Logged in - go to home/match screen
-                window.location.href = 'onboarding.html';
+            if (SparkAPI.auth.isLoggedIn()) {
+                // User is logged in - try to restore last page
+                const lastPage = SparkAPI.navigation.getLastPage();
+                if (lastPage) {
+                    // Restore to last visited page
+                    window.location.href = lastPage;
+                } else {
+                    // No saved page - go to match selection
+                    window.location.href = 'match.html';
+                }
             } else {
                 // Not logged in - go to onboarding
                 window.location.href = 'onboarding.html';

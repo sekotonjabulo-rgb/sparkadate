@@ -216,6 +216,13 @@
         }
         .edited-label {
             font-style: italic;
+            opacity: 0.7;
+        }
+        .message-time.has-edited .edited-label {
+            opacity: 1;
+        }
+        .message-wrapper .message-time.has-edited {
+            opacity: 1;
         }
         .message-reply-preview {
             font-size: 12px;
@@ -654,6 +661,9 @@
 
         if (!SparkAPI.auth.isLoggedIn()) {
             window.location.href = 'index.html';
+        } else {
+            // Save current page for PWA session restoration
+            SparkAPI.navigation.saveCurrentPage();
         }
 
         // Format last seen time
@@ -799,7 +809,9 @@
             }
 
             const timeString = time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            const editedLabel = messageData?.edited_at ? '<span class="edited-label">(edited)</span>' : '';
+            const isEdited = !!messageData?.edited_at;
+            const editedLabel = isEdited ? '<span class="edited-label">(edited)</span>' : '';
+            const editedClass = isEdited ? ' has-edited' : '';
 
             // Build reply preview if this is a reply
             let replyPreview = '';
@@ -863,7 +875,7 @@
                     </button>
                     <div class="message-dropdown">${dropdownItems}</div>
                 </div>
-                <span class="message-time">${timeString} ${editedLabel}</span>
+                <span class="message-time${editedClass}">${timeString} ${editedLabel}</span>
             `;
 
             // Add event listeners for dropdown
@@ -999,6 +1011,7 @@
                     // Add edited label if not already there
                     const timeElement = editingMessage.element.querySelector('.message-time');
                     if (timeElement && !timeElement.querySelector('.edited-label')) {
+                        timeElement.classList.add('has-edited');
                         timeElement.innerHTML += ' <span class="edited-label">(edited)</span>';
                     }
                     // Update in map

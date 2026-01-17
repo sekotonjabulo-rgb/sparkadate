@@ -145,6 +145,8 @@ const auth = {
         localStorage.removeItem('sparkUser');
         localStorage.removeItem('sparkUserData');
         localStorage.removeItem('sparkCurrentMatch');
+        localStorage.removeItem('sparkLastPage');
+        localStorage.removeItem('sparkLastPageTime');
         window.location.href = 'index.html';
     },
 
@@ -339,6 +341,44 @@ const presence = {
     }
 };
 
+// Page navigation tracking for PWA session restoration
+const navigation = {
+    // Pages that should be restored (main app pages, not auth/onboarding)
+    restorablePages: ['chat.html', 'match.html', 'timer.html', 'reveal.html', 'revealed.html', 'revealrequest.html'],
+
+    // Save current page to localStorage
+    saveCurrentPage() {
+        const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+        if (this.restorablePages.includes(currentPage)) {
+            localStorage.setItem('sparkLastPage', currentPage);
+            localStorage.setItem('sparkLastPageTime', Date.now().toString());
+        }
+    },
+
+    // Get the last saved page (if valid and recent)
+    getLastPage() {
+        const lastPage = localStorage.getItem('sparkLastPage');
+        const lastPageTime = localStorage.getItem('sparkLastPageTime');
+
+        if (!lastPage || !lastPageTime) return null;
+
+        // Only restore if the saved page is less than 7 days old
+        const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+        if (Date.now() - parseInt(lastPageTime) > sevenDaysMs) {
+            this.clearLastPage();
+            return null;
+        }
+
+        return lastPage;
+    },
+
+    // Clear saved page
+    clearLastPage() {
+        localStorage.removeItem('sparkLastPage');
+        localStorage.removeItem('sparkLastPageTime');
+    }
+};
+
 window.SparkAPI = {
     auth,
     users,
@@ -346,5 +386,6 @@ window.SparkAPI = {
     messages,
     typing,
     push,
-    presence
+    presence,
+    navigation
 };
