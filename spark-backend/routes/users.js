@@ -64,6 +64,10 @@ router.patch('/me', authenticateToken, async (req, res) => {
 // Update preferences
 router.patch('/me/preferences', authenticateToken, async (req, res) => {
     try {
+        console.log('=== PREFERENCES UPDATE DEBUG ===');
+        console.log('User ID:', req.user.id);
+        console.log('Request body:', JSON.stringify(req.body));
+
         const { age_min, age_max, max_distance_km, relationship_intent, dealbreakers } = req.body;
 
         // Build update object with only defined values
@@ -74,41 +78,65 @@ router.patch('/me/preferences', authenticateToken, async (req, res) => {
         if (relationship_intent !== undefined) updates.relationship_intent = relationship_intent;
         if (dealbreakers !== undefined) updates.dealbreakers = dealbreakers;
 
-        // First check if preferences exist
-        const { data: existing } = await supabase
-            .from('user_preferences')
-            .select('id')
-            .eq('user_id', req.user.id)
-            .single();
+        console.log('Updates object:', JSON.stringify(updates));
 
-        let preferences, error;
-
-        if (existing) {
-            // Update existing preferences
-            const result = await supabase
+        // Helper function to upsert preferences
+        async function upsertPreferences(data) {
+            console.log('Checking for existing preferences...');
+            const { data: existing, error: selectError } = await supabase
                 .from('user_preferences')
-                .update(updates)
+                .select('id')
                 .eq('user_id', req.user.id)
-                .select()
                 .single();
-            preferences = result.data;
-            error = result.error;
-        } else {
-            // Create new preferences
-            const result = await supabase
-                .from('user_preferences')
-                .insert({ user_id: req.user.id, ...updates })
-                .select()
-                .single();
-            preferences = result.data;
-            error = result.error;
+
+            console.log('Existing check result:', { existing, selectError: selectError?.message });
+
+            if (existing) {
+                console.log('Updating existing preferences...');
+                const result = await supabase
+                    .from('user_preferences')
+                    .update(data)
+                    .eq('user_id', req.user.id)
+                    .select()
+                    .single();
+                console.log('Update result:', { data: result.data, error: result.error?.message });
+                return result;
+            } else {
+                console.log('Inserting new preferences...');
+                const result = await supabase
+                    .from('user_preferences')
+                    .insert({ user_id: req.user.id, ...data })
+                    .select()
+                    .single();
+                console.log('Insert result:', { data: result.data, error: result.error?.message });
+                return result;
+            }
         }
 
-        if (error) throw error;
+        let result = await upsertPreferences(updates);
 
-        res.json({ preferences });
+        // If failed and we included relationship_intent, try without it
+        if (result.error && updates.relationship_intent !== undefined) {
+            console.log('First attempt failed, retrying without relationship_intent');
+            const { relationship_intent: _, ...updatesWithoutIntent } = updates;
+            result = await upsertPreferences(updatesWithoutIntent);
+        }
+
+        if (result.error) {
+            console.error('Final error:', result.error);
+            throw result.error;
+        }
+
+        console.log('=== PREFERENCES UPDATE SUCCESS ===');
+        res.json({ preferences: result.data });
     } catch (error) {
         console.error('Update preferences error:', error);
+        console.error('Error details:', {
+            message: error.message,
+            code: error.code,
+            details: error.details,
+            hint: error.hint
+        });
         res.status(500).json({ error: 'Failed to update preferences' });
     }
 });
