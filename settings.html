@@ -1093,6 +1093,7 @@
                 location: locationInput.value,
                 age_min: ageMinSlider.value,
                 age_max: ageMaxSlider.value,
+                max_distance_km: distanceSlider.value,
                 relationship_intent: relationshipIntent.value
             });
 
@@ -1109,10 +1110,11 @@
                 const profileResult = await SparkAPI.users.updateProfile(profileData);
                 console.log('[Settings Debug] Profile update result:', profileResult);
 
-                // Update preferences (only age_min, age_max, relationship_intent - no max_distance_km in DB)
+                // Update preferences
                 const preferencesData = {
                     age_min: parseInt(ageMinSlider.value),
                     age_max: parseInt(ageMaxSlider.value),
+                    max_distance_km: parseInt(distanceSlider.value),
                     relationship_intent: relationshipIntent.value
                 };
                 console.log('[Settings Debug] Updating preferences with:', preferencesData);
