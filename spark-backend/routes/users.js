@@ -220,4 +220,51 @@ router.delete('/me/photos/:photoId', authenticateToken, async (req, res) => {
     }
 });
 
+// Delete user account
+router.delete('/me', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        // Delete user photos from storage
+        const { data: photos } = await supabase
+            .from('user_photos')
+            .select('photo_url')
+            .eq('user_id', userId);
+
+        if (photos && photos.length > 0) {
+            const filePaths = photos.map(p => {
+                const fileName = p.photo_url.split('/').pop();
+                return `${userId}/${fileName}`;
+            });
+            await supabase.storage.from('user-photos').remove(filePaths);
+        }
+
+        // Delete related data (order matters due to foreign keys)
+        await supabase.from('user_photos').delete().eq('user_id', userId);
+        await supabase.from('user_preferences').delete().eq('user_id', userId);
+        await supabase.from('personality_profiles').delete().eq('user_id', userId);
+        await supabase.from('typing_status').delete().eq('user_id', userId);
+        await supabase.from('push_subscriptions').delete().eq('user_id', userId);
+
+        // Delete messages sent by user
+        await supabase.from('messages').delete().eq('sender_id', userId);
+
+        // Delete matches where user is involved
+        await supabase.from('matches').delete().or(`user_a_id.eq.${userId},user_b_id.eq.${userId}`);
+
+        // Finally delete the user
+        const { error } = await supabase
+            .from('users')
+            .delete()
+            .eq('id', userId);
+
+        if (error) throw error;
+
+        res.json({ deleted: true });
+    } catch (error) {
+        console.error('Delete account error:', error);
+        res.status(500).json({ error: 'Failed to delete account' });
+    }
+});
+
 export default router;
