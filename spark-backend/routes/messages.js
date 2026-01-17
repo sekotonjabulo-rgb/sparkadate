@@ -3,6 +3,7 @@ import { supabase } from '../config/supabase.js';
 import { authenticateToken } from '../middleware/auth.js';
 import { analyzeMessage, analyzeConversation, updatePersonalityProfile } from '../services/gemini.js';
 import { sendPushToUser } from './push.js';
+import { emitToMatch, confirmMessage } from '../services/websocket.js';
 
 const router = express.Router();
 
@@ -155,6 +156,10 @@ router.post('/:matchId', authenticateToken, async (req, res) => {
             .single();
 
         if (error) throw error;
+
+        // Emit WebSocket event for real-time delivery
+        emitToMatch(matchId, 'new-message', message);
+        confirmMessage(matchId, message);
 
         // Update match message count
         const newMessageCount = (match.total_messages || 0) + 1;

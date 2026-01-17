@@ -1126,11 +1126,27 @@
                 saveBtn.textContent = 'Saved!';
                 console.log('[Settings Debug] Save completed successfully');
 
+                // Update local state with new values
+                userData.display_name = displayNameInput.value;
+                userData.location = locationInput.value;
+                userPreferences = {
+                    ...userPreferences,
+                    age_min: parseInt(ageMinSlider.value),
+                    age_max: parseInt(ageMaxSlider.value),
+                    max_distance_km: parseInt(distanceSlider.value),
+                    relationship_intent: relationshipIntent.value
+                };
+
                 // Update display name in header
                 profileNameDisplay.innerHTML = displayNameInput.value || 'User';
                 if (userData?.subscription_tier === 'pro') {
                     profileNameDisplay.innerHTML += '<span class="pro-badge">PRO</span>';
                 }
+
+                // Update localStorage with new user data for other pages
+                const currentUser = JSON.parse(localStorage.getItem('sparkUser') || '{}');
+                currentUser.display_name = displayNameInput.value;
+                localStorage.setItem('sparkUser', JSON.stringify(currentUser));
 
                 setTimeout(() => {
                     saveBtn.textContent = 'Save Changes';
