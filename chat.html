@@ -119,16 +119,14 @@
             position: absolute;
             top: calc(100% + 8px);
             right: 0;
-            background: rgba(30, 30, 30, 0.98);
-            border: 1px solid var(--color-input-border);
+            background: #1a1a1a;
+            border: 1px solid rgba(255, 255, 255, 0.15);
             border-radius: 12px;
             padding: 4px;
             min-width: 160px;
             z-index: 1000;
             display: none;
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6);
         }
         .header-dropdown.visible {
             display: block;
@@ -608,9 +606,9 @@
                     <div class="header-menu-container">
                         <button class="btn-icon" id="headerMenuBtn" title="Menu">
                             <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <circle cx="12" cy="5" r="1" fill="currentColor" stroke="none"/>
-                                <circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/>
-                                <circle cx="12" cy="19" r="1" fill="currentColor" stroke="none"/>
+                                <circle cx="12" cy="5" r="1.5" fill="white" stroke="white"/>
+                                <circle cx="12" cy="12" r="1.5" fill="white" stroke="white"/>
+                                <circle cx="12" cy="19" r="1.5" fill="white" stroke="white"/>
                             </svg>
                         </button>
                         <div class="header-dropdown" id="headerDropdown">
