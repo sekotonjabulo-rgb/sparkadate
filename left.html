@@ -166,8 +166,8 @@
 
         leftName.textContent = matchData.name ? `${matchData.name} has left the conversation` : 'Your match has left';
 
-        if (!SparkAPI.auth.isLoggedIn()) {
-            window.location.href = 'index.html';
+        if (!SparkAPI.auth.requireVerification()) {
+            // User will be redirected
         }
 
         nextBtn.addEventListener('click', async () => {

@@ -316,7 +316,7 @@
 
                 if (onboardingData.photos && onboardingData.photos.length > 0) {
                     createBtn.textContent = 'Uploading photos...';
-                    
+
                     try {
                         for (let i = 0; i < onboardingData.photos.length; i++) {
                             await SparkAPI.users.uploadPhoto(onboardingData.photos[i], i);
@@ -326,8 +326,12 @@
                     }
                 }
 
+                // Store email for verification page
+                localStorage.setItem('sparkVerifyEmail', emailInput.value.trim());
                 localStorage.removeItem('sparkUserData');
-                window.location.href = 'plan.html';
+
+                // Redirect to email verification
+                window.location.href = 'verify-email.html';
             } catch (error) {
                 alert(error.message || 'Failed to create account');
                 createBtn.disabled = false;

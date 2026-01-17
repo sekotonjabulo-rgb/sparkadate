@@ -217,8 +217,8 @@
 
         const matchData = JSON.parse(localStorage.getItem('sparkCurrentMatch') || '{}');
 
-        if (!SparkAPI.auth.isLoggedIn()) {
-            window.location.href = 'index.html';
+        if (!SparkAPI.auth.requireVerification()) {
+            // User will be redirected
         } else {
             // Save current page for PWA session restoration
             SparkAPI.navigation.saveCurrentPage();

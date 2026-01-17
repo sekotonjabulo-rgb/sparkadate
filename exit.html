@@ -152,10 +152,10 @@
         exitName.textContent = matchData.name || 'Unknown';
         exitAge.textContent = `${matchData.age || '??'} years old`;
     
-        if (!SparkAPI.auth.isLoggedIn()) {
-            window.location.href = 'index.html';
+        if (!SparkAPI.auth.requireVerification()) {
+            // User will be redirected
         }
-    
+
         nextBtn.addEventListener('click', async () => {
             nextBtn.disabled = true;
             nextBtn.textContent = 'Finding match...';

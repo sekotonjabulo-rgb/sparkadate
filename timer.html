@@ -157,8 +157,10 @@
         const matchData = JSON.parse(localStorage.getItem('sparkCurrentMatch') || '{}')
         let userProfile = null
 
-        // Save current page for PWA session restoration
-        if (SparkAPI.auth.isLoggedIn()) {
+        // Check login and email verification
+        if (!SparkAPI.auth.requireVerification()) {
+            // User will be redirected
+        } else {
             SparkAPI.navigation.saveCurrentPage();
         }
 
