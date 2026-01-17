@@ -841,9 +841,12 @@
         }
 
         // Track changes
-        function markChanged() {
+        function markChanged(fieldName = 'unknown') {
+            console.log('[Settings Debug] markChanged called from:', fieldName);
+            console.log('[Settings Debug] hasChanges before:', hasChanges);
             hasChanges = true;
             saveBar.classList.add('visible');
+            console.log('[Settings Debug] hasChanges after:', hasChanges, '- save bar visible');
         }
 
         // Load profile data
@@ -1003,12 +1006,14 @@
         }
 
         ageMinSlider.addEventListener('input', () => {
+            console.log('[Settings Debug] ageMinSlider changed to:', ageMinSlider.value);
             updateAgeRange();
-            markChanged();
+            markChanged('ageMinSlider');
         });
         ageMaxSlider.addEventListener('input', () => {
+            console.log('[Settings Debug] ageMaxSlider changed to:', ageMaxSlider.value);
             updateAgeRange();
-            markChanged();
+            markChanged('ageMaxSlider');
         });
 
         // Distance slider
@@ -1017,16 +1022,26 @@
         }
 
         distanceSlider.addEventListener('input', () => {
+            console.log('[Settings Debug] distanceSlider changed to:', distanceSlider.value);
             updateDistance();
-            markChanged();
+            markChanged('distanceSlider');
         });
 
         // Relationship intent
-        relationshipIntent.addEventListener('change', markChanged);
+        relationshipIntent.addEventListener('change', () => {
+            console.log('[Settings Debug] relationshipIntent changed to:', relationshipIntent.value);
+            markChanged('relationshipIntent');
+        });
 
         // Profile inputs
-        displayNameInput.addEventListener('input', markChanged);
-        locationInput.addEventListener('input', markChanged);
+        displayNameInput.addEventListener('input', () => {
+            console.log('[Settings Debug] displayNameInput changed to:', displayNameInput.value);
+            markChanged('displayNameInput');
+        });
+        locationInput.addEventListener('input', () => {
+            console.log('[Settings Debug] locationInput changed to:', locationInput.value);
+            markChanged('locationInput');
+        });
 
         // Push notifications
         async function checkPushStatus() {
@@ -1072,27 +1087,44 @@
 
         // Save changes
         saveBtn.addEventListener('click', async () => {
+            console.log('[Settings Debug] Save button clicked');
+            console.log('[Settings Debug] Current values:', {
+                display_name: displayNameInput.value,
+                location: locationInput.value,
+                age_min: ageMinSlider.value,
+                age_max: ageMaxSlider.value,
+                max_distance_km: distanceSlider.value,
+                relationship_intent: relationshipIntent.value
+            });
+
             saveBtn.disabled = true;
             saveBtn.textContent = 'Saving...';
 
             try {
                 // Update profile
-                await SparkAPI.users.updateProfile({
+                const profileData = {
                     display_name: displayNameInput.value,
                     location: locationInput.value
-                });
+                };
+                console.log('[Settings Debug] Updating profile with:', profileData);
+                const profileResult = await SparkAPI.users.updateProfile(profileData);
+                console.log('[Settings Debug] Profile update result:', profileResult);
 
                 // Update preferences
-                await SparkAPI.users.updatePreferences({
+                const preferencesData = {
                     age_min: parseInt(ageMinSlider.value),
                     age_max: parseInt(ageMaxSlider.value),
                     max_distance_km: parseInt(distanceSlider.value),
                     relationship_intent: relationshipIntent.value
-                });
+                };
+                console.log('[Settings Debug] Updating preferences with:', preferencesData);
+                const preferencesResult = await SparkAPI.users.updatePreferences(preferencesData);
+                console.log('[Settings Debug] Preferences update result:', preferencesResult);
 
                 hasChanges = false;
                 saveBar.classList.remove('visible');
                 saveBtn.textContent = 'Saved!';
+                console.log('[Settings Debug] Save completed successfully');
 
                 // Update display name in header
                 profileNameDisplay.innerHTML = displayNameInput.value || 'User';
@@ -1106,7 +1138,8 @@
                 }, 1500);
 
             } catch (error) {
-                console.error('Save error:', error);
+                console.error('[Settings Debug] Save error:', error);
+                console.error('[Settings Debug] Error details:', error.message, error.stack);
                 alert('Failed to save changes');
                 saveBtn.textContent = 'Save Changes';
                 saveBtn.disabled = false;
