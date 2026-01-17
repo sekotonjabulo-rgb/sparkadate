@@ -1,11 +1,12 @@
 import crypto from 'crypto';
+import { Resend } from 'resend';
 
-// Email service abstraction
-// Supports multiple providers: Resend, SendGrid, or SMTP
-// Configure via environment variables
-
-const EMAIL_PROVIDER = process.env.EMAIL_PROVIDER || 'resend'; // 'resend', 'sendgrid', 'smtp', or 'console'
+// Email service using Resend
 const APP_URL = process.env.APP_URL || 'https://sparkadate.online';
+const EMAIL_FROM = process.env.EMAIL_FROM || 'Spark <noreply@sparkadate.online>';
+
+// Initialize Resend client
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Generate a secure token
 export function generateToken() {
@@ -17,71 +18,26 @@ export function generateVerificationCode() {
     return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-async function sendWithResend(to, subject, html) {
-    const response = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            from: process.env.EMAIL_FROM || 'Spark <noreply@sparkadate.online>',
+// Send email using Resend
+export async function sendEmail(to, subject, html) {
+    try {
+        const { data, error } = await resend.emails.send({
+            from: EMAIL_FROM,
             to: [to],
             subject,
             html
-        })
-    });
+        });
 
-    if (!response.ok) {
-        const error = await response.json();
-        throw new Error(`Resend error: ${error.message}`);
-    }
+        if (error) {
+            console.error('Resend error:', error);
+            throw new Error(`Email send failed: ${error.message}`);
+        }
 
-    return response.json();
-}
-
-async function sendWithSendGrid(to, subject, html) {
-    const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${process.env.SENDGRID_API_KEY}`,
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            personalizations: [{ to: [{ email: to }] }],
-            from: { email: process.env.EMAIL_FROM || 'noreply@sparkadate.online' },
-            subject,
-            content: [{ type: 'text/html', value: html }]
-        })
-    });
-
-    if (!response.ok) {
-        const error = await response.text();
-        throw new Error(`SendGrid error: ${error}`);
-    }
-
-    return { success: true };
-}
-
-async function sendWithConsole(to, subject, html) {
-    // Development mode - log to console
-    console.log('\n========== EMAIL ==========');
-    console.log(`To: ${to}`);
-    console.log(`Subject: ${subject}`);
-    console.log(`Body: ${html.replace(/<[^>]*>/g, '')}`);
-    console.log('===========================\n');
-    return { success: true, mode: 'console' };
-}
-
-export async function sendEmail(to, subject, html) {
-    switch (EMAIL_PROVIDER) {
-        case 'resend':
-            return sendWithResend(to, subject, html);
-        case 'sendgrid':
-            return sendWithSendGrid(to, subject, html);
-        case 'console':
-        default:
-            return sendWithConsole(to, subject, html);
+        console.log('Email sent successfully:', data?.id);
+        return { success: true, id: data?.id };
+    } catch (error) {
+        console.error('Email service error:', error);
+        throw error;
     }
 }
 
