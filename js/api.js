@@ -344,7 +344,7 @@ const presence = {
 // Page navigation tracking for PWA session restoration
 const navigation = {
     // Pages that should be restored (main app pages, not auth/onboarding)
-    restorablePages: ['chat.html', 'match.html', 'timer.html', 'reveal.html', 'revealed.html', 'revealrequest.html'],
+    restorablePages: ['chat.html', 'match.html', 'timer.html', 'reveal.html', 'revealed.html', 'revealrequest.html', 'settings.html'],
 
     // Save current page to localStorage
     saveCurrentPage() {
