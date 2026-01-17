@@ -231,6 +231,12 @@ const users = {
         return apiRequest(`/users/me/photos/${photoId}`, {
             method: 'DELETE'
         });
+    },
+
+    async deleteAccount() {
+        return apiRequest('/users/me', {
+            method: 'DELETE'
+        });
     }
 };
 
