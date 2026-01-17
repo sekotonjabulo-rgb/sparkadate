@@ -840,6 +840,8 @@
 
                 // Check if partner has left the conversation
                 if (match.partner_left) {
+                    // Clear saved page so PWA doesn't restore to chat
+                    SparkAPI.navigation.clearLastPage();
                     window.location.href = 'left.html';
                     return;
                 }
@@ -1238,21 +1240,61 @@
             }, 3000);
         }
 
-        // Load everything in parallel immediately when page opens
-        Promise.all([
-            sendHeartbeat(),
-            updatePartnerStatus(),
-            loadMessages(),
-            checkRevealRequest(),
-            checkPartnerTyping()
-        ]).then(() => {
-            // Start polling
-            setInterval(pollMessages, 3000);
-            setInterval(checkRevealRequest, 5000);
-            setInterval(sendHeartbeat, 30000);
-            setInterval(updatePartnerStatus, 30000);
-            setInterval(checkPartnerTyping, 2000); // Check typing status every 2 seconds
-        });
+        // First, verify the match is still valid before loading anything
+        async function verifyMatchAndInit() {
+            try {
+                const { match } = await SparkAPI.matches.getCurrent();
+
+                // No active match - redirect to find one
+                if (!match) {
+                    SparkAPI.navigation.clearLastPage();
+                    localStorage.removeItem('sparkCurrentMatch');
+                    window.location.href = 'match.html';
+                    return;
+                }
+
+                // Partner has left - redirect to left page
+                if (match.partner_left) {
+                    SparkAPI.navigation.clearLastPage();
+                    window.location.href = 'left.html';
+                    return;
+                }
+
+                // Match is valid - proceed with loading
+                Promise.all([
+                    sendHeartbeat(),
+                    updatePartnerStatus(),
+                    loadMessages(),
+                    checkRevealRequest(),
+                    checkPartnerTyping()
+                ]).then(() => {
+                    // Start polling
+                    setInterval(pollMessages, 3000);
+                    setInterval(checkRevealRequest, 5000);
+                    setInterval(sendHeartbeat, 30000);
+                    setInterval(updatePartnerStatus, 30000);
+                    setInterval(checkPartnerTyping, 2000);
+                });
+            } catch (error) {
+                console.error('Failed to verify match:', error);
+                // On error, try to continue anyway
+                Promise.all([
+                    sendHeartbeat(),
+                    updatePartnerStatus(),
+                    loadMessages(),
+                    checkRevealRequest(),
+                    checkPartnerTyping()
+                ]).then(() => {
+                    setInterval(pollMessages, 3000);
+                    setInterval(checkRevealRequest, 5000);
+                    setInterval(sendHeartbeat, 30000);
+                    setInterval(updatePartnerStatus, 30000);
+                    setInterval(checkPartnerTyping, 2000);
+                });
+            }
+        }
+
+        verifyMatchAndInit();
 
         // Handle page unload
         window.addEventListener('beforeunload', handlePageUnload);

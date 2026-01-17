@@ -159,18 +159,20 @@
         nextBtn.addEventListener('click', async () => {
             nextBtn.disabled = true;
             nextBtn.textContent = 'Finding match...';
-    
+
             try {
                 // Exit current match if not already exited
                 if (matchData.id) {
                     await SparkAPI.matches.exit(matchData.id);
                 }
-    
+
                 localStorage.removeItem('sparkCurrentMatch');
+                SparkAPI.navigation.clearLastPage();
                 window.location.href = 'match.html';
             } catch (error) {
                 console.error('Exit error:', error);
                 localStorage.removeItem('sparkCurrentMatch');
+                SparkAPI.navigation.clearLastPage();
                 window.location.href = 'match.html';
             }
         });
