@@ -147,7 +147,7 @@ const auth = {
         localStorage.removeItem('sparkCurrentMatch');
         localStorage.removeItem('sparkLastPage');
         localStorage.removeItem('sparkLastPageTime');
-        window.location.href = 'index.html';
+        window.location.href = 'app.html';
     },
 
     isLoggedIn() {
