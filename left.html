@@ -176,10 +176,12 @@
 
             try {
                 localStorage.removeItem('sparkCurrentMatch');
+                SparkAPI.navigation.clearLastPage();
                 window.location.href = 'match.html';
             } catch (error) {
                 console.error('Error:', error);
                 localStorage.removeItem('sparkCurrentMatch');
+                SparkAPI.navigation.clearLastPage();
                 window.location.href = 'match.html';
             }
         });
