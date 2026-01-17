@@ -66,19 +66,43 @@ router.patch('/me/preferences', authenticateToken, async (req, res) => {
     try {
         const { age_min, age_max, max_distance_km, relationship_intent, dealbreakers } = req.body;
 
-        const { data: preferences, error } = await supabase
+        // Build update object with only defined values
+        const updates = { updated_at: new Date().toISOString() };
+        if (age_min !== undefined) updates.age_min = age_min;
+        if (age_max !== undefined) updates.age_max = age_max;
+        if (max_distance_km !== undefined) updates.max_distance_km = max_distance_km;
+        if (relationship_intent !== undefined) updates.relationship_intent = relationship_intent;
+        if (dealbreakers !== undefined) updates.dealbreakers = dealbreakers;
+
+        // First check if preferences exist
+        const { data: existing } = await supabase
             .from('user_preferences')
-            .update({
-                age_min,
-                age_max,
-                max_distance_km,
-                relationship_intent,
-                dealbreakers,
-                updated_at: new Date().toISOString()
-            })
+            .select('id')
             .eq('user_id', req.user.id)
-            .select()
             .single();
+
+        let preferences, error;
+
+        if (existing) {
+            // Update existing preferences
+            const result = await supabase
+                .from('user_preferences')
+                .update(updates)
+                .eq('user_id', req.user.id)
+                .select()
+                .single();
+            preferences = result.data;
+            error = result.error;
+        } else {
+            // Create new preferences
+            const result = await supabase
+                .from('user_preferences')
+                .insert({ user_id: req.user.id, ...updates })
+                .select()
+                .single();
+            preferences = result.data;
+            error = result.error;
+        }
 
         if (error) throw error;
 

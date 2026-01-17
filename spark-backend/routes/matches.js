@@ -172,7 +172,7 @@ router.post('/find', authenticateToken, async (req, res) => {
 
         const { data: candidates } = await supabase
             .from('users')
-            .select('*, personality_profiles(*), interest_mappings(*)')
+            .select('*, personality_profiles(*), interest_mappings(*), user_preferences(*)')
             .neq('id', userId)
             .eq('is_active', true)
             .eq('is_banned', false)
@@ -218,7 +218,8 @@ router.post('/find', authenticateToken, async (req, res) => {
             !matchedUserIds.has(c.id) && !previousMatchUserIds.has(c.id)
         );
 
-        // Filter by gender preferences and distance
+        // Filter by gender preferences, distance, and relationship intent
+        const userIntent = preferences?.relationship_intent || 'unsure';
         const validCandidates = availableCandidates.filter(c => {
             const genderMap = { man: 'men', woman: 'women' };
             const userSeeks = user.seeking === 'everyone' || user.seeking === genderMap[c.gender];
@@ -226,8 +227,23 @@ router.post('/find', authenticateToken, async (req, res) => {
             if (!userSeeks || !candidateSeeks) return false;
 
             const distance = calculateDistanceKm(user.latitude, user.longitude, c.latitude, c.longitude);
-            if (distance === null) return true;
-            return distance <= maxDistanceKm;
+            if (distance !== null && distance > maxDistanceKm) return false;
+
+            // Check relationship intent compatibility
+            const candidatePrefs = c.user_preferences?.[0] || c.user_preferences;
+            const candidateIntent = candidatePrefs?.relationship_intent || 'unsure';
+
+            // If either user is "unsure", match with anyone
+            // Otherwise, intents should match or be compatible
+            if (userIntent !== 'unsure' && candidateIntent !== 'unsure') {
+                // Strict matching for serious/casual - they shouldn't mix
+                if ((userIntent === 'serious' && candidateIntent === 'casual') ||
+                    (userIntent === 'casual' && candidateIntent === 'serious')) {
+                    return false;
+                }
+            }
+
+            return true;
         });
 
         if (validCandidates.length === 0) {
