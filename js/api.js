@@ -109,7 +109,17 @@ async function apiRequest(endpoint, options = {}) {
         }
 
         if (!response.ok) {
-            throw new Error(data.error || 'Request failed');
+            console.error('API Response Error:', {
+                status: response.status,
+                error: data.error,
+                details: data.details,
+                code: data.code,
+                hint: data.hint
+            });
+            const errorMessage = data.details
+                ? `${data.error}: ${data.details}${data.hint ? ` (Hint: ${data.hint})` : ''}`
+                : data.error || 'Request failed';
+            throw new Error(errorMessage);
         }
 
         return data;

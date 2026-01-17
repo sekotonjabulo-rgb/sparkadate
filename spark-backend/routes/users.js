@@ -117,13 +117,25 @@ router.patch('/me/preferences', authenticateToken, async (req, res) => {
 
         // If failed and we included relationship_intent, try without it
         if (result.error && updates.relationship_intent !== undefined) {
-            console.log('First attempt failed, retrying without relationship_intent');
+            console.log('First attempt failed with error:', result.error.message);
+            console.log('Retrying without relationship_intent...');
             const { relationship_intent: _, ...updatesWithoutIntent } = updates;
             result = await upsertPreferences(updatesWithoutIntent);
         }
 
+        // If still failed, try with only basic numeric fields
         if (result.error) {
-            console.error('Final error:', result.error);
+            console.log('Second attempt failed with error:', result.error.message);
+            console.log('Retrying with only basic fields (age_min, age_max, max_distance_km)...');
+            const basicUpdates = { updated_at: new Date().toISOString() };
+            if (age_min !== undefined) basicUpdates.age_min = age_min;
+            if (age_max !== undefined) basicUpdates.age_max = age_max;
+            if (max_distance_km !== undefined) basicUpdates.max_distance_km = max_distance_km;
+            result = await upsertPreferences(basicUpdates);
+        }
+
+        if (result.error) {
+            console.error('Final error after all retries:', result.error);
             throw result.error;
         }
 
@@ -137,7 +149,12 @@ router.patch('/me/preferences', authenticateToken, async (req, res) => {
             details: error.details,
             hint: error.hint
         });
-        res.status(500).json({ error: 'Failed to update preferences' });
+        res.status(500).json({
+            error: 'Failed to update preferences',
+            details: error.message || 'Unknown error',
+            code: error.code || 'UNKNOWN',
+            hint: error.hint || null
+        });
     }
 });
 

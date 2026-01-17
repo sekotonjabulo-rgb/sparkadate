@@ -1140,7 +1140,8 @@
             } catch (error) {
                 console.error('[Settings Debug] Save error:', error);
                 console.error('[Settings Debug] Error details:', error.message, error.stack);
-                alert('Failed to save changes');
+                const errorMsg = error.message || 'Unknown error';
+                alert(`Failed to save changes: ${errorMsg}`);
                 saveBtn.textContent = 'Save Changes';
                 saveBtn.disabled = false;
             }
