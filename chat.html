@@ -1240,8 +1240,24 @@
             }, 3000);
         }
 
-        // First, verify the match is still valid before loading anything
-        async function verifyMatchAndInit() {
+        // Load content immediately for fast UI
+        function startLoadingContent() {
+            // Load messages and status immediately - don't wait
+            loadMessages();
+            updatePartnerStatus();
+            sendHeartbeat();
+            checkPartnerTyping();
+
+            // Start polling immediately
+            setInterval(pollMessages, 3000);
+            setInterval(checkRevealRequest, 5000);
+            setInterval(sendHeartbeat, 30000);
+            setInterval(updatePartnerStatus, 30000);
+            setInterval(checkPartnerTyping, 2000);
+        }
+
+        // Verify match status in background (redirect if invalid)
+        async function verifyMatchInBackground() {
             try {
                 const { match } = await SparkAPI.matches.getCurrent();
 
@@ -1259,42 +1275,15 @@
                     window.location.href = 'left.html';
                     return;
                 }
-
-                // Match is valid - proceed with loading
-                Promise.all([
-                    sendHeartbeat(),
-                    updatePartnerStatus(),
-                    loadMessages(),
-                    checkRevealRequest(),
-                    checkPartnerTyping()
-                ]).then(() => {
-                    // Start polling
-                    setInterval(pollMessages, 3000);
-                    setInterval(checkRevealRequest, 5000);
-                    setInterval(sendHeartbeat, 30000);
-                    setInterval(updatePartnerStatus, 30000);
-                    setInterval(checkPartnerTyping, 2000);
-                });
             } catch (error) {
                 console.error('Failed to verify match:', error);
-                // On error, try to continue anyway
-                Promise.all([
-                    sendHeartbeat(),
-                    updatePartnerStatus(),
-                    loadMessages(),
-                    checkRevealRequest(),
-                    checkPartnerTyping()
-                ]).then(() => {
-                    setInterval(pollMessages, 3000);
-                    setInterval(checkRevealRequest, 5000);
-                    setInterval(sendHeartbeat, 30000);
-                    setInterval(updatePartnerStatus, 30000);
-                    setInterval(checkPartnerTyping, 2000);
-                });
+                // On error, continue anyway - the polling will handle it
             }
         }
 
-        verifyMatchAndInit();
+        // Start loading immediately, verify in background
+        startLoadingContent();
+        verifyMatchInBackground();
 
         // Handle page unload
         window.addEventListener('beforeunload', handlePageUnload);
