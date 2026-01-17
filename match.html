@@ -272,9 +272,9 @@
             }, 5100);
         }
     
-        // Check if logged in
-        if (!SparkAPI.auth.isLoggedIn()) {
-            window.location.href = 'index.html';
+        // Check if logged in and email verified
+        if (!SparkAPI.auth.requireVerification()) {
+            // User will be redirected by requireVerification()
         } else {
             // Save current page for PWA session restoration
             SparkAPI.navigation.saveCurrentPage();

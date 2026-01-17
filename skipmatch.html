@@ -328,8 +328,8 @@
             }
         })
 
-        if (!SparkAPI.auth.isLoggedIn()) {
-            window.location.href = 'index.html'
+        if (!SparkAPI.auth.requireVerification()) {
+            // User will be redirected
         } else {
             findMatch()
         }

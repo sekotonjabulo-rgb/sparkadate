@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="Spark">
+    <link rel="apple-touch-icon" href="blueocean.jpeg">
+    <title>Spark – Verify Email</title>
+    <style>
+        @font-face {
+            font-family: 'CabinetGrotesk-Medium';
+            src: url('./fonts/CabinetGrotesk-Medium.woff2') format('woff2'),
+                 url('./fonts/CabinetGrotesk-Medium.woff') format('woff'),
+                 url('./fonts/CabinetGrotesk-Medium.ttf') format('truetype');
+            font-weight: 500;
+            font-display: swap;
+            font-style: normal;
+        }
+
+        :root {
+            --color-background: #000000;
+            --color-surface: #FFFFFF;
+            --color-text-primary: #FFFFFF;
+            --color-text-secondary: rgba(255, 255, 255, 0.65);
+            --color-input-bg: rgba(255, 255, 255, 0.08);
+            --color-input-border: rgba(255, 255, 255, 0.15);
+            --color-error: #FF453A;
+            --color-success: #30D158;
+            --radius-pill: 28px;
+            --radius-input: 16px;
+            --font-heading: 'CabinetGrotesk-Medium', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-heading);
+            background-color: var(--color-background);
+            color: var(--color-text-primary);
+            min-height: 100dvh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .screen {
+            min-height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            padding: 80px 16px 48px;
+            max-width: 428px;
+            margin: 0 auto;
+            animation: blurFadeIn 0.6s ease-out forwards;
+        }
+
+        .content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .icon-container {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 24px;
+        }
+
+        .icon-container svg {
+            width: 40px;
+            height: 40px;
+            stroke: var(--color-surface);
+        }
+
+        .title {
+            font-size: 28px;
+            font-weight: 500;
+            letter-spacing: -0.02em;
+            margin-bottom: 12px;
+        }
+
+        .subtitle {
+            font-size: 15px;
+            color: var(--color-text-secondary);
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+
+        .email-display {
+            font-size: 15px;
+            color: var(--color-surface);
+            margin-bottom: 32px;
+        }
+
+        .code-inputs {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-bottom: 24px;
+        }
+
+        .code-input {
+            width: 48px;
+            height: 56px;
+            background-color: var(--color-input-bg);
+            border: 1px solid var(--color-input-border);
+            border-radius: 12px;
+            font-family: var(--font-heading);
+            font-size: 24px;
+            font-weight: 500;
+            color: var(--color-text-primary);
+            text-align: center;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .code-input:focus {
+            border-color: var(--color-surface);
+        }
+
+        .code-input.error {
+            border-color: var(--color-error);
+            animation: shake 0.3s ease;
+        }
+
+        .code-input.success {
+            border-color: var(--color-success);
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-4px); }
+            75% { transform: translateX(4px); }
+        }
+
+        .error-message {
+            color: var(--color-error);
+            font-size: 14px;
+            text-align: center;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        .error-message.visible {
+            display: block;
+        }
+
+        .actions {
+            margin-top: auto;
+            padding-top: 32px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .btn-primary {
+            width: 100%;
+            height: 56px;
+            background-color: var(--color-surface);
+            color: var(--color-background);
+            border: none;
+            border-radius: var(--radius-pill);
+            font-family: var(--font-heading);
+            font-size: 17px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+        }
+
+        .btn-primary:active {
+            opacity: 0.85;
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .resend-section {
+            text-align: center;
+        }
+
+        .resend-text {
+            font-size: 14px;
+            color: var(--color-text-secondary);
+        }
+
+        .resend-btn {
+            background: none;
+            border: none;
+            color: var(--color-surface);
+            font-family: var(--font-heading);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            padding: 0;
+            text-decoration: underline;
+        }
+
+        .resend-btn:disabled {
+            color: var(--color-text-secondary);
+            cursor: not-allowed;
+            text-decoration: none;
+        }
+
+        .timer {
+            color: var(--color-text-secondary);
+            font-size: 14px;
+        }
+
+        /* Success state */
+        .success-state {
+            display: none;
+            text-align: center;
+            padding: 40px 0;
+        }
+
+        .success-state.visible {
+            display: block;
+        }
+
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--color-success);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+        }
+
+        .success-icon svg {
+            width: 40px;
+            height: 40px;
+            stroke: white;
+        }
+
+        .success-title {
+            font-size: 24px;
+            margin-bottom: 12px;
+        }
+
+        .success-text {
+            color: var(--color-text-secondary);
+            font-size: 15px;
+            margin-bottom: 32px;
+        }
+
+        @keyframes blurFadeIn {
+            0% {
+                opacity: 0;
+                filter: blur(12px);
+            }
+            100% {
+                opacity: 1;
+                filter: blur(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="screen">
+        <section class="content" id="verifySection">
+            <div class="icon-container">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                    <polyline points="22,6 12,13 2,6"/>
+                </svg>
+            </div>
+            <h1 class="title">Check your email</h1>
+            <p class="subtitle">We sent a 6-digit code to</p>
+            <p class="email-display" id="emailDisplay">loading...</p>
+
+            <div class="code-inputs" id="codeInputs">
+                <input type="text" class="code-input" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="one-time-code">
+                <input type="text" class="code-input" maxlength="1" inputmode="numeric" pattern="[0-9]">
+                <input type="text" class="code-input" maxlength="1" inputmode="numeric" pattern="[0-9]">
+                <input type="text" class="code-input" maxlength="1" inputmode="numeric" pattern="[0-9]">
+                <input type="text" class="code-input" maxlength="1" inputmode="numeric" pattern="[0-9]">
+                <input type="text" class="code-input" maxlength="1" inputmode="numeric" pattern="[0-9]">
+            </div>
+
+            <p class="error-message" id="errorMessage">Invalid code. Please try again.</p>
+
+            <div class="actions">
+                <button class="btn-primary" id="verifyBtn" disabled>Verify Email</button>
+                <div class="resend-section">
+                    <span class="resend-text">Didn't receive it? </span>
+                    <button class="resend-btn" id="resendBtn" disabled>Resend code</button>
+                    <span class="timer" id="timer"></span>
+                </div>
+            </div>
+        </section>
+
+        <section class="success-state" id="successState">
+            <div class="success-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                </svg>
+            </div>
+            <h2 class="success-title">Email verified</h2>
+            <p class="success-text">Your account is ready. Let's find you a match.</p>
+            <button class="btn-primary" id="continueBtn">Continue</button>
+        </section>
+    </main>
+
+    <script src="js/api.js"></script>
+    <script>
+        const emailDisplay = document.getElementById('emailDisplay');
+        const codeInputs = document.querySelectorAll('.code-input');
+        const verifyBtn = document.getElementById('verifyBtn');
+        const resendBtn = document.getElementById('resendBtn');
+        const timer = document.getElementById('timer');
+        const errorMessage = document.getElementById('errorMessage');
+        const verifySection = document.getElementById('verifySection');
+        const successState = document.getElementById('successState');
+        const continueBtn = document.getElementById('continueBtn');
+
+        // Get email from localStorage (set during signup)
+        const userEmail = localStorage.getItem('sparkVerifyEmail') ||
+                          JSON.parse(localStorage.getItem('sparkUser') || '{}').email;
+
+        if (!userEmail) {
+            window.location.href = 'signup.html';
+        }
+
+        emailDisplay.textContent = userEmail;
+
+        // Resend cooldown
+        let resendCooldown = 0;
+        let cooldownInterval = null;
+
+        function startCooldown(seconds = 60) {
+            resendCooldown = seconds;
+            resendBtn.disabled = true;
+
+            cooldownInterval = setInterval(() => {
+                resendCooldown--;
+                if (resendCooldown <= 0) {
+                    clearInterval(cooldownInterval);
+                    resendBtn.disabled = false;
+                    timer.textContent = '';
+                } else {
+                    timer.textContent = `(${resendCooldown}s)`;
+                }
+            }, 1000);
+
+            timer.textContent = `(${resendCooldown}s)`;
+        }
+
+        // Start initial cooldown (code was sent on signup)
+        startCooldown(60);
+
+        // Handle code input
+        codeInputs.forEach((input, index) => {
+            input.addEventListener('input', (e) => {
+                const value = e.target.value.replace(/[^0-9]/g, '');
+                e.target.value = value;
+
+                // Clear error state
+                input.classList.remove('error');
+                errorMessage.classList.remove('visible');
+
+                // Auto-advance to next input
+                if (value && index < codeInputs.length - 1) {
+                    codeInputs[index + 1].focus();
+                }
+
+                // Enable verify button when all filled
+                const code = getCode();
+                verifyBtn.disabled = code.length !== 6;
+            });
+
+            input.addEventListener('keydown', (e) => {
+                // Handle backspace
+                if (e.key === 'Backspace' && !e.target.value && index > 0) {
+                    codeInputs[index - 1].focus();
+                }
+            });
+
+            // Handle paste
+            input.addEventListener('paste', (e) => {
+                e.preventDefault();
+                const pastedData = e.clipboardData.getData('text').replace(/[^0-9]/g, '').slice(0, 6);
+
+                pastedData.split('').forEach((char, i) => {
+                    if (codeInputs[i]) {
+                        codeInputs[i].value = char;
+                    }
+                });
+
+                // Focus last filled or next empty
+                const focusIndex = Math.min(pastedData.length, codeInputs.length - 1);
+                codeInputs[focusIndex].focus();
+
+                verifyBtn.disabled = pastedData.length !== 6;
+            });
+        });
+
+        function getCode() {
+            return Array.from(codeInputs).map(input => input.value).join('');
+        }
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.classList.add('visible');
+            codeInputs.forEach(input => input.classList.add('error'));
+        }
+
+        function showSuccess() {
+            codeInputs.forEach(input => input.classList.add('success'));
+            verifySection.style.display = 'none';
+            successState.classList.add('visible');
+
+            // Update user data to reflect verified status
+            const userData = JSON.parse(localStorage.getItem('sparkUser') || '{}');
+            userData.email_verified = true;
+            localStorage.setItem('sparkUser', JSON.stringify(userData));
+
+            // Clear verification email from storage
+            localStorage.removeItem('sparkVerifyEmail');
+        }
+
+        // Verify code
+        verifyBtn.addEventListener('click', async () => {
+            const code = getCode();
+            if (code.length !== 6) return;
+
+            verifyBtn.disabled = true;
+            verifyBtn.textContent = 'Verifying...';
+
+            try {
+                const response = await fetch(`${SparkAPI.config.baseUrl}/auth/verify-email`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: userEmail, code })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.verified) {
+                    showSuccess();
+                } else {
+                    showError(data.error || 'Invalid code. Please try again.');
+                    verifyBtn.disabled = false;
+                    verifyBtn.textContent = 'Verify Email';
+                }
+            } catch (error) {
+                showError('Something went wrong. Please try again.');
+                verifyBtn.disabled = false;
+                verifyBtn.textContent = 'Verify Email';
+            }
+        });
+
+        // Resend code
+        resendBtn.addEventListener('click', async () => {
+            if (resendBtn.disabled) return;
+
+            resendBtn.disabled = true;
+
+            try {
+                const response = await fetch(`${SparkAPI.config.baseUrl}/auth/send-verification`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: userEmail })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Clear inputs
+                    codeInputs.forEach(input => {
+                        input.value = '';
+                        input.classList.remove('error');
+                    });
+                    codeInputs[0].focus();
+                    errorMessage.classList.remove('visible');
+                    verifyBtn.disabled = true;
+
+                    startCooldown(60);
+                } else {
+                    showError(data.error || 'Failed to resend code');
+                    resendBtn.disabled = false;
+                }
+            } catch (error) {
+                showError('Failed to resend code');
+                resendBtn.disabled = false;
+            }
+        });
+
+        // Continue after verification
+        continueBtn.addEventListener('click', () => {
+            window.location.href = 'plan.html';
+        });
+
+        // Focus first input on load
+        codeInputs[0].focus();
+    </script>
+</body>
+</html>

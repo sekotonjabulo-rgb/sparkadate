@@ -178,10 +178,31 @@ router.post('/signup', async (req, res) => {
         // Process match queue for new user
         const queueMatch = await processMatchQueue(user);
 
+        // Send verification email
+        try {
+            const code = generateVerificationCode();
+            const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+
+            await supabase
+                .from('email_verifications')
+                .upsert({
+                    user_id: user.id,
+                    code,
+                    expires_at: expiresAt.toISOString(),
+                    used: false
+                }, { onConflict: 'user_id' });
+
+            await sendVerificationEmail(user.email, code);
+            console.log('Verification email sent to:', user.email);
+        } catch (emailError) {
+            console.error('Failed to send verification email:', emailError);
+            // Don't fail signup if email fails - user can resend
+        }
+
         const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '30d' });
 
         res.status(201).json({
-            user: { id: user.id, email: user.email, display_name: user.display_name },
+            user: { id: user.id, email: user.email, display_name: user.display_name, email_verified: false },
             token,
             matched: queueMatch ? true : false
         });
@@ -210,7 +231,12 @@ router.post('/login', async (req, res) => {
         const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '30d' });
 
         res.json({
-            user: { id: user.id, email: user.email, display_name: user.display_name },
+            user: {
+                id: user.id,
+                email: user.email,
+                display_name: user.display_name,
+                email_verified: user.email_verified || false
+            },
             token
         });
     } catch (error) {

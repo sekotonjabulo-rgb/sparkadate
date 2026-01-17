@@ -182,6 +182,29 @@ const auth = {
     getCurrentUser() {
         const user = localStorage.getItem('sparkUser');
         return user ? JSON.parse(user) : null;
+    },
+
+    isEmailVerified() {
+        const user = this.getCurrentUser();
+        return user?.email_verified === true;
+    },
+
+    // Call this on protected pages to enforce email verification
+    requireVerification() {
+        if (!this.isLoggedIn()) {
+            window.location.href = 'login.html';
+            return false;
+        }
+        if (!this.isEmailVerified()) {
+            // Store email for verification page
+            const user = this.getCurrentUser();
+            if (user?.email) {
+                localStorage.setItem('sparkVerifyEmail', user.email);
+            }
+            window.location.href = 'verify-email.html';
+            return false;
+        }
+        return true;
     }
 };
 
@@ -396,6 +419,9 @@ const navigation = {
 };
 
 window.SparkAPI = {
+    config: {
+        baseUrl: API_BASE_URL
+    },
     auth,
     users,
     matches,

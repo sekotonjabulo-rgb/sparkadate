@@ -834,8 +834,8 @@
         let hasChanges = false;
         let uploadingPhotoSlot = null;
 
-        if (!SparkAPI.auth.isLoggedIn()) {
-            window.location.href = 'index.html';
+        if (!SparkAPI.auth.requireVerification()) {
+            // User will be redirected by requireVerification()
         } else {
             SparkAPI.navigation.saveCurrentPage();
         }
