@@ -74,39 +74,42 @@ router.patch('/me/preferences', authenticateToken, async (req, res) => {
         if (relationship_intent !== undefined) updates.relationship_intent = relationship_intent;
         if (dealbreakers !== undefined) updates.dealbreakers = dealbreakers;
 
-        // First check if preferences exist
-        const { data: existing } = await supabase
-            .from('user_preferences')
-            .select('id')
-            .eq('user_id', req.user.id)
-            .single();
-
-        let preferences, error;
-
-        if (existing) {
-            // Update existing preferences
-            const result = await supabase
+        // Helper function to upsert preferences
+        async function upsertPreferences(data) {
+            const { data: existing } = await supabase
                 .from('user_preferences')
-                .update(updates)
+                .select('id')
                 .eq('user_id', req.user.id)
-                .select()
                 .single();
-            preferences = result.data;
-            error = result.error;
-        } else {
-            // Create new preferences
-            const result = await supabase
-                .from('user_preferences')
-                .insert({ user_id: req.user.id, ...updates })
-                .select()
-                .single();
-            preferences = result.data;
-            error = result.error;
+
+            if (existing) {
+                return await supabase
+                    .from('user_preferences')
+                    .update(data)
+                    .eq('user_id', req.user.id)
+                    .select()
+                    .single();
+            } else {
+                return await supabase
+                    .from('user_preferences')
+                    .insert({ user_id: req.user.id, ...data })
+                    .select()
+                    .single();
+            }
         }
 
-        if (error) throw error;
+        let result = await upsertPreferences(updates);
 
-        res.json({ preferences });
+        // If failed and we included relationship_intent, try without it
+        if (result.error && updates.relationship_intent !== undefined) {
+            console.log('Retrying preferences update without relationship_intent');
+            const { relationship_intent: _, ...updatesWithoutIntent } = updates;
+            result = await upsertPreferences(updatesWithoutIntent);
+        }
+
+        if (result.error) throw result.error;
+
+        res.json({ preferences: result.data });
     } catch (error) {
         console.error('Update preferences error:', error);
         res.status(500).json({ error: 'Failed to update preferences' });
