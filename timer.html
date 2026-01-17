@@ -157,6 +157,11 @@
         const matchData = JSON.parse(localStorage.getItem('sparkCurrentMatch') || '{}')
         let userProfile = null
 
+        // Save current page for PWA session restoration
+        if (SparkAPI.auth.isLoggedIn()) {
+            SparkAPI.navigation.saveCurrentPage();
+        }
+
         async function loadUserProfile() {
             try {
                 const { user } = await SparkAPI.users.getProfile()
