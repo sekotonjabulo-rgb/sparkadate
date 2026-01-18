@@ -26,6 +26,8 @@
             --color-surface: #FFFFFF;
             --color-text-primary: #FFFFFF;
             --color-text-secondary: rgba(255, 255, 255, 0.65);
+            --color-input-bg: rgba(255, 255, 255, 0.08);
+            --color-input-border: rgba(255, 255, 255, 0.12);
             --radius-pill: 28px;
             --font-heading: 'CabinetGrotesk-Medium', -apple-system, BlinkMacSystemFont, sans-serif;
         }
@@ -54,8 +56,48 @@
             flex-direction: column;
             max-width: 428px;
             margin: 0 auto;
-            padding: 24px 16px 48px;
             animation: blurFadeIn 0.6s ease-out forwards;
+        }
+
+        .timer-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 20px;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            flex-shrink: 0;
+        }
+
+        .back-btn {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: none;
+            border: 1px solid var(--color-input-border);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: border-color 0.2s ease, background-color 0.2s ease;
+            text-decoration: none;
+        }
+
+        .back-btn:hover {
+            border-color: rgba(255, 255, 255, 0.3);
+            background-color: var(--color-input-bg);
+        }
+
+        .back-btn svg {
+            width: 18px;
+            height: 18px;
+            stroke: var(--color-text-primary);
+        }
+
+        .timer-title-header {
+            font-size: 18px;
+            font-weight: 500;
         }
 
         .timer-content {
@@ -90,6 +132,7 @@
             flex-direction: column;
             align-items: center;
             gap: 16px;
+            padding: 0 16px 24px;
         }
 
         .btn-primary {
@@ -135,6 +178,15 @@
 </head>
 <body>
     <main class="timer-screen">
+        <header class="timer-header">
+            <a href="chat.html" class="back-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+            </a>
+            <h1 class="timer-title-header">Timer</h1>
+        </header>
+
         <div class="timer-content">
             <p class="timer-label">Reveal available in</p>
             <h1 class="timer-value" id="timerValue">--:--:--</h1>
