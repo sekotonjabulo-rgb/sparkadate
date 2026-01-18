@@ -766,8 +766,12 @@
 
         chatNameElement.textContent = matchData.name || 'Unknown';
 
+        // Initialize reveal button status
+        revealBtn.dataset.status = 'can-request';
+
         // Timer button click handler
         timerBtn.addEventListener('click', () => {
+            console.log('Timer button clicked');
             window.location.href = 'timer.html';
         });
 
@@ -987,12 +991,14 @@
         revealBtn.addEventListener('click', (e) => {
             e.preventDefault();
             const status = revealBtn.dataset.status;
+            console.log('Reveal button clicked, status:', status);
             
             if (status === 'pending-request') {
                 window.location.href = 'revealrequest.html';
             } else if (status === 'can-request') {
                 window.location.href = 'reveal.html';
             } else if (status === 'already-revealed') {
+                console.log('Already revealed, doing nothing');
                 return;
             }
         });
