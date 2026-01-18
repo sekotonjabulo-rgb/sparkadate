@@ -481,6 +481,8 @@ let userData = {
     photos: [null, null, null]
 };
 
+let isNavigating = false;
+
 function updateProgress() {
     progressFill.style.width = `${(currentStep / 4) * 100}%`;
 }
@@ -526,7 +528,6 @@ seekingBtns.forEach(btn => {
 function updatePhotoBtn() {
     const hasPhoto = userData.photos.some(p => p !== null);
     continueBtn4.disabled = !hasPhoto;
-    console.log('Photo button updated. Has photo:', hasPhoto, 'Button disabled:', continueBtn4.disabled);
 }
 
 photoSlots.forEach(slot => {
@@ -534,9 +535,7 @@ photoSlots.forEach(slot => {
     const removeBtn = slot.querySelector('.photo-remove');
     const index = parseInt(slot.dataset.index);
 
-    // Handle slot click to open file picker
     slot.addEventListener('click', (e) => {
-        // Ignore if clicking remove button
         if (e.target === removeBtn || removeBtn.contains(e.target)) {
             return;
         }
@@ -596,43 +595,54 @@ continueBtn3.addEventListener('click', () => {
     showStep(4);
 });
 
-// Handle continue button 4 with both click and touchend for mobile compatibility
 function handleContinue4(e) {
-    // Prevent default behavior and event bubbling
     e.preventDefault();
     e.stopPropagation();
     
-    // Check if button is disabled
-    if (continueBtn4.disabled) {
-        console.log('Button is disabled');
+    if (continueBtn4.disabled || isNavigating) {
+        console.log('Button disabled or already navigating');
         return;
     }
     
-    console.log('Continue button 4 clicked/touched');
-    console.log('User data photos before filter:', userData.photos);
+    isNavigating = true;
+    continueBtn4.disabled = true;
     
-    // Filter out null photos
+    console.log('Starting navigation process');
+    console.log('User data before filter:', userData);
+    
     userData.photos = userData.photos.filter(p => p !== null);
     
-    console.log('User data photos after filter:', userData.photos);
+    console.log('User data after filter:', userData);
     
-    // Save to localStorage
+    const dataToSave = {
+        age: userData.age,
+        gender: userData.gender,
+        seeking: userData.seeking,
+        location: userData.location,
+        latitude: userData.latitude || null,
+        longitude: userData.longitude || null,
+        photos: userData.photos
+    };
+    
+    console.log('Data to save:', dataToSave);
+    
     try {
-        localStorage.setItem('sparkUserData', JSON.stringify({
-            ...userData,
-            latitude: userData.latitude || null,
-            longitude: userData.longitude || null
-        }));
-        console.log('Data saved to localStorage');
+        localStorage.setItem('sparkUserData', JSON.stringify(dataToSave));
+        console.log('Data saved to localStorage successfully');
+        
+        setTimeout(() => {
+            console.log('Navigating to signup.html');
+            window.location.href = 'signup.html';
+        }, 100);
+        
     } catch (error) {
         console.error('Failed to save to localStorage:', error);
+        alert('Unable to save your information. Please try again.');
+        isNavigating = false;
+        continueBtn4.disabled = false;
     }
-    
-    // Navigate to next page
-    window.location.href = 'signup.html';
 }
 
-// Add both click and touchend listeners for maximum mobile compatibility
 continueBtn4.addEventListener('click', handleContinue4);
 
 function requestLocation() {
