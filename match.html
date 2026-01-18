@@ -204,6 +204,34 @@
         const matchAge = document.getElementById('matchAge');
         let matchCheckInterval = null;
 
+        // Validate that user has completed all onboarding steps
+        function validateOnboardingComplete() {
+            // Check if logged in
+            if (!SparkAPI.auth.isLoggedIn()) {
+                window.location.href = 'login.html';
+                return false;
+            }
+
+            // Check if email is verified
+            if (!SparkAPI.auth.isEmailVerified()) {
+                const user = SparkAPI.auth.getCurrentUser();
+                if (user?.email) {
+                    localStorage.setItem('sparkVerifyEmail', user.email);
+                }
+                window.location.href = 'verify-email.html';
+                return false;
+            }
+
+            // Check if user has completed plan selection
+            const hasCompletedPlan = localStorage.getItem('sparkPlanCompleted') === 'true';
+            if (!hasCompletedPlan) {
+                window.location.href = 'plan.html';
+                return false;
+            }
+
+            return true;
+        }
+
         async function checkForMatch() {
             try {
                 const { match: foundMatch } = await SparkAPI.matches.getCurrent();
@@ -225,6 +253,11 @@
         }
     
         async function findMatch() {
+            // Validate onboarding is complete before attempting to match
+            if (!validateOnboardingComplete()) {
+                return;
+            }
+
             try {
                 // Check for existing match first
                 const { match: existingMatch } = await SparkAPI.matches.getCurrent();
@@ -241,7 +274,7 @@
                     return;
                 }
 
-                // Find new match
+                // Find new match - this is where the user enters the queue
                 const { match, queued } = await SparkAPI.matches.findNew();
     
                 if (queued) {
@@ -303,14 +336,11 @@
             }
         });
 
-        // Check if logged in and email verified
-        if (!SparkAPI.auth.requireVerification()) {
-            // User will be redirected by requireVerification()
-        } else {
-            // Save current page for PWA session restoration
-            SparkAPI.navigation.saveCurrentPage();
-            findMatch();
-        }
+        // Save current page for PWA session restoration
+        SparkAPI.navigation.saveCurrentPage();
+        
+        // Start the matching process
+        findMatch();
     </script>
 </body>
 </html>
