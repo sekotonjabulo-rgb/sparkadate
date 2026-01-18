@@ -572,7 +572,7 @@ input.addEventListener('change', async (e) => {
         const reader = new FileReader();
         reader.onload = async (event) => {
             try {
-                const compressed = await compressImage(event.target.result);
+                const compressed = await compressImage(event.target.result, 1000, 0.6); // Changed from 1200, 0.7
                 userData.photos[index] = compressed;
 
                 let img = slot.querySelector('img');
@@ -638,11 +638,8 @@ function handleContinue4(e) {
     continueBtn4.disabled = true;
     
     console.log('Starting navigation process');
-    console.log('User data before filter:', userData);
     
     userData.photos = userData.photos.filter(p => p !== null);
-    
-    console.log('User data after filter:', userData);
     
     const dataToSave = {
         age: userData.age,
@@ -654,23 +651,45 @@ function handleContinue4(e) {
         photos: userData.photos
     };
     
-    console.log('Data to save:', dataToSave);
+    console.log('Attempting to save data, photo count:', dataToSave.photos.length);
     
-    try {
-        localStorage.setItem('sparkUserData', JSON.stringify(dataToSave));
-        console.log('Data saved to localStorage successfully');
-        
-        setTimeout(() => {
-            console.log('Navigating to signup.html');
-            window.location.href = 'signup.html';
-        }, 100);
-        
-    } catch (error) {
-        console.error('Failed to save to localStorage:', error);
-        alert('Unable to save your information. Please try again.');
-        isNavigating = false;
-        continueBtn4.disabled = false;
+    let saveAttempts = 0;
+    const maxAttempts = 3;
+    
+    async function attemptSave() {
+        try {
+            const jsonString = JSON.stringify(dataToSave);
+            console.log('Data size in bytes:', new Blob([jsonString]).size);
+            
+            localStorage.setItem('sparkUserData', jsonString);
+            console.log('Data saved successfully');
+            
+            setTimeout(() => {
+                console.log('Navigating to signup.html');
+                window.location.href = 'signup.html';
+            }, 100);
+            
+        } catch (error) {
+            console.error('Save attempt failed:', error);
+            saveAttempts++;
+            
+            if (error.name === 'QuotaExceededError' && saveAttempts < maxAttempts && dataToSave.photos.length > 0) {
+                console.log('Quota exceeded, reducing image quality');
+                
+                for (let i = 0; i < dataToSave.photos.length; i++) {
+                    dataToSave.photos[i] = await compressImage(dataToSave.photos[i], 800, 0.5);
+                }
+                
+                attemptSave();
+            } else {
+                alert('Unable to save your information. Please try using fewer or smaller photos.');
+                isNavigating = false;
+                continueBtn4.disabled = false;
+            }
+        }
     }
+    
+    attemptSave();
 }
 
 continueBtn4.addEventListener('click', handleContinue4);
