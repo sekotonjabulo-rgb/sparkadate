@@ -631,13 +631,13 @@
                     <span class="chat-status" id="chatStatus"></span>
                 </div>
                 <div class="chat-actions">
-                    <button class="btn-icon" id="timerBtn" title="Timer">
+                    <a href="timer.html" class="btn-icon" id="timerBtn" title="Timer">
                         <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="12" cy="12" r="10"/>
                             <path d="M12 6v6l4 2"/>
                         </svg>
-                    </button>
-                    <a href="#" class="btn-icon" id="revealBtn" title="Request reveal">
+                    </a>
+                    <a href="reveal.html" class="btn-icon" id="revealBtn" title="Request reveal">
                         <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
                             <circle cx="12" cy="12" r="3"/>
@@ -737,7 +737,6 @@
         const messageInput = document.getElementById('messageInput');
         const sendBtn = document.getElementById('sendBtn');
         const typingIndicator = document.getElementById('typingIndicator');
-        const timerBtn = document.getElementById('timerBtn');
         const revealBtn = document.getElementById('revealBtn');
         const revealNotification = document.getElementById('revealNotification');
         const replyPreviewBar = document.getElementById('replyPreviewBar');
@@ -765,15 +764,6 @@
         let useWebSocket = true;
 
         chatNameElement.textContent = matchData.name || 'Unknown';
-
-        // Initialize reveal button status
-        revealBtn.dataset.status = 'can-request';
-
-        // Timer button click handler
-        timerBtn.addEventListener('click', () => {
-            console.log('Timer button clicked');
-            window.location.href = 'timer.html';
-        });
 
         // WebSocket connection
         function initWebSocket() {
@@ -971,37 +961,21 @@
                         return;
                     }
                     revealNotification.classList.remove('visible');
-                    revealBtn.dataset.status = 'already-revealed';
                     revealBtn.title = 'Already revealed';
                     return;
                 }
 
                 if (match.reveal_requested_by && match.reveal_requested_by !== currentUser.id) {
                     revealNotification.classList.add('visible');
-                    revealBtn.dataset.status = 'pending-request';
+                    revealBtn.href = 'revealrequest.html';
                 } else {
                     revealNotification.classList.remove('visible');
-                    revealBtn.dataset.status = 'can-request';
+                    revealBtn.href = 'reveal.html';
                 }
             } catch (error) {
                 console.error('Check reveal request error:', error);
             }
         }
-
-        revealBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            const status = revealBtn.dataset.status;
-            console.log('Reveal button clicked, status:', status);
-            
-            if (status === 'pending-request') {
-                window.location.href = 'revealrequest.html';
-            } else if (status === 'can-request') {
-                window.location.href = 'reveal.html';
-            } else if (status === 'already-revealed') {
-                console.log('Already revealed, doing nothing');
-                return;
-            }
-        });
 
         async function loadMessages() {
             try {
