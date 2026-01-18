@@ -152,6 +152,8 @@
             font-weight: 500;
             cursor: pointer;
             transition: opacity 0.2s ease;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
 
         .btn-primary:active {
@@ -293,13 +295,40 @@
             }
         });
 
-        createBtn.addEventListener('click', async () => {
+        createBtn.addEventListener('click', async (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            
             if (createBtn.disabled) return;
 
             createBtn.disabled = true;
             createBtn.textContent = 'Creating account...';
 
-            const onboardingData = JSON.parse(localStorage.getItem('sparkUserData') || '{}');
+            console.log('Starting signup process');
+
+            let onboardingData;
+            try {
+                const rawData = localStorage.getItem('sparkUserData');
+                console.log('Raw localStorage data:', rawData);
+                
+                if (!rawData) {
+                    throw new Error('No onboarding data found');
+                }
+                
+                onboardingData = JSON.parse(rawData);
+                console.log('Parsed onboarding data:', onboardingData);
+                
+                if (!onboardingData.age || !onboardingData.gender || !onboardingData.seeking || !onboardingData.location) {
+                    console.error('Incomplete onboarding data:', onboardingData);
+                    throw new Error('Missing required profile information');
+                }
+            } catch (error) {
+                console.error('Error reading onboarding data:', error);
+                alert('Session expired or incomplete. Please start over.');
+                localStorage.removeItem('sparkUserData');
+                window.location.href = 'index.html';
+                return;
+            }
 
             const userData = {
                 email: emailInput.value.trim(),
@@ -311,29 +340,50 @@
                 location: onboardingData.location
             };
 
+            console.log('User data being sent to API:', userData);
+
             try {
-                await SparkAPI.auth.signup(userData);
+                const signupResponse = await SparkAPI.auth.signup(userData);
+                console.log('Signup successful:', signupResponse);
 
                 if (onboardingData.photos && onboardingData.photos.length > 0) {
                     createBtn.textContent = 'Uploading photos...';
+                    console.log('Starting photo upload, count:', onboardingData.photos.length);
 
                     try {
                         for (let i = 0; i < onboardingData.photos.length; i++) {
+                            console.log(`Uploading photo ${i + 1}/${onboardingData.photos.length}`);
                             await SparkAPI.users.uploadPhoto(onboardingData.photos[i], i);
                         }
+                        console.log('All photos uploaded successfully');
                     } catch (photoError) {
                         console.warn('Photo upload failed:', photoError);
                     }
                 }
 
-                // Store email for verification page
                 localStorage.setItem('sparkVerifyEmail', emailInput.value.trim());
                 localStorage.removeItem('sparkUserData');
 
-                // Redirect to email verification
+                console.log('Redirecting to verification page');
                 window.location.href = 'verify-email.html';
+                
             } catch (error) {
-                alert(error.message || 'Failed to create account');
+                console.error('Signup error details:', {
+                    message: error.message,
+                    stack: error.stack,
+                    error: error
+                });
+                
+                let errorMessage = 'Failed to create account. Please try again.';
+                
+                if (error.response) {
+                    console.error('API response error:', error.response);
+                    errorMessage = error.response.data?.message || error.response.statusText || errorMessage;
+                } else if (error.message) {
+                    errorMessage = error.message;
+                }
+                
+                alert(errorMessage);
                 createBtn.disabled = false;
                 createBtn.textContent = 'Create Account';
             }
