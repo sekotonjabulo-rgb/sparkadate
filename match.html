@@ -202,6 +202,27 @@
         const matchInfo = document.getElementById('matchInfo');
         const matchName = document.getElementById('matchName');
         const matchAge = document.getElementById('matchAge');
+        let matchCheckInterval = null;
+
+        async function checkForMatch() {
+            try {
+                const { match: foundMatch } = await SparkAPI.matches.getCurrent();
+                
+                if (foundMatch && !foundMatch.partner_left) {
+                    clearInterval(matchCheckInterval);
+                    matchCheckInterval = null;
+                    showMatch(foundMatch.partner);
+                    localStorage.setItem('sparkCurrentMatch', JSON.stringify({
+                        id: foundMatch.id,
+                        name: foundMatch.partner.display_name,
+                        age: foundMatch.partner.age,
+                        revealTime: new Date(foundMatch.reveal_available_at).getTime()
+                    }));
+                }
+            } catch (error) {
+                console.error('Error checking for match:', error);
+            }
+        }
     
         async function findMatch() {
             try {
@@ -229,6 +250,9 @@
                     skeleton.classList.add('hidden');
                     matchInfo.classList.add('visible');
                     setTimeout(() => matchInfo.classList.add('revealed'), 400);
+                    
+                    // Start checking for match every 2 seconds
+                    matchCheckInterval = setInterval(checkForMatch, 2000);
                     return;
                 }
     
@@ -272,6 +296,13 @@
             }, 5100);
         }
     
+        // Cleanup interval on page unload
+        window.addEventListener('beforeunload', () => {
+            if (matchCheckInterval) {
+                clearInterval(matchCheckInterval);
+            }
+        });
+
         // Check if logged in and email verified
         if (!SparkAPI.auth.requireVerification()) {
             // User will be redirected by requireVerification()
