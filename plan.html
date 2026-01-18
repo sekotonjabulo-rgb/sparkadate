@@ -202,6 +202,7 @@
             color: var(--color-text-secondary);
             text-decoration: none;
             transition: color 0.2s ease;
+            cursor: pointer;
         }
 
         .link-skip:active {
@@ -296,7 +297,7 @@
 
             <div class="plan-actions">
                 <button type="button" class="btn-primary" id="continueBtn">Continue with Pro</button>
-                <a href="match.html" class="link-skip">Continue with Free</a>
+                <a class="link-skip" id="skipLink">Continue with Free</a>
             </div>
         </section>
     </main>
@@ -307,8 +308,9 @@
         const freePlan = document.getElementById('freePlan')
         const proPlan = document.getElementById('proPlan')
         const continueBtn = document.getElementById('continueBtn')
+        const skipLink = document.getElementById('skipLink')
 
-        console.log('Elements found:', { freePlan, proPlan, continueBtn })
+        console.log('Elements found:', { freePlan, proPlan, continueBtn, skipLink })
 
         let selectedPlan = 'pro'
 
@@ -341,9 +343,17 @@
                     window.location.href = 'login.html'
                 }
             } else {
-                console.log('Free plan selected, going to match')
+                console.log('Free plan selected, marking plan as completed and going to match')
+                localStorage.setItem('sparkPlanCompleted', 'true')
                 window.location.href = 'match.html'
             }
+        })
+
+        skipLink.addEventListener('click', (e) => {
+            e.preventDefault()
+            console.log('Skip link clicked, marking plan as completed and going to match')
+            localStorage.setItem('sparkPlanCompleted', 'true')
+            window.location.href = 'match.html'
         })
 
         console.log('Event listeners attached')
