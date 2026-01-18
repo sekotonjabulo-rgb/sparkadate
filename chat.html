@@ -631,8 +631,8 @@
                     <span class="chat-status" id="chatStatus"></span>
                 </div>
                 <div class="chat-actions">
-                    <a href="timer.html" class="btn-icon" title="View timer">
-                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+<a href="#" class="btn-icon" id="revealBtn" title="Request reveal">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="12" cy="12" r="10"/>
                             <path d="M12 6v6l4 2"/>
                         </svg>
@@ -953,44 +953,58 @@
         }
 
         async function checkRevealRequest() {
-            try {
-                const { match } = await SparkAPI.matches.getCurrent();
+    try {
+        const { match } = await SparkAPI.matches.getCurrent();
 
-                if (!match) return;
+        if (!match) return;
 
-                // Check if partner has left the conversation
-                if (match.partner_left) {
-                    // Clear saved page so PWA doesn't restore to chat
-                    SparkAPI.navigation.clearLastPage();
-                    window.location.href = 'left.html';
-                    return;
-                }
-
-                const currentUser = SparkAPI.auth.getCurrentUser();
-                const seenBy = match.revealed_seen_by || [];
-
-                if (match.status === 'revealed') {
-                    if (!seenBy.includes(currentUser.id)) {
-                        window.location.href = 'revealed.html';
-                        return;
-                    }
-                    revealNotification.classList.remove('visible');
-                    revealBtn.href = '#';
-                    revealBtn.title = 'Already revealed';
-                    return;
-                }
-
-                if (match.reveal_requested_by && match.reveal_requested_by !== currentUser.id) {
-                    revealNotification.classList.add('visible');
-                    revealBtn.href = 'revealrequest.html';
-                } else {
-                    revealNotification.classList.remove('visible');
-                    revealBtn.href = 'reveal.html';
-                }
-            } catch (error) {
-                console.error('Check reveal request error:', error);
-            }
+        // Check if partner has left the conversation
+        if (match.partner_left) {
+            SparkAPI.navigation.clearLastPage();
+            window.location.href = 'left.html';
+            return;
         }
+
+        const currentUser = SparkAPI.auth.getCurrentUser();
+        const seenBy = match.revealed_seen_by || [];
+
+        if (match.status === 'revealed') {
+            if (!seenBy.includes(currentUser.id)) {
+                window.location.href = 'revealed.html';
+                return;
+            }
+            revealNotification.classList.remove('visible');
+            revealBtn.dataset.status = 'already-revealed';
+            revealBtn.title = 'Already revealed';
+            return;
+        }
+
+        if (match.reveal_requested_by && match.reveal_requested_by !== currentUser.id) {
+            revealNotification.classList.add('visible');
+            revealBtn.dataset.status = 'pending-request';
+        } else {
+            revealNotification.classList.remove('visible');
+            revealBtn.dataset.status = 'can-request';
+        }
+    } catch (error) {
+        console.error('Check reveal request error:', error);
+    }
+}
+
+// Add click handler for reveal button
+revealBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    const status = revealBtn.dataset.status;
+    
+    if (status === 'pending-request') {
+        window.location.href = 'revealrequest.html';
+    } else if (status === 'can-request') {
+        window.location.href = 'reveal.html';
+    } else if (status === 'already-revealed') {
+        // Do nothing or show a message
+        return;
+    }
+});
 
         async function loadMessages() {
             try {
