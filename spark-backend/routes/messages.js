@@ -168,6 +168,37 @@ router.post('/:matchId', authenticateToken, async (req, res) => {
             .update({ total_messages: newMessageCount })
             .eq('id', matchId);
 
+        // Analyze conversation every 10 messages
+        if (newMessageCount % 10 === 0 && newMessageCount >= 10) {
+            const { data: allMessages } = await supabase
+                .from('messages')
+                .select('*')
+                .eq('match_id', matchId)
+                .order('sent_at', { ascending: true });
+
+            if (allMessages && allMessages.length >= 10) {
+                try {
+                    const conversationAnalysis = await analyzeConversation(allMessages);
+                    
+                    if (conversationAnalysis) {
+                        await supabase
+                            .from('conversation_analytics')
+                            .update({
+                                total_messages: allMessages.length,
+                                ...conversationAnalysis,
+                                updated_at: new Date().toISOString()
+                            })
+                            .eq('match_id', matchId);
+                        
+                        console.log(`Conversation analytics updated for match ${matchId}`);
+                    }
+                } catch (analyzeError) {
+                    console.error('Conversation analysis error:', analyzeError);
+                    // Don't fail the message send if analysis fails
+                }
+            }
+        }
+
         // Send push notification to the other user
         const recipientId = match.user_a_id === senderId ? match.user_b_id : match.user_a_id;
 
