@@ -290,6 +290,27 @@ router.post('/find', authenticateToken, async (req, res) => {
             .from('conversation_analytics')
             .insert({ match_id: match.id });
 
+        // Update queue entries for both users
+        await supabase
+            .from('match_queue')
+            .update({
+                matched_at: new Date().toISOString(),
+                matched_with: bestMatch.candidate.id,
+                is_active: false
+            })
+            .eq('user_id', userId)
+            .eq('is_active', true);
+
+        await supabase
+            .from('match_queue')
+            .update({
+                matched_at: new Date().toISOString(),
+                matched_with: userId,
+                is_active: false
+            })
+            .eq('user_id', bestMatch.candidate.id)
+            .eq('is_active', true);
+
         res.json({
             match: {
                 id: match.id,
