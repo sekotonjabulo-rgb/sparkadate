@@ -95,65 +95,6 @@
                 overflow: hidden;
             }
         }
-        .notification-prompt {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(10px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
-            padding: 20px;
-        }
-
-        .notification-prompt-content {
-            background: #1a1a1a;
-            border-radius: 20px;
-            padding: 32px 24px;
-            max-width: 360px;
-            width: 100%;
-            text-align: center;
-        }
-
-        .notification-prompt-icon {
-            width: 64px;
-            height: 64px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 20px;
-        }
-
-        .notification-prompt-icon svg {
-            width: 32px;
-            height: 32px;
-        }
-
-        .notification-prompt-text h3 {
-            font-size: 20px;
-            font-weight: 500;
-            margin-bottom: 8px;
-            color: var(--color-text-primary);
-        }
-
-        .notification-prompt-text p {
-            font-size: 15px;
-            color: var(--color-text-secondary);
-            margin-bottom: 24px;
-            line-height: 1.5;
-        }
-
-        .notification-prompt-actions {
-            display: flex;
-            gap: 12px;
-        }
-
         .btn-dismiss,
         .btn-enable {
             flex: 1;
@@ -728,25 +669,6 @@
     </style>
 </head>
 <body>
-    <div class="notification-prompt" id="notificationPrompt" style="display: none;">
-        <div class="notification-prompt-content">
-            <div class="notification-prompt-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-                    <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-                </svg>
-            </div>
-            <div class="notification-prompt-text">
-                <h3>Stay Connected</h3>
-                <p>Get notified when you receive new messages</p>
-            </div>
-            <div class="notification-prompt-actions">
-                <button class="btn-dismiss" id="dismissNotifications">Not Now</button>
-                <button class="btn-enable" id="enableNotifications">Enable</button>
-            </div>
-        </div>
-    </div>
-    
     <div class="chat-container">
         <main class="chat-screen">
             <header class="chat-header">
