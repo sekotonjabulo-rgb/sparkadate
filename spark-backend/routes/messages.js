@@ -1,7 +1,7 @@
 import express from 'express';
 import { supabase } from '../config/supabase.js';
 import { authenticateToken } from '../middleware/auth.js';
-import { analyzeMessage, analyzeConversation, updatePersonalityProfile } from '../services/gemini.js';
+import { analyzeMessage, analyzeConversation, updatePersonalityProfile } from '../services/groq.js';
 import { sendPushToUser } from './push.js';
 import { emitToMatch, confirmMessage } from '../services/websocket.js';
 
@@ -110,6 +110,103 @@ function calculateProfileConfidence(totalMessagesAnalyzed, totalConversationsAna
     return Math.round((messageConfidence + conversationConfidence) * 100) / 100;
 }
 
+// Calculate message distribution between users
+function calculateMessageDistribution(messages, match) {
+    const messagesByUserA = messages.filter(m => m.sender_id === match.user_a_id).length;
+    const messagesByUserB = messages.filter(m => m.sender_id === match.user_b_id).length;
+    
+    const messageBalanceRatio = messagesByUserB > 0 
+        ? Math.round((messagesByUserA / messagesByUserB) * 100) / 100 
+        : null;
+    
+    return { messagesByUserA, messagesByUserB, messageBalanceRatio };
+}
+
+// Calculate response times per user in a specific match
+function calculateResponseTimesPerUser(messages, match) {
+    const responseTimesA = [];
+    const responseTimesB = [];
+    
+    for (let i = 1; i < messages.length; i++) {
+        const current = messages[i];
+        const previous = messages[i - 1];
+        
+        // Only count when users alternate
+        if (current.sender_id !== previous.sender_id) {
+            const responseTime = (new Date(current.sent_at) - new Date(previous.sent_at)) / 1000;
+            
+            // Only count reasonable response times (under 24 hours)
+            if (responseTime > 0 && responseTime < 86400) {
+                if (current.sender_id === match.user_a_id) {
+                    responseTimesA.push(responseTime);
+                } else {
+                    responseTimesB.push(responseTime);
+                }
+            }
+        }
+    }
+    
+    const avgResponseTimeA = responseTimesA.length > 0
+        ? Math.round(responseTimesA.reduce((a, b) => a + b, 0) / responseTimesA.length)
+        : null;
+    
+    const avgResponseTimeB = responseTimesB.length > 0
+        ? Math.round(responseTimesB.reduce((a, b) => a + b, 0) / responseTimesB.length)
+        : null;
+    
+    return { avgResponseTimeA, avgResponseTimeB };
+}
+
+// Calculate temporal metrics (gaps, sessions, peak engagement)
+function calculateTemporalMetrics(messages) {
+    if (messages.length < 2) {
+        return { 
+            longestGapHours: null, 
+            conversationSessions: 0, 
+            peakEngagementDay: null 
+        };
+    }
+    
+    let longestGap = 0;
+    const sessionThreshold = 3600000; // 1 hour in milliseconds
+    let sessions = 1;
+    const messagesByDay = {};
+    
+    for (let i = 1; i < messages.length; i++) {
+        const currentTime = new Date(messages[i].sent_at);
+        const previousTime = new Date(messages[i - 1].sent_at);
+        const gap = currentTime - previousTime;
+        
+        // Track longest gap
+        if (gap > longestGap) {
+            longestGap = gap;
+        }
+        
+        // Count sessions (messages separated by more than 1 hour start new session)
+        if (gap > sessionThreshold) {
+            sessions++;
+        }
+        
+        // Count messages per day
+        const day = currentTime.toDateString();
+        messagesByDay[day] = (messagesByDay[day] || 0) + 1;
+    }
+    
+    // Convert longest gap to hours
+    const longestGapHours = Math.round((longestGap / 3600000) * 100) / 100;
+    
+    // Find peak engagement day
+    const peakDay = Object.entries(messagesByDay)
+        .sort((a, b) => b[1] - a[1])[0];
+    const peakEngagementDay = peakDay ? peakDay[0] : null;
+    
+    return { 
+        longestGapHours, 
+        conversationSessions: sessions, 
+        peakEngagementDay 
+    };
+}
+
 // Send message
 router.post('/:matchId', authenticateToken, async (req, res) => {
     try {
@@ -178,20 +275,38 @@ router.post('/:matchId', authenticateToken, async (req, res) => {
 
             if (allMessages && allMessages.length >= 10) {
                 try {
+                    // Get AI-based conversation analysis from Groq
                     const conversationAnalysis = await analyzeConversation(allMessages);
                     
-                    if (conversationAnalysis) {
-                        await supabase
-                            .from('conversation_analytics')
-                            .update({
-                                total_messages: allMessages.length,
-                                ...conversationAnalysis,
-                                updated_at: new Date().toISOString()
-                            })
-                            .eq('match_id', matchId);
-                        
-                        console.log(`Conversation analytics updated for match ${matchId}`);
-                    }
+                    // Calculate deterministic metrics
+                    const { messagesByUserA, messagesByUserB, messageBalanceRatio } = 
+                        calculateMessageDistribution(allMessages, match);
+                    
+                    const { avgResponseTimeA, avgResponseTimeB } = 
+                        calculateResponseTimesPerUser(allMessages, match);
+                    
+                    const { longestGapHours, conversationSessions, peakEngagementDay } = 
+                        calculateTemporalMetrics(allMessages);
+                    
+                    // Update conversation analytics with both AI and calculated metrics
+                    await supabase
+                        .from('conversation_analytics')
+                        .update({
+                            total_messages: allMessages.length,
+                            messages_by_user_a: messagesByUserA,
+                            messages_by_user_b: messagesByUserB,
+                            message_balance_ratio: messageBalanceRatio,
+                            avg_response_time_a_seconds: avgResponseTimeA,
+                            avg_response_time_b_seconds: avgResponseTimeB,
+                            longest_gap_hours: longestGapHours,
+                            conversation_sessions: conversationSessions,
+                            peak_engagement_day: peakEngagementDay,
+                            ...conversationAnalysis,
+                            updated_at: new Date().toISOString()
+                        })
+                        .eq('match_id', matchId);
+                    
+                    console.log(`Conversation analytics updated for match ${matchId}`);
                 } catch (analyzeError) {
                     console.error('Conversation analysis error:', analyzeError);
                     // Don't fail the message send if analysis fails
@@ -209,13 +324,13 @@ router.post('/:matchId', authenticateToken, async (req, res) => {
             .eq('id', senderId)
             .single();
 
-sendPushToUser(recipientId, {
-    title: sender?.display_name || 'Spark',
-    body: content.length > 100 ? content.substring(0, 100) + '...' : content,
-    url: '/chat.html',
-    matchId: matchId,
-    tag: `message-${matchId}`
-});
+        sendPushToUser(recipientId, {
+            title: sender?.display_name || 'Spark',
+            body: content.length > 100 ? content.substring(0, 100) + '...' : content,
+            url: '/chat.html',
+            matchId: matchId,
+            tag: `message-${matchId}`
+        });
 
         // Update personality profile every 5 messages
         if (newMessageCount % 5 === 0) {
@@ -419,6 +534,16 @@ router.post('/:matchId/analyze', authenticateToken, async (req, res) => {
     try {
         const { matchId } = req.params;
 
+        const { data: match } = await supabase
+            .from('matches')
+            .select('*')
+            .eq('id', matchId)
+            .single();
+
+        if (!match) {
+            return res.status(404).json({ error: 'Match not found' });
+        }
+
         const { data: messages } = await supabase
             .from('messages')
             .select('*')
@@ -429,21 +554,40 @@ router.post('/:matchId/analyze', authenticateToken, async (req, res) => {
             return res.status(400).json({ error: 'Not enough messages to analyze' });
         }
 
-        const analysis = await analyzeConversation(messages);
+        // Get AI-based conversation analysis from Groq
+        const conversationAnalysis = await analyzeConversation(messages);
 
-        if (analysis) {
-            // Update conversation analytics
-            await supabase
-                .from('conversation_analytics')
-                .upsert({
-                    match_id: matchId,
-                    total_messages: messages.length,
-                    ...analysis,
-                    updated_at: new Date().toISOString()
-                });
-        }
+        // Calculate deterministic metrics
+        const { messagesByUserA, messagesByUserB, messageBalanceRatio } = 
+            calculateMessageDistribution(messages, match);
+        
+        const { avgResponseTimeA, avgResponseTimeB } = 
+            calculateResponseTimesPerUser(messages, match);
+        
+        const { longestGapHours, conversationSessions, peakEngagementDay } = 
+            calculateTemporalMetrics(messages);
 
-        res.json({ analysis });
+        const analyticsData = {
+            match_id: matchId,
+            total_messages: messages.length,
+            messages_by_user_a: messagesByUserA,
+            messages_by_user_b: messagesByUserB,
+            message_balance_ratio: messageBalanceRatio,
+            avg_response_time_a_seconds: avgResponseTimeA,
+            avg_response_time_b_seconds: avgResponseTimeB,
+            longest_gap_hours: longestGapHours,
+            conversation_sessions: conversationSessions,
+            peak_engagement_day: peakEngagementDay,
+            ...conversationAnalysis,
+            updated_at: new Date().toISOString()
+        };
+
+        // Update conversation analytics
+        await supabase
+            .from('conversation_analytics')
+            .upsert(analyticsData);
+
+        res.json({ analysis: analyticsData });
     } catch (error) {
         console.error('Analyze conversation error:', error);
         res.status(500).json({ error: 'Failed to analyze conversation' });
