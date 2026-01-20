@@ -257,92 +257,94 @@
 
     <script src="js/api.js"></script>
     <script>
-        const skeleton = document.getElementById('skeleton')
-        const matchInfo = document.getElementById('matchInfo')
-        const matchLabel = document.getElementById('matchLabel')
-        const matchName = document.getElementById('matchName')
-        const matchAge = document.getElementById('matchAge')
-        const matchActions = document.getElementById('matchActions')
-        const actionBtn = document.getElementById('actionBtn')
+        const skeleton = document.getElementById('skeleton');
+        const matchInfo = document.getElementById('matchInfo');
+        const matchLabel = document.getElementById('matchLabel');
+        const matchName = document.getElementById('matchName');
+        const matchAge = document.getElementById('matchAge');
+        const matchActions = document.getElementById('matchActions');
+        const actionBtn = document.getElementById('actionBtn');
 
-        let matchFound = false
+        let isSearching = true;
+        let pollInterval = null;
 
         async function findMatch() {
             try {
-                const { match: existingMatch } = await SparkAPI.matches.getCurrent()
+                const { match: existingMatch } = await SparkAPI.matches.getCurrent();
                 
                 if (existingMatch) {
-                    showMatch(existingMatch.partner, existingMatch)
-                    return
+                    showMatch(existingMatch.partner, existingMatch);
+                    return;
                 }
 
-                const { match, queued } = await SparkAPI.matches.findNew()
+                const { match, queued } = await SparkAPI.matches.findNew();
 
-                if (queued || !match) {
-                    showNoMatches()
-                    return
+                if (match) {
+                    showMatch(match.partner, match);
+                    return;
                 }
 
-                showMatch(match.partner, match)
+                // No immediate match found, start polling
+                startPollingForMatch();
+                
             } catch (error) {
-                console.error('Match error:', error)
-                showNoMatches()
+                console.error('Match error:', error);
+                // Retry on error instead of giving up
+                setTimeout(findMatch, 3000);
             }
         }
 
+        async function startPollingForMatch() {
+            pollInterval = setInterval(async () => {
+                if (!isSearching) return;
+                
+                try {
+                    const { match } = await SparkAPI.matches.getCurrent();
+                    
+                    if (match) {
+                        clearInterval(pollInterval);
+                        showMatch(match.partner, match);
+                    }
+                } catch (error) {
+                    console.error('Poll error:', error);
+                }
+            }, 3000);
+        }
+
         function showMatch(partner, matchData) {
-            matchFound = true
-            matchLabel.textContent = "You're matched with"
-            matchName.textContent = partner.display_name
-            matchAge.textContent = `${partner.age} years old`
-            actionBtn.textContent = 'Start chatting'
+            isSearching = false;
+            if (pollInterval) clearInterval(pollInterval);
+            
+            matchLabel.textContent = "You're matched with";
+            matchName.textContent = partner.display_name;
+            matchAge.textContent = `${partner.age} years old`;
+            actionBtn.textContent = 'Start chatting';
 
             localStorage.setItem('sparkCurrentMatch', JSON.stringify({
                 id: matchData.id,
                 name: partner.display_name,
                 age: partner.age,
                 revealTime: new Date(matchData.reveal_available_at).getTime()
-            }))
+            }));
 
             setTimeout(() => {
-                skeleton.classList.add('hidden')
-                matchInfo.classList.add('visible')
-            }, 1500)
+                skeleton.classList.add('hidden');
+                matchInfo.classList.add('visible');
+            }, 1500);
 
             setTimeout(() => {
-                matchActions.classList.add('visible')
-            }, 2000)
-        }
-
-        function showNoMatches() {
-            matchFound = false
-            matchLabel.textContent = ''
-            matchName.textContent = 'No matches yet'
-            matchAge.textContent = "We'll notify you when someone's available"
-            actionBtn.textContent = 'Back to home'
-
-            setTimeout(() => {
-                skeleton.classList.add('hidden')
-                matchInfo.classList.add('visible')
-            }, 1500)
-
-            setTimeout(() => {
-                matchActions.classList.add('visible')
-            }, 2000)
+                matchActions.classList.add('visible');
+            }, 2000);
         }
 
         actionBtn.addEventListener('click', () => {
-            if (matchFound) {
-                window.location.href = 'chat.html'
-            } else {
-                window.location.href = 'app.html'
-            }
-        })
+            window.location.href = 'chat.html';
+        });
 
         if (!SparkAPI.auth.requireVerification()) {
             // User will be redirected
         } else {
-            findMatch()
+            findMatch();
         }
     </script>
 </body>
