@@ -56,9 +56,9 @@ self.addEventListener('push', event => {
         renotify: true
     };
     
-    event.waitUntil(
-        self.registration.showNotification(data.title || 'Spark', options)
-    );
+event.waitUntil(
+    self.registration.showNotification(data.title || '', options)  // Changed from 'Spark' to ''
+);
 });
 
 self.addEventListener('notificationclick', event => {
