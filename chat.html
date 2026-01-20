@@ -707,7 +707,7 @@
                     </div>
                 </div>
             </section>
-                        <button class="scroll-to-bottom-btn" id="scrollToBottomBtn" title="Scroll to bottom">
+            <button class="scroll-to-bottom-btn" id="scrollToBottomBtn" title="Scroll to bottom">
                 <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M12 5v14M5 12l7 7 7-7"/>
                 </svg>
@@ -739,20 +739,31 @@
             </div>
         </main>
     </div>
+    
+    <!-- Register Service Worker -->
     <script>
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js')
-        .then(registration => {
-            console.log('Service Worker registered successfully:', registration.scope);
-        })
-        .catch(error => {
-            console.error('Service Worker registration failed:', error);
-        });
-}
-</script>
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js')
+            .then(registration => {
+                console.log('Service Worker registered successfully:', registration.scope);
+            })
+            .catch(error => {
+                console.error('Service Worker registration failed:', error);
+            });
+    }
+    </script>
+    
     <script src="js/api.js"></script>
     <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
     <script>
+        // Mobile debugging console - Shows console on device screen
+        (function () {
+            var script = document.createElement('script');
+            script.src = "https://cdn.jsdelivr.net/npm/eruda";
+            document.body.appendChild(script);
+            script.onload = function () { eruda.init(); };
+        })();
+
         const chatNameElement = document.getElementById('chatName');
         const chatStatus = document.getElementById('chatStatus');
         const chatMessages = document.getElementById('chatMessages');
@@ -774,7 +785,7 @@ if ('serviceWorker' in navigator) {
         const matchData = JSON.parse(localStorage.getItem('sparkCurrentMatch') || '{}');
         let matchId = matchData.id;
         let displayedMessageIds = new Set();
-        let messagesMap = new Map(); // Store messages for reply lookup
+        let messagesMap = new Map();
         let displayedDates = new Set();
         let lastDisplayedDate = null;
         let isInitialLoad = true;
@@ -787,7 +798,6 @@ if ('serviceWorker' in navigator) {
 
         chatNameElement.textContent = matchData.name || 'Unknown';
 
-        // WebSocket connection
         function initWebSocket() {
             const token = localStorage.getItem('sparkToken');
             if (!token || typeof io === 'undefined') {
@@ -831,7 +841,6 @@ if ('serviceWorker' in navigator) {
                 });
 
                 socket.on('message-confirmed', (msg) => {
-                    // Update temp message with real ID
                     messagesMap.set(msg.id, msg);
                     displayedMessageIds.add(msg.id);
                 });
@@ -857,14 +866,12 @@ if ('serviceWorker' in navigator) {
             }
         }
 
-        // Format date for separator (Today, Yesterday, or date)
         function formatDateSeparator(date) {
             const messageDate = new Date(date);
             const today = new Date();
             const yesterday = new Date(today);
             yesterday.setDate(yesterday.getDate() - 1);
 
-            // Reset times to compare just dates
             const messageDateOnly = new Date(messageDate.getFullYear(), messageDate.getMonth(), messageDate.getDate());
             const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
             const yesterdayOnly = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate());
@@ -882,13 +889,11 @@ if ('serviceWorker' in navigator) {
             }
         }
 
-        // Get date key for comparison (YYYY-MM-DD)
         function getDateKey(date) {
             const d = new Date(date);
             return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
         }
 
-        // Add date separator to UI
         function addDateSeparator(date) {
             const dateKey = getDateKey(date);
             if (displayedDates.has(dateKey)) return;
@@ -901,13 +906,10 @@ if ('serviceWorker' in navigator) {
         }
 
         if (!SparkAPI.auth.requireVerification()) {
-            // User will be redirected by requireVerification()
         } else {
-            // Save current page for PWA session restoration
             SparkAPI.navigation.saveCurrentPage();
         }
 
-        // Format last seen time
         function formatLastSeen(lastSeenDate) {
             const now = new Date();
             const lastSeen = new Date(lastSeenDate);
@@ -931,7 +933,6 @@ if ('serviceWorker' in navigator) {
             }
         }
 
-        // Update the status text
         function updateStatusUI(isOnline, lastSeen) {
             if (isOnline) {
                 chatStatus.textContent = 'Online';
@@ -942,7 +943,6 @@ if ('serviceWorker' in navigator) {
             }
         }
 
-        // Fetch and update partner's online status
         async function updatePartnerStatus() {
             try {
                 const { isOnline, lastSeen } = await SparkAPI.presence.getMatchStatus(matchId);
@@ -953,7 +953,6 @@ if ('serviceWorker' in navigator) {
             }
         }
 
-        // Send heartbeat to indicate user is online
         async function sendHeartbeat() {
             try {
                 await SparkAPI.presence.heartbeat();
@@ -962,9 +961,7 @@ if ('serviceWorker' in navigator) {
             }
         }
 
-        // Set user offline when leaving the page
         function handlePageUnload() {
-            // Use sendBeacon for reliable delivery on page unload
             const token = localStorage.getItem('sparkToken');
             if (token) {
                 navigator.sendBeacon(
@@ -975,70 +972,65 @@ if ('serviceWorker' in navigator) {
         }
 
         async function checkRevealRequest() {
-    try {
-        const { match } = await SparkAPI.matches.getCurrent();
+            try {
+                const { match } = await SparkAPI.matches.getCurrent();
 
-        if (!match) return;
+                if (!match) return;
 
-        // Check if partner has left the conversation
-        if (match.partner_left) {
-            SparkAPI.navigation.clearLastPage();
-            window.location.href = 'left.html';
-            return;
+                if (match.partner_left) {
+                    SparkAPI.navigation.clearLastPage();
+                    window.location.href = 'left.html';
+                    return;
+                }
+
+                const currentUser = SparkAPI.auth.getCurrentUser();
+                const seenBy = match.revealed_seen_by || [];
+
+                if (match.status === 'revealed') {
+                    if (!seenBy.includes(currentUser.id)) {
+                        window.location.href = 'revealed.html';
+                        return;
+                    }
+                    revealNotification.classList.remove('visible');
+                    revealBtn.dataset.status = 'already-revealed';
+                    revealBtn.title = 'Already revealed';
+                    return;
+                }
+
+                if (match.reveal_requested_by && match.reveal_requested_by !== currentUser.id) {
+                    revealNotification.classList.add('visible');
+                    revealBtn.dataset.status = 'pending-request';
+                } else {
+                    revealNotification.classList.remove('visible');
+                    revealBtn.dataset.status = 'can-request';
+                }
+            } catch (error) {
+                console.error('Check reveal request error:', error);
+            }
         }
 
-        const currentUser = SparkAPI.auth.getCurrentUser();
-        const seenBy = match.revealed_seen_by || [];
-
-        if (match.status === 'revealed') {
-            if (!seenBy.includes(currentUser.id)) {
-                window.location.href = 'revealed.html';
+        revealBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const status = revealBtn.dataset.status;
+            
+            if (status === 'pending-request') {
+                window.location.href = 'revealrequest.html';
+            } else if (status === 'can-request') {
+                window.location.href = 'reveal.html';
+            } else if (status === 'already-revealed') {
                 return;
             }
-            revealNotification.classList.remove('visible');
-            revealBtn.dataset.status = 'already-revealed';
-            revealBtn.title = 'Already revealed';
-            return;
-        }
-
-        if (match.reveal_requested_by && match.reveal_requested_by !== currentUser.id) {
-            revealNotification.classList.add('visible');
-            revealBtn.dataset.status = 'pending-request';
-        } else {
-            revealNotification.classList.remove('visible');
-            revealBtn.dataset.status = 'can-request';
-        }
-    } catch (error) {
-        console.error('Check reveal request error:', error);
-    }
-}
-
-// Add click handler for reveal button
-revealBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    const status = revealBtn.dataset.status;
-    
-    if (status === 'pending-request') {
-        window.location.href = 'revealrequest.html';
-    } else if (status === 'can-request') {
-        window.location.href = 'reveal.html';
-    } else if (status === 'already-revealed') {
-        // Do nothing or show a message
-        return;
-    }
-});
+        });
 
         async function loadMessages() {
             try {
                 const { messages } = await SparkAPI.messages.getAll(matchId);
                 const currentUser = SparkAPI.auth.getCurrentUser();
 
-                // First pass: store all messages in map for reply lookups
                 messages.forEach(msg => {
                     messagesMap.set(msg.id, msg);
                 });
 
-                // Second pass: display messages
                 messages.forEach(msg => {
                     if (!displayedMessageIds.has(msg.id)) {
                         displayedMessageIds.add(msg.id);
@@ -1056,7 +1048,6 @@ revealBtn.addEventListener('click', (e) => {
         function addMessageToUI(content, isSent, animate = true, timestamp = null, messageData = null) {
             const time = timestamp ? new Date(timestamp) : new Date();
 
-            // Add date separator if this is a new day
             addDateSeparator(time);
 
             const wrapper = document.createElement('div');
@@ -1070,7 +1061,6 @@ revealBtn.addEventListener('click', (e) => {
             const editedLabel = isEdited ? '<span class="edited-label">(edited)</span>' : '';
             const editedClass = isEdited ? ' has-edited' : '';
 
-            // Build reply preview if this is a reply
             let replyPreview = '';
             if (messageData?.reply_to_id && messagesMap.has(messageData.reply_to_id)) {
                 const originalMsg = messagesMap.get(messageData.reply_to_id);
@@ -1080,7 +1070,6 @@ revealBtn.addEventListener('click', (e) => {
                 replyPreview = `<div class="message-reply-preview">${escapeHtml(previewText)}</div>`;
             }
 
-            // Build dropdown menu items
             let dropdownItems = `
                 <button class="message-dropdown-item" data-action="reply">
                     <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1135,14 +1124,12 @@ revealBtn.addEventListener('click', (e) => {
                 <span class="message-time${editedClass}">${timeString} ${editedLabel}</span>
             `;
 
-            // Add event listeners for dropdown
             if (messageData) {
                 const menuBtn = wrapper.querySelector('.message-menu-btn');
                 const dropdown = wrapper.querySelector('.message-dropdown');
 
                 menuBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    // Close any other open dropdowns
                     document.querySelectorAll('.message-dropdown.visible').forEach(d => {
                         if (d !== dropdown) d.classList.remove('visible');
                     });
@@ -1168,20 +1155,17 @@ revealBtn.addEventListener('click', (e) => {
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
 
-        // Close dropdowns when clicking outside
         document.addEventListener('click', () => {
             document.querySelectorAll('.message-dropdown.visible').forEach(d => d.classList.remove('visible'));
             document.querySelectorAll('.message-menu-btn.active').forEach(b => b.classList.remove('active'));
             headerDropdown.classList.remove('visible');
         });
 
-        // Header menu toggle
         headerMenuBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             headerDropdown.classList.toggle('visible');
         });
 
-        // Logout button
         logoutBtn.addEventListener('click', (e) => {
             e.preventDefault();
             if (confirm('Are you sure you want to log out?')) {
@@ -1189,14 +1173,12 @@ revealBtn.addEventListener('click', (e) => {
             }
         });
 
-        // Scroll to bottom button
         function checkScrollPosition() {
             const scrollTop = chatMessages.scrollTop;
             const scrollHeight = chatMessages.scrollHeight;
             const clientHeight = chatMessages.clientHeight;
             const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
 
-            // Show button when user is more than 200px from bottom
             if (distanceFromBottom > 200) {
                 scrollToBottomBtn.classList.add('visible');
             } else {
@@ -1297,20 +1279,16 @@ revealBtn.addEventListener('click', (e) => {
             const content = messageInput.value.trim();
             if (!content) return;
 
-            // Handle edit mode
             if (editingMessage) {
                 try {
                     const { message } = await SparkAPI.messages.edit(matchId, editingMessage.data.id, content);
-                    // Update the displayed message
                     const msgElement = editingMessage.element.querySelector('.message span');
                     if (msgElement) msgElement.textContent = content;
-                    // Add edited label if not already there
                     const timeElement = editingMessage.element.querySelector('.message-time');
                     if (timeElement && !timeElement.querySelector('.edited-label')) {
                         timeElement.classList.add('has-edited');
                         timeElement.innerHTML += ' <span class="edited-label">(edited)</span>';
                     }
-                    // Update in map
                     messagesMap.set(message.id, message);
                     cancelEdit();
                 } catch (error) {
@@ -1323,7 +1301,6 @@ revealBtn.addEventListener('click', (e) => {
             messageInput.value = '';
             sendBtn.classList.remove('visible');
 
-            // Create optimistic message data for immediate display
             const tempId = 'temp-' + Date.now();
             const tempMessage = {
                 id: tempId,
@@ -1339,11 +1316,9 @@ revealBtn.addEventListener('click', (e) => {
 
             try {
                 const { message } = await SparkAPI.messages.send(matchId, content, replyId);
-                // Replace temp ID with real ID
                 messagesMap.delete(tempId);
                 messagesMap.set(message.id, message);
                 displayedMessageIds.add(message.id);
-                // Update typing status
                 setTypingStatus(false);
             } catch (error) {
                 console.error('Send message error:', error);
@@ -1356,7 +1331,6 @@ revealBtn.addEventListener('click', (e) => {
                 const { messages } = await SparkAPI.messages.getAll(matchId);
                 const currentUser = SparkAPI.auth.getCurrentUser();
 
-                // Store in map first for reply lookups
                 messages.forEach(msg => {
                     messagesMap.set(msg.id, msg);
                 });
@@ -1373,12 +1347,10 @@ revealBtn.addEventListener('click', (e) => {
             }
         }
 
-        // Typing indicator functions
         async function setTypingStatus(typing) {
             if (isTyping === typing) return;
             isTyping = typing;
 
-            // Use WebSocket if available
             if (useWebSocket && socket?.connected) {
                 socket.emit('typing', { matchId, isTyping: typing });
                 return;
@@ -1392,7 +1364,6 @@ revealBtn.addEventListener('click', (e) => {
         }
 
         async function checkPartnerTyping() {
-            // Skip if using WebSocket - handled by socket events
             if (useWebSocket && socket?.connected) return;
 
             try {
@@ -1407,41 +1378,32 @@ revealBtn.addEventListener('click', (e) => {
             }
         }
 
-        // Handle typing detection
         function handleTypingInput() {
-            // Show send button
             if (messageInput.value.trim()) {
                 sendBtn.classList.add('visible');
             } else {
                 sendBtn.classList.remove('visible');
             }
 
-            // Set typing status
             setTypingStatus(true);
 
-            // Clear existing timeout
             if (typingTimeout) {
                 clearTimeout(typingTimeout);
             }
 
-            // Set timeout to clear typing status after 3 seconds of inactivity
             typingTimeout = setTimeout(() => {
                 setTypingStatus(false);
             }, 3000);
         }
 
-        // Load content immediately for fast UI
         function startLoadingContent() {
-            // Initialize WebSocket connection
             initWebSocket();
 
-            // Load messages and status immediately - don't wait
             loadMessages();
             updatePartnerStatus();
             sendHeartbeat();
             checkPartnerTyping();
 
-            // Start polling - reduced frequency when WebSocket is connected
             setInterval(() => {
                 if (!useWebSocket || !socket?.connected) {
                     pollMessages();
@@ -1471,12 +1433,10 @@ revealBtn.addEventListener('click', (e) => {
             }, 2000);
         }
 
-        // Verify match status in background (redirect if invalid)
         async function verifyMatchInBackground() {
             try {
                 const { match } = await SparkAPI.matches.getCurrent();
 
-                // No active match - redirect to find one
                 if (!match) {
                     SparkAPI.navigation.clearLastPage();
                     localStorage.removeItem('sparkCurrentMatch');
@@ -1484,7 +1444,6 @@ revealBtn.addEventListener('click', (e) => {
                     return;
                 }
 
-                // Partner has left - redirect to left page
                 if (match.partner_left) {
                     SparkAPI.navigation.clearLastPage();
                     window.location.href = 'left.html';
@@ -1492,64 +1451,106 @@ revealBtn.addEventListener('click', (e) => {
                 }
             } catch (error) {
                 console.error('Failed to verify match:', error);
-                // On error, continue anyway - the polling will handle it
             }
         }
 
-        // Start loading immediately, verify in background
         startLoadingContent();
         verifyMatchInBackground();
 
-        // Handle page unload
         window.addEventListener('beforeunload', handlePageUnload);
         window.addEventListener('pagehide', handlePageUnload);
 
-        // Push notification setup
+        // Push notification setup with detailed logging
         async function setupPushNotifications() {
-            if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-                console.log('Push notifications not supported');
+            console.log('=== PUSH SETUP START ===');
+            
+            const isPWA = window.matchMedia('(display-mode: standalone)').matches || 
+                          window.navigator.standalone === true;
+            console.log('Is PWA mode?', isPWA);
+            
+            if (!isPWA) {
+                console.log('⚠️ Not running as PWA! Open from home screen icon.');
                 return;
             }
+            
+            if (!('serviceWorker' in navigator)) {
+                console.log('❌ Service Worker not supported');
+                return;
+            }
+            console.log('✓ Service Worker supported');
+            
+            if (!('PushManager' in window)) {
+                console.log('❌ Push Manager not supported');
+                return;
+            }
+            console.log('✓ Push Manager supported');
 
             try {
-                // Check if already subscribed
+                console.log('Waiting for service worker to be ready...');
                 const registration = await navigator.serviceWorker.ready;
+                console.log('✓ Service Worker ready:', registration);
+
+                console.log('Checking existing subscription...');
                 let subscription = await registration.pushManager.getSubscription();
+                console.log('Existing subscription:', subscription);
 
                 if (subscription) {
-                    // Already subscribed
+                    console.log('✓ Already subscribed');
+                    try {
+                        await SparkAPI.push.subscribe(subscription);
+                        console.log('✓ Re-saved existing subscription');
+                    } catch (e) {
+                        console.log('Could not save existing subscription:', e);
+                    }
                     return;
                 }
 
-                // Request permission
+                console.log('Requesting notification permission...');
                 const permission = await Notification.requestPermission();
+                console.log('Permission result:', permission);
+                
                 if (permission !== 'granted') {
-                    console.log('Notification permission denied');
+                    console.log('❌ Notification permission denied');
                     return;
                 }
+                console.log('✓ Permission granted');
 
-                // Get VAPID public key
-                const { publicKey } = await SparkAPI.push.getVapidKey();
-                if (!publicKey) {
-                    console.log('VAPID key not available');
+                console.log('Fetching VAPID key from backend...');
+                const vapidResponse = await SparkAPI.push.getVapidKey();
+                console.log('VAPID response:', vapidResponse);
+                
+                if (!vapidResponse || !vapidResponse.publicKey) {
+                    console.log('❌ VAPID key not available');
                     return;
                 }
+                console.log('✓ VAPID key received:', vapidResponse.publicKey.substring(0, 20) + '...');
 
-                // Subscribe to push
+                console.log('Converting VAPID key...');
+                const applicationServerKey = urlBase64ToUint8Array(vapidResponse.publicKey);
+                console.log('✓ VAPID key converted');
+
+                console.log('Subscribing to push...');
                 subscription = await registration.pushManager.subscribe({
                     userVisibleOnly: true,
-                    applicationServerKey: urlBase64ToUint8Array(publicKey)
+                    applicationServerKey: applicationServerKey
                 });
+                console.log('✓ Push subscription created:', subscription);
 
-                // Send subscription to server
-                await SparkAPI.push.subscribe(subscription);
-                console.log('Push notification subscription successful');
+                console.log('Sending subscription to backend...');
+                const saveResponse = await SparkAPI.push.subscribe(subscription);
+                console.log('✓ Backend save response:', saveResponse);
+                
+                console.log('=== PUSH SETUP SUCCESS ===');
             } catch (error) {
-                console.error('Push subscription error:', error);
+                console.error('❌ Push subscription error:', error);
+                console.error('Error details:', {
+                    name: error.name,
+                    message: error.message,
+                    stack: error.stack
+                });
             }
         }
 
-        // Helper function to convert VAPID key
         function urlBase64ToUint8Array(base64String) {
             const padding = '='.repeat((4 - base64String.length % 4) % 4);
             const base64 = (base64String + padding)
@@ -1563,10 +1564,9 @@ revealBtn.addEventListener('click', (e) => {
             return outputArray;
         }
 
-        // Request push notification permission after user has been chatting for a bit
         setTimeout(() => {
             setupPushNotifications();
-        }, 10000); // Ask after 10 seconds
+        }, 10000);
     </script>
 </body>
 </html>
