@@ -314,23 +314,34 @@ router.post('/:matchId', authenticateToken, async (req, res) => {
             }
         }
 
-        // Send push notification to the other user
+        // Send push notification to the other user (only if they're not actively viewing the chat)
         const recipientId = match.user_a_id === senderId ? match.user_b_id : match.user_a_id;
 
-        // Get sender's name for notification
-        const { data: sender } = await supabase
-            .from('users')
-            .select('display_name')
-            .eq('id', senderId)
+        // Check if recipient is currently active in this chat
+        const { data: presenceData } = await supabase
+            .from('presence')
+            .select('in_chat_match_id, is_active_in_chat')
+            .eq('user_id', recipientId)
             .single();
 
-        sendPushToUser(recipientId, {
-            title: sender?.display_name || 'Spark',
-            body: content.length > 100 ? content.substring(0, 100) + '...' : content,
-            url: '/chat.html',
-            matchId: matchId,
-            tag: `message-${matchId}`
-        });
+        const isRecipientInChat = presenceData?.in_chat_match_id === matchId && presenceData?.is_active_in_chat === true;
+
+        // Only send push notification if recipient is NOT actively viewing this chat
+        if (!isRecipientInChat) {
+            const { data: sender } = await supabase
+                .from('users')
+                .select('display_name')
+                .eq('id', senderId)
+                .single();
+
+            sendPushToUser(recipientId, {
+                title: sender?.display_name || 'Spark',
+                body: content.length > 100 ? content.substring(0, 100) + '...' : content,
+                url: '/chat.html',
+                matchId: matchId,
+                tag: `message-${matchId}`
+            });
+        }
 
         // Update personality profile every 5 messages
         if (newMessageCount % 5 === 0) {
