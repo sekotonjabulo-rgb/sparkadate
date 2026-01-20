@@ -209,13 +209,13 @@ router.post('/:matchId', authenticateToken, async (req, res) => {
             .eq('id', senderId)
             .single();
 
-        sendPushToUser(recipientId, {
-            title: sender?.display_name || 'New message',
-            body: content.length > 100 ? content.substring(0, 100) + '...' : content,
-            url: '/chat.html',
-            matchId: matchId,
-            tag: `message-${matchId}`
-        });
+sendPushToUser(recipientId, {
+    title: sender?.display_name || 'Spark',
+    body: content.length > 100 ? content.substring(0, 100) + '...' : content,
+    url: '/chat.html',
+    matchId: matchId,
+    tag: `message-${matchId}`
+});
 
         // Update personality profile every 5 messages
         if (newMessageCount % 5 === 0) {
