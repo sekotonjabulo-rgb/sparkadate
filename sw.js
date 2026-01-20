@@ -1,30 +1,29 @@
 const CACHE_NAME = 'spark-v1';
 const urlsToCache = [
-    '/Spark/',
-    '/Spark/index.html',
-    '/Spark/onboarding.html',
-    '/Spark/onboarding1.html',
-    '/Spark/signup.html',
-    '/Spark/login.html',
-    '/Spark/plan.html',
-    '/Spark/payment.html',
-    '/Spark/match.html',
-    '/Spark/chat.html',
-    '/Spark/timer.html',
-    '/Spark/reveal.html',
-    '/Spark/revealed.html',
-    '/Spark/exit.html',
-    '/Spark/blueocean.jpeg',
-    '/Spark/fonts/CabinetGrotesk-Medium.woff2',
-    '/Spark/fonts/CabinetGrotesk-Medium.woff',
-    '/Spark/fonts/CabinetGrotesk-Medium.ttf'
+    '/',
+    '/index.html',
+    '/chat.html',
+    '/blueocean.jpeg'
 ];
 
 self.addEventListener('install', event => {
+    console.log('Service Worker installing...');
     event.waitUntil(
         caches.open(CACHE_NAME)
-            .then(cache => cache.addAll(urlsToCache))
+            .then(cache => {
+                console.log('Opened cache');
+                return cache.addAll(urlsToCache);
+            })
+            .catch(err => {
+                console.error('Cache addAll failed:', err);
+            })
     );
+    self.skipWaiting(); // Force the waiting service worker to become the active service worker
+});
+
+self.addEventListener('activate', event => {
+    console.log('Service Worker activating...');
+    event.waitUntil(self.clients.claim()); // Claim clients immediately
 });
 
 self.addEventListener('fetch', event => {
@@ -36,8 +35,9 @@ self.addEventListener('fetch', event => {
 
 // Push notification handling
 self.addEventListener('push', event => {
+    console.log('Push notification received:', event);
     if (!event.data) return;
-
+    
     const data = event.data.json();
     const options = {
         body: data.body || 'You have a new message',
@@ -55,31 +55,29 @@ self.addEventListener('push', event => {
         tag: data.tag || 'spark-notification',
         renotify: true
     };
-
+    
     event.waitUntil(
         self.registration.showNotification(data.title || 'Spark', options)
     );
 });
 
-// Handle notification click
 self.addEventListener('notificationclick', event => {
+    console.log('Notification clicked:', event);
     event.notification.close();
-
+    
     if (event.action === 'dismiss') return;
-
+    
     const urlToOpen = event.notification.data?.url || '/chat.html';
-
+    
     event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true })
             .then(windowClients => {
-                // Check if there's already a window open
                 for (const client of windowClients) {
                     if (client.url.includes('sparkadate') && 'focus' in client) {
                         client.navigate(urlToOpen);
                         return client.focus();
                     }
                 }
-                // If no window is open, open a new one
                 if (clients.openWindow) {
                     return clients.openWindow(urlToOpen);
                 }
@@ -87,7 +85,6 @@ self.addEventListener('notificationclick', event => {
     );
 });
 
-// Handle notification close
 self.addEventListener('notificationclose', event => {
-    // Analytics or cleanup can be done here
+    console.log('Notification closed:', event);
 });
