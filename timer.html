@@ -286,18 +286,14 @@
             skipBtn.disabled = true
             
             try {
-                const result = await SparkAPI.matches.forceReveal(matchData.id)
-                
-                timerSublabel.textContent = 'Redirecting to reveal...'
-                setTimeout(() => {
-                    window.location.href = 'revealed.html'
-                }, 800)
+                await SparkAPI.matches.forceReveal(matchData.id)
             } catch (error) {
-                console.error('Auto-reveal failed:', error)
-                timerValue.textContent = 'Reveal failed'
-                timerSublabel.textContent = 'Please refresh the page'
-                isRevealInProgress = false
+                console.error('Auto-reveal error:', error)
             }
+            
+            setTimeout(() => {
+                window.location.href = 'revealed.html'
+            }, 1000)
         }
 
         function updateTimer() {
