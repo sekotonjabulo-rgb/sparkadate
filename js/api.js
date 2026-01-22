@@ -286,6 +286,10 @@ const matches = {
         return apiRequest(`/matches/${matchId}/reveal`, { method: 'POST' });
     },
 
+    async forceReveal(matchId) {
+        return apiRequest(`/matches/${matchId}/force-reveal`, { method: 'POST' });
+    },
+
     async markRevealSeen(matchId) {
         return apiRequest(`/matches/${matchId}/seen`, { method: 'POST' });
     },
