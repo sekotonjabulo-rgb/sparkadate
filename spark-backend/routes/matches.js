@@ -528,4 +528,11 @@ router.get('/:matchId/photos', authenticateToken, async (req, res) => {
     }
 });
 
+console.log('Matches routes loaded:');
+console.log('- POST /:matchId/reveal');
+console.log('- POST /:matchId/force-reveal');
+console.log('- POST /:matchId/seen');
+console.log('- POST /:matchId/exit');
+console.log('- GET /:matchId/photos');
+
 export default router;
