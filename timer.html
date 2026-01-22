@@ -219,6 +219,7 @@
 
         const matchData = JSON.parse(localStorage.getItem('sparkCurrentMatch') || '{}')
         let userProfile = null
+        let isRevealInProgress = false
 
         async function loadUserProfile() {
             try {
@@ -276,13 +277,35 @@
             }
         })
 
+        async function initiateAutoReveal() {
+            if (isRevealInProgress) return
+            isRevealInProgress = true
+
+            timerValue.textContent = 'Time\'s up!'
+            timerSublabel.textContent = 'Revealing now...'
+            skipBtn.disabled = true
+            
+            try {
+                const result = await SparkAPI.matches.forceReveal(matchData.id)
+                
+                timerSublabel.textContent = 'Redirecting to reveal...'
+                setTimeout(() => {
+                    window.location.href = 'revealed.html'
+                }, 800)
+            } catch (error) {
+                console.error('Auto-reveal failed:', error)
+                timerValue.textContent = 'Reveal failed'
+                timerSublabel.textContent = 'Please refresh the page'
+                isRevealInProgress = false
+            }
+        }
+
         function updateTimer() {
             const now = Date.now()
             const remaining = matchData.revealTime - now
 
             if (remaining <= 0) {
-                timerValue.textContent = 'Ready'
-                timerSublabel.textContent = 'You can now request a reveal'
+                initiateAutoReveal()
                 return
             }
 
