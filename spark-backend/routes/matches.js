@@ -371,6 +371,45 @@ router.post('/:matchId/reveal', authenticateToken, async (req, res) => {
     }
 });
 
+router.post('/:matchId/force-reveal', authenticateToken, async (req, res) => {
+    try {
+        const { matchId } = req.params;
+        const userId = req.user.id;
+
+        const { data: match } = await supabase
+            .from('matches')
+            .select('*')
+            .eq('id', matchId)
+            .single();
+
+        if (!match || (match.user_a_id !== userId && match.user_b_id !== userId)) {
+            return res.status(403).json({ error: 'Not authorized' });
+        }
+
+        const now = new Date();
+        const revealAvailableAt = new Date(match.reveal_available_at);
+
+        if (now < revealAvailableAt) {
+            return res.status(400).json({ error: 'Timer has not expired yet' });
+        }
+
+        await supabase
+            .from('matches')
+            .update({
+                status: 'revealed',
+                revealed_at: now.toISOString(),
+                reveal_requested_by: userId,
+                reveal_requested_at: now.toISOString()
+            })
+            .eq('id', matchId);
+
+        res.json({ revealed: true });
+    } catch (error) {
+        console.error('Force reveal error:', error);
+        res.status(500).json({ error: 'Failed to force reveal' });
+    }
+});
+
 router.post('/:matchId/seen', authenticateToken, async (req, res) => {
     try {
         const { matchId } = req.params;
