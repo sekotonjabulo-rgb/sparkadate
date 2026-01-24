@@ -1,1 +1,43 @@
+name: Build iOS App (Unsigned for Sideloading)
 
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+    
+    - name: Setup Xcode
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: latest-stable
+    
+    - name: Build unsigned IPA
+      run: |
+        cd ios-src
+        xcodebuild -workspace Spark.xcworkspace \
+          -scheme Spark \
+          -configuration Release \
+          -sdk iphoneos \
+          -archivePath build/Spark.xcarchive \
+          CODE_SIGN_IDENTITY="" \
+          CODE_SIGNING_REQUIRED=NO \
+          CODE_SIGNING_ALLOWED=NO \
+          archive
+        
+        mkdir -p build/Payload
+        cp -r build/Spark.xcarchive/Products/Applications/Spark.app build/Payload/
+        cd build
+        zip -r Spark-Unsigned.ipa Payload
+    
+    - name: Upload IPA artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: Spark-Unsigned-IPA
+        path: ios-src/build/Spark-Unsigned.ipa
