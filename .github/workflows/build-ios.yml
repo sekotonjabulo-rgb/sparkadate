@@ -18,6 +18,11 @@ jobs:
       with:
         xcode-version: latest-stable
     
+    - name: Install CocoaPods dependencies
+      run: |
+        cd ios-src
+        pod install
+    
     - name: Build unsigned IPA
       run: |
         cd ios-src
