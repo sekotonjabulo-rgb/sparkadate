@@ -11,7 +11,7 @@ jobs:
     
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     
     - name: Setup Xcode
       uses: maxim-lobanov/setup-xcode@v1
@@ -37,7 +37,7 @@ jobs:
         zip -r Spark-Unsigned.ipa Payload
     
     - name: Upload IPA artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: Spark-Unsigned-IPA
         path: ios-src/build/Spark-Unsigned.ipa
