@@ -22,7 +22,7 @@
 		595F23B225CEFBFE0053416C /* Spark.swift in Sources */ = {isa = PBXBuildFile; fileRef = 595F23A725CEFBFE0053416C /* Spark.swift */; };
 		595F23B325CEFBFE0053416C /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 595F23AB25CEFBFE0053416C /* OnboardingView.swift */; };
 		595F23B425CEFBFE0053416C /* OnboardingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 595F23A925CEFBFE0053416C /* OnboardingViewController.swift */; };
-		595F23B525CEFBFE0053416C /* FontExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 595F23AA25CEFBFE0053416C /* FontExtensions.swift */; };
+		595F23B525CEFBFE0053416C /* FontExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 595F23B725CEFBFE0053416C /* FontExtensions.swift */; };
 		CDC0FE292388222C002C8D56 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = CDC0FE252388222B002C8D56 /* Main.storyboard */; };
 		CDC0FE2A2388222C002C8D56 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = CDC0FE272388222B002C8D56 /* LaunchScreen.storyboard */; };
 		E1E260C850014D6B34B487B0 /* Pods_Spark.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BE9D7FFB2FBE6EEBCA807B6A /* Pods_Spark.framework */; };
@@ -47,7 +47,7 @@
 		595F23A725CEFBFE0053416C /* Spark.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Spark.swift; path = "Spark/Spark.swift"; sourceTree = "<group>"; };
 		595F23AB25CEFBFE0053416C /* OnboardingView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = OnboardingView.swift; path = "Spark/OnboardingView.swift"; sourceTree = "<group>"; };
 		595F23A925CEFBFE0053416C /* OnboardingViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = OnboardingViewController.swift; path = "Spark/OnboardingViewController.swift"; sourceTree = "<group>"; };
-		595F23AA25CEFBFE0053416C /* FontExtensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = FontExtensions.swift; path = "Spark/FontExtensions.swift"; sourceTree = "<group>"; };
+		595F23B725CEFBFE0053416C /* FontExtensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = FontExtensions.swift; path = "Spark/FontExtensions.swift"; sourceTree = "<group>"; };
 		BE9D7FFB2FBE6EEBCA807B6A /* Pods_Spark.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = "Pods_Spark.framework"; sourceTree = BUILT_PRODUCTS_DIR; };
 		BEE8E5C625AE96C07F8AADED /* Pods-Spark.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Spark.debug.xcconfig"; path = "Target Support Files/Pods-Spark/Pods-Spark.debug.xcconfig"; sourceTree = "<group>"; };
 		CDC0FE262388222B002C8D56 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = "Spark/Base.lproj/Main.storyboard"; sourceTree = "<group>"; };
@@ -101,7 +101,7 @@
 				595F23A725CEFBFE0053416C /* Spark.swift */,
 				595F23AB25CEFBFE0053416C /* OnboardingView.swift */,
 				595F23A925CEFBFE0053416C /* OnboardingViewController.swift */,
-				595F23AA25CEFBFE0053416C /* FontExtensions.swift */,
+				595F23B725CEFBFE0053416C /* FontExtensions.swift */,
 				CDC0FE272388222B002C8D56 /* LaunchScreen.storyboard */,
 				CDC0FE252388222B002C8D56 /* Main.storyboard */,
 				595F23A425CEFBFE0053416C /* WebView.swift */,
