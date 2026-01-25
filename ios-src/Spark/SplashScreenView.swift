@@ -89,7 +89,7 @@ struct SplashScreenView: View {
                 onNavigate("match.html")
             }
         } else {
-            // Not logged in - go to onboarding
+            // Not logged in - go to native onboarding
             onNavigate("onboarding.html")
         }
     }

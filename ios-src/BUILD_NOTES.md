@@ -1,12 +1,14 @@
 # Build Notes for Sideloadly/IPA
 
-## New Native Splash Screen
+## New Native SwiftUI Views
 
-The app now uses a native Swift splash screen instead of loading `app.html` in the WebView.
+The app now uses native SwiftUI views instead of loading HTML pages in the WebView for key screens.
 
 ### Files Added:
-- `Spark/SplashScreenView.swift` - SwiftUI splash screen view
+- `Spark/SplashScreenView.swift` - SwiftUI splash screen view (replaces `app.html`)
 - `Spark/SplashViewController.swift` - UIKit wrapper for the splash screen
+- `Spark/OnboardingView.swift` - SwiftUI onboarding view (replaces `onboarding.html`)
+- `Spark/OnboardingViewController.swift` - UIKit wrapper for the onboarding screen
 - `Spark/Spark.swift` - Shared WebView reference struct
 
 ### Project Configuration:
@@ -38,6 +40,9 @@ When building your IPA (via your build service/CI/CD):
 ### Testing:
 After sideloading with Sideloadly:
 - App should show native splash screen with logo and "Spark" text
-- After 2 seconds, should navigate to onboarding (if not logged in) or match page (if logged in)
-- WebView should load the appropriate HTML page after splash
+- After 2 seconds, should navigate to native onboarding view (if not logged in) or match page (if logged in)
+- Onboarding screen should show "Spark" wordmark, tagline, and two action buttons
+- Tapping "Get Started" should navigate to `onboarding1.html` in WebView
+- Tapping "I already have an account" should navigate to `login.html` in WebView
+- WebView should load the appropriate HTML pages after native screens
 

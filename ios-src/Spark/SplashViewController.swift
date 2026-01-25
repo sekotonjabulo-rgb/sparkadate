@@ -27,32 +27,46 @@ class SplashViewController: UIViewController {
     }
     
     private func navigateToPage(_ page: String) {
-        // Convert page name to URL and load in WebView
-        let baseURL = rootUrl.deletingLastPathComponent()
-        let targetURL = baseURL.appendingPathComponent(page)
-        
-        // Navigate to the page in the WebView
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
             
             // Dismiss splash screen first
             self.dismiss(animated: false) {
-                // Load the target page in WebView
-                if Spark.webView != nil {
-                    Spark.webView.load(URLRequest(url: targetURL))
+                // Check if we should show native onboarding view
+                if page == "onboarding.html" {
+                    self.showNativeOnboarding()
                 } else {
-                    // Fallback: load root URL
-                    Spark.webView?.load(URLRequest(url: rootUrl))
-                }
-                
-                // Show the main view controller's WebView
-                if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-                   let window = windowScene.windows.first,
-                   let mainVC = window.rootViewController as? ViewController {
-                    mainVC.webviewView.isHidden = false
-                    mainVC.loadingView.isHidden = false
+                    // Convert page name to URL and load in WebView
+                    let baseURL = rootUrl.deletingLastPathComponent()
+                    let targetURL = baseURL.appendingPathComponent(page)
+                    
+                    // Load the target page in WebView
+                    if Spark.webView != nil {
+                        Spark.webView.load(URLRequest(url: targetURL))
+                    } else {
+                        // Fallback: load root URL
+                        Spark.webView?.load(URLRequest(url: rootUrl))
+                    }
+                    
+                    // Show the main view controller's WebView
+                    if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                       let window = windowScene.windows.first,
+                       let mainVC = window.rootViewController as? ViewController {
+                        mainVC.webviewView.isHidden = false
+                        mainVC.loadingView.isHidden = false
+                    }
                 }
             }
+        }
+    }
+    
+    private func showNativeOnboarding() {
+        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+           let window = windowScene.windows.first,
+           let rootVC = window.rootViewController {
+            let onboardingVC = OnboardingViewController()
+            onboardingVC.modalPresentationStyle = .fullScreen
+            rootVC.present(onboardingVC, animated: true, completion: nil)
         }
     }
 }
