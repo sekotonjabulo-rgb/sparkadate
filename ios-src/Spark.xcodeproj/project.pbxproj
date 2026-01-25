@@ -18,8 +18,8 @@
 		595F23AE25CEFBFE0053416C /* Printer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 595F23A325CEFBFE0053416C /* Printer.swift */; };
 		595F23AF25CEFBFE0053416C /* WebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 595F23A425CEFBFE0053416C /* WebView.swift */; };
 		595F23B025CEFBFE0053416C /* SplashScreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 595F23B625CEFBFE0053416C /* SplashScreenView.swift */; };
-		595F23B125CEFBFE0053416C /* SplashViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 595F23A625CEFBFE0053416C /* SplashViewController.swift */; };
-		595F23B225CEFBFE0053416C /* Spark.swift in Sources */ = {isa = PBXBuildFile; fileRef = 595F23A725CEFBFE0053416C /* Spark.swift */; };
+		595F23B125CEFBFE0053416C /* SplashViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 595F23B825CEFBFE0053416C /* SplashViewController.swift */; };
+		595F23B225CEFBFE0053416C /* Spark.swift in Sources */ = {isa = PBXBuildFile; fileRef = 595F23B925CEFBFE0053416C /* Spark.swift */; };
 		595F23B325CEFBFE0053416C /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 595F23AB25CEFBFE0053416C /* OnboardingView.swift */; };
 		595F23B425CEFBFE0053416C /* OnboardingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 595F23A925CEFBFE0053416C /* OnboardingViewController.swift */; };
 		595F23B525CEFBFE0053416C /* FontExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 595F23B725CEFBFE0053416C /* FontExtensions.swift */; };
@@ -43,8 +43,8 @@
 		595F23A325CEFBFE0053416C /* Printer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Printer.swift; path = "Spark/Printer.swift"; sourceTree = "<group>"; };
 		595F23A425CEFBFE0053416C /* WebView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = WebView.swift; path = "Spark/WebView.swift"; sourceTree = "<group>"; };
 		595F23B625CEFBFE0053416C /* SplashScreenView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SplashScreenView.swift; path = "Spark/SplashScreenView.swift"; sourceTree = "<group>"; };
-		595F23A625CEFBFE0053416C /* SplashViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SplashViewController.swift; path = "Spark/SplashViewController.swift"; sourceTree = "<group>"; };
-		595F23A725CEFBFE0053416C /* Spark.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Spark.swift; path = "Spark/Spark.swift"; sourceTree = "<group>"; };
+		595F23B825CEFBFE0053416C /* SplashViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SplashViewController.swift; path = "Spark/SplashViewController.swift"; sourceTree = "<group>"; };
+		595F23B925CEFBFE0053416C /* Spark.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Spark.swift; path = "Spark/Spark.swift"; sourceTree = "<group>"; };
 		595F23AB25CEFBFE0053416C /* OnboardingView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = OnboardingView.swift; path = "Spark/OnboardingView.swift"; sourceTree = "<group>"; };
 		595F23A925CEFBFE0053416C /* OnboardingViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = OnboardingViewController.swift; path = "Spark/OnboardingViewController.swift"; sourceTree = "<group>"; };
 		595F23B725CEFBFE0053416C /* FontExtensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = FontExtensions.swift; path = "Spark/FontExtensions.swift"; sourceTree = "<group>"; };
@@ -97,8 +97,8 @@
 				595F239A25CEFBFD0053416C /* Settings.swift */,
 				595F23A125CEFBFE0053416C /* ViewController.swift */,
 				595F23B625CEFBFE0053416C /* SplashScreenView.swift */,
-				595F23A625CEFBFE0053416C /* SplashViewController.swift */,
-				595F23A725CEFBFE0053416C /* Spark.swift */,
+				595F23B825CEFBFE0053416C /* SplashViewController.swift */,
+				595F23B925CEFBFE0053416C /* Spark.swift */,
 				595F23AB25CEFBFE0053416C /* OnboardingView.swift */,
 				595F23A925CEFBFE0053416C /* OnboardingViewController.swift */,
 				595F23B725CEFBFE0053416C /* FontExtensions.swift */,
