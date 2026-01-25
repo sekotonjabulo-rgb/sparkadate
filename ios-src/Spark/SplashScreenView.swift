@@ -44,8 +44,7 @@ struct SplashScreenView: View {
                 
                 // Wordmark
                 Text("Spark")
-                    .font(.custom("CabinetGrotesk-Medium", size: 36))
-                    .fontWeight(.medium)
+                    .font(.customFont("CabinetGrotesk-Medium", size: 36))
                     .tracking(-0.02)
                     .foregroundColor(.white)
             }

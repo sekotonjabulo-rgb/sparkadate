@@ -18,15 +18,13 @@ struct OnboardingView: View {
                 VStack(spacing: 24) {
                     // Wordmark
                     Text("Spark")
-                        .font(.custom("CabinetGrotesk-Medium", size: 48))
-                        .fontWeight(.medium)
+                        .font(.customFont("CabinetGrotesk-Medium", size: 48))
                         .tracking(-0.02)
                         .foregroundColor(.white)
                     
                     // Tagline
                     Text("Meet someone before you see them.")
-                        .font(.custom("CabinetGrotesk-Medium", size: 17))
-                        .fontWeight(.medium)
+                        .font(.customFont("CabinetGrotesk-Medium", size: 17))
                         .foregroundColor(Color.white.opacity(0.65))
                 }
                 .padding(.horizontal, 16)
@@ -40,8 +38,7 @@ struct OnboardingView: View {
                         onNavigate("onboarding1.html")
                     }) {
                         Text("Get Started")
-                            .font(.custom("CabinetGrotesk-Medium", size: 17))
-                            .fontWeight(.medium)
+                            .font(.customFont("CabinetGrotesk-Medium", size: 17))
                             .foregroundColor(.black)
                             .frame(maxWidth: .infinity)
                             .frame(height: 56)
@@ -55,8 +52,7 @@ struct OnboardingView: View {
                         onNavigate("login.html")
                     }) {
                         Text("I already have an account")
-                            .font(.custom("CabinetGrotesk-Medium", size: 15))
-                            .fontWeight(.medium)
+                            .font(.customFont("CabinetGrotesk-Medium", size: 15))
                             .foregroundColor(Color.white.opacity(0.65))
                     }
                     .buttonStyle(OnboardingLinkStyle())
