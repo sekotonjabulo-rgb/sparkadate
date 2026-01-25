@@ -1,8 +1,6 @@
 import UIKit
 import WebKit
 
-var webView: WKWebView! = nil
-
 class ViewController: UIViewController, WKNavigationDelegate, UIDocumentInteractionControllerDelegate {
     
     var documentController: UIDocumentInteractionController?
@@ -31,14 +29,39 @@ class ViewController: UIViewController, WKNavigationDelegate, UIDocumentInteract
         return .default
     }
 
+    private var splashViewController: SplashViewController?
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         initWebView()
         initToolbarView()
-        loadRootUrl()
+        
+        // Show native splash screen instead of loading app.html
+        showSplashScreen()
     
         NotificationCenter.default.addObserver(self, selector: #selector(self.keyboardWillHide(_:)), name: UIResponder.keyboardWillHideNotification , object: nil)
         
+    }
+    
+    private func showSplashScreen() {
+        let splashVC = SplashViewController()
+        splashVC.modalPresentationStyle = .fullScreen
+        splashViewController = splashVC
+        
+        // Hide WebView initially
+        webviewView.isHidden = true
+        loadingView.isHidden = true
+        
+        present(splashVC, animated: false) { [weak self] in
+            // After splash screen navigates, it will load the appropriate page
+        }
+    }
+    
+    func hideSplashScreen() {
+        splashViewController?.dismiss(animated: false) { [weak self] in
+            self?.webviewView.isHidden = false
+            self?.loadingView.isHidden = false
+        }
     }
 
     override func viewDidLayoutSubviews() {
@@ -51,7 +74,9 @@ class ViewController: UIViewController, WKNavigationDelegate, UIDocumentInteract
     }
     
     func initWebView() {
-        Spark.webView = createWebView(container: webviewView, WKSMH: self, WKND: self, NSO: self, VC: self)
+        if Spark.webView == nil {
+            Spark.webView = createWebView(container: webviewView, WKSMH: self, WKND: self, NSO: self, VC: self)
+        }
         webviewView.addSubview(Spark.webView);
         
         Spark.webView.uiDelegate = self;
