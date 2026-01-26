@@ -284,13 +284,22 @@
             timerValue.textContent = 'Time\'s up!'
             timerSublabel.textContent = 'Revealing now...'
             skipBtn.disabled = true
-            
+
             try {
                 await SparkAPI.matches.forceReveal(matchData.id)
+
+                // Update local match data to reflect revealed status
+                const updatedMatch = {
+                    ...matchData,
+                    revealed: true,
+                    status: 'revealed',
+                    revealedAt: Date.now()
+                }
+                localStorage.setItem('sparkCurrentMatch', JSON.stringify(updatedMatch))
             } catch (error) {
                 console.error('Auto-reveal error:', error)
             }
-            
+
             setTimeout(() => {
                 window.location.href = 'revealed.html'
             }, 1000)
