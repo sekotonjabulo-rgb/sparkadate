@@ -36,8 +36,11 @@ class ViewController: UIViewController, WKNavigationDelegate, UIDocumentInteract
         initWebView()
         initToolbarView()
 
-        // Load app.html directly (which handles splash and navigation to onboarding)
+        // Load app.html in background as fallback while showing native splash
         loadRootUrl()
+
+        // Show native splash screen on top
+        showSplashScreen()
 
         NotificationCenter.default.addObserver(self, selector: #selector(self.keyboardWillHide(_:)), name: UIResponder.keyboardWillHideNotification , object: nil)
 
