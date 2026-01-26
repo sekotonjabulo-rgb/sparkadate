@@ -19,29 +19,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  validate-swift:
-    runs-on: macos-latest
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-
-    - name: Setup Xcode
-      uses: maxim-lobanov/setup-xcode@v1
-      with:
-        xcode-version: latest-stable
-
-    - name: Validate Swift syntax
-      run: |
-        echo "Validating Swift files..."
-        find ios-src -name "*.swift" -type f | while read file; do
-          echo "Checking: $file"
-          swiftc -typecheck "$file" 2>/dev/null || echo "Note: $file requires project context for full validation"
-        done
-        echo "Swift syntax validation complete"
-
   build:
     runs-on: macos-latest
-    needs: validate-swift
 
     steps:
     - name: Checkout repository
@@ -50,7 +29,10 @@ jobs:
     - name: Setup Xcode
       uses: maxim-lobanov/setup-xcode@v1
       with:
-        xcode-version: latest-stable
+        xcode-version: '15.4'
+
+    - name: Show Xcode version
+      run: xcodebuild -version
 
     - name: Install CocoaPods dependencies
       run: |
@@ -68,7 +50,15 @@ jobs:
           CODE_SIGN_IDENTITY="" \
           CODE_SIGNING_REQUIRED=NO \
           CODE_SIGNING_ALLOWED=NO \
-          archive
+          archive 2>&1 | tee build.log
+
+        # Show any errors clearly
+        if [ ${PIPESTATUS[0]} -ne 0 ]; then
+          echo "=== BUILD FAILED ==="
+          echo "=== Showing error details ==="
+          grep -A 5 "error:" build.log || true
+          exit 1
+        fi
 
         mkdir -p build/Payload
         cp -r build/Spark.xcarchive/Products/Applications/Spark.app build/Payload/
