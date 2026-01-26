@@ -9,7 +9,8 @@ class SplashViewController: UIViewController {
         super.viewDidLoad()
 
         let splashView = SplashScreenView { [weak self] page in
-            self?.navigateToPage(page)
+            // Just dismiss splash - app.html is already loading in webview underneath
+            self?.dismissSplash()
         }
 
         let hostingController = UIHostingController(rootView: splashView)
@@ -27,21 +28,8 @@ class SplashViewController: UIViewController {
         hostingController.didMove(toParent: self)
     }
 
-    private func navigateToPage(_ page: String) {
-        // Dismiss splash and load the HTML page in webview
-        self.dismiss(animated: false) {
-            guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-                  let window = windowScene.windows.first,
-                  let mainVC = window.rootViewController as? ViewController else {
-                return
-            }
-
-            let baseURL = rootUrl.deletingLastPathComponent()
-            let targetURL = baseURL.appendingPathComponent(page)
-
-            Spark.webView.load(URLRequest(url: targetURL))
-            mainVC.webviewView.isHidden = false
-            mainVC.loadingView.isHidden = false
-        }
+    private func dismissSplash() {
+        // Simply dismiss - app.html is already loading underneath
+        self.dismiss(animated: false, completion: nil)
     }
 }

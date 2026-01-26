@@ -30,17 +30,20 @@ class ViewController: UIViewController, WKNavigationDelegate, UIDocumentInteract
     }
 
     private var splashViewController: SplashViewController?
-    
+
     override func viewDidLoad() {
         super.viewDidLoad()
         initWebView()
         initToolbarView()
-        
-        // Show native splash screen instead of loading app.html
+
+        // Load app.html in background as fallback while showing native splash
+        loadRootUrl()
+
+        // Show native splash screen on top
         showSplashScreen()
-    
+
         NotificationCenter.default.addObserver(self, selector: #selector(self.keyboardWillHide(_:)), name: UIResponder.keyboardWillHideNotification , object: nil)
-        
+
     }
     
     private func showSplashScreen() {
