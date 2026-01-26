@@ -6,14 +6,18 @@ class OnboardingViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+
+        // Set black background to match OnboardingView
+        view.backgroundColor = .black
+
         let onboardingView = OnboardingView { [weak self] page in
             self?.navigateToPage(page)
         }
-        
+
         let hostingController = UIHostingController(rootView: onboardingView)
+        hostingController.view.backgroundColor = .black
         self.hostingController = hostingController
-        
+
         addChild(hostingController)
         view.addSubview(hostingController.view)
         hostingController.view.translatesAutoresizingMaskIntoConstraints = false
