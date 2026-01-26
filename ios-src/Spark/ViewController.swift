@@ -30,17 +30,17 @@ class ViewController: UIViewController, WKNavigationDelegate, UIDocumentInteract
     }
 
     private var splashViewController: SplashViewController?
-    
+
     override func viewDidLoad() {
         super.viewDidLoad()
         initWebView()
         initToolbarView()
-        
-        // Show native splash screen instead of loading app.html
-        showSplashScreen()
-    
+
+        // Load app.html directly (which handles splash and navigation to onboarding)
+        loadRootUrl()
+
         NotificationCenter.default.addObserver(self, selector: #selector(self.keyboardWillHide(_:)), name: UIResponder.keyboardWillHideNotification , object: nil)
-        
+
     }
     
     private func showSplashScreen() {
