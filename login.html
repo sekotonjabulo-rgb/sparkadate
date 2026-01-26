@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#000000">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Spark">
     <link rel="apple-touch-icon" href="blueocean.jpeg">
     <title>Spark – Login</title>
@@ -42,12 +42,15 @@
             --radius-pill: 28px;
             --radius-input: 16px;
             --font-heading: 'CabinetGrotesk-Medium', -apple-system, BlinkMacSystemFont, sans-serif;
+            --safe-area-inset-top: env(safe-area-inset-top);
+            --safe-area-inset-bottom: env(safe-area-inset-bottom);
         }
 
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
@@ -56,16 +59,26 @@
             color: var(--color-text-primary);
             min-height: 100dvh;
             -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            overscroll-behavior: none;
+            position: fixed;
+            width: 100%;
+            overflow: hidden;
         }
 
         .login-screen {
             min-height: 100dvh;
             display: flex;
             flex-direction: column;
-            padding: 80px 16px 48px;
+            padding-top: max(80px, calc(var(--safe-area-inset-top) + 40px));
+            padding-bottom: max(48px, calc(var(--safe-area-inset-bottom) + 32px));
+            padding-left: 16px;
+            padding-right: 16px;
             max-width: 428px;
             margin: 0 auto;
-            animation: blurFadeIn 0.6s ease-out forwards;
+            animation: contentFadeIn 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
         .login-content {
@@ -105,7 +118,9 @@
             font-weight: 500;
             color: var(--color-text-primary);
             outline: none;
-            transition: border-color 0.2s ease;
+            transition: border-color 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            -webkit-appearance: none;
+            appearance: none;
         }
 
         .form-input.has-icon {
@@ -132,11 +147,15 @@
             align-items: center;
             justify-content: center;
             color: var(--color-text-secondary);
-            transition: color 0.2s ease;
+            transition: color 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                        transform 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            user-select: none;
+            -webkit-user-select: none;
         }
 
-        .password-toggle:hover {
+        .password-toggle:active {
             color: var(--color-text-primary);
+            transform: scale(0.95);
         }
 
         .password-toggle svg {
@@ -166,6 +185,13 @@
             font-weight: 500;
             cursor: pointer;
             transition: opacity 0.2s ease;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
 
         .link-secondary {
@@ -174,24 +200,33 @@
             color: var(--color-text-secondary);
             text-decoration: none;
             transition: color 0.2s ease;
+            user-select: none;
+            -webkit-user-select: none;
         }
 
         .link-secondary:active {
             color: var(--color-text-primary);
         }
 
-        .btn-primary:active {
+        .btn-primary:active:not(:disabled) {
             opacity: 0.85;
         }
 
-        @keyframes blurFadeIn {
+        @keyframes contentFadeIn {
             0% {
                 opacity: 0;
-                filter: blur(12px);
+                transform: translateY(8px);
             }
             100% {
                 opacity: 1;
-                filter: blur(0);
+                transform: translateY(0);
+            }
+        }
+
+        @supports (padding: max(0px)) {
+            body {
+                padding-left: env(safe-area-inset-left);
+                padding-right: env(safe-area-inset-right);
             }
         }
     </style>
@@ -204,11 +239,11 @@
 
             <form id="loginForm">
                 <div class="form-group">
-                    <input type="email" class="form-input" id="email" placeholder="Email" required>
+                    <input type="email" class="form-input" id="email" placeholder="Email" required autocomplete="email" inputmode="email">
                 </div>
                 <div class="form-group">
-                    <input type="password" class="form-input has-icon" id="password" placeholder="Password" required>
-                    <button type="button" class="password-toggle" id="togglePassword">
+                    <input type="password" class="form-input has-icon" id="password" placeholder="Password" required autocomplete="current-password">
+                    <button type="button" class="password-toggle" id="togglePassword" aria-label="Toggle password visibility">
                         <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="eyeIcon">
                             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
                             <circle cx="12" cy="12" r="3"/>
@@ -224,6 +259,16 @@
     </main>
     <script src="js/api.js"></script>
     <script>
+        // Prevent double-tap zoom on iOS
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function(event) {
+            const now = Date.now();
+            if (now - lastTouchEnd <= 300) {
+                event.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+
         const form = document.getElementById('loginForm');
         const submitBtn = document.getElementById('submitBtn');
         const emailInput = document.getElementById('email');
