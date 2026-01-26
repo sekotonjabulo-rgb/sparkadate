@@ -2,150 +2,188 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#000000">
+    <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+    <meta name="theme-color" content="#F2F2F7" media="(prefers-color-scheme: light)">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Spark">
-    <link rel="apple-touch-icon" href="blueocean.jpeg">
+    <link rel="apple-touch-icon" href="spark-icon.png">
     <title>Spark – Login</title>
-    
+
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-8F6YCX65EM"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
-
   gtag('config', 'G-8F6YCX65EM');
 </script>
 
     <style>
-        @font-face {
-            font-family: 'CabinetGrotesk-Medium';
-            src: url('./fonts/CabinetGrotesk-Medium.woff2') format('woff2'),
-                 url('./fonts/CabinetGrotesk-Medium.woff') format('woff'),
-                 url('./fonts/CabinetGrotesk-Medium.ttf') format('truetype');
-            font-weight: 500;
-            font-display: swap;
-            font-style: normal;
+        :root {
+            --ios-font: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+
+            /* iOS Dark Mode Colors (default) */
+            --ios-bg-primary: #000000;
+            --ios-bg-secondary: #1C1C1E;
+            --ios-bg-tertiary: #2C2C2E;
+            --ios-separator: rgba(84, 84, 88, 0.65);
+            --ios-label-primary: #FFFFFF;
+            --ios-label-secondary: rgba(235, 235, 245, 0.6);
+            --ios-label-tertiary: rgba(235, 235, 245, 0.3);
+            --ios-fill-primary: rgba(120, 120, 128, 0.36);
+            --ios-fill-secondary: rgba(120, 120, 128, 0.32);
+            --ios-blue: #0A84FF;
+            --ios-red: #FF453A;
+            --ios-tint: #0A84FF;
+
+            --ios-safe-top: env(safe-area-inset-top, 0px);
+            --ios-safe-bottom: env(safe-area-inset-bottom, 0px);
         }
 
-        :root {
-            --color-background: #000000;
-            --color-surface: #FFFFFF;
-            --color-text-primary: #FFFFFF;
-            --color-text-secondary: rgba(255, 255, 255, 0.65);
-            --color-input-bg: rgba(255, 255, 255, 0.08);
-            --color-input-border: rgba(255, 255, 255, 0.15);
-            --radius-pill: 28px;
-            --radius-input: 16px;
-            --font-heading: 'CabinetGrotesk-Medium', -apple-system, BlinkMacSystemFont, sans-serif;
+        @media (prefers-color-scheme: light) {
+            :root {
+                --ios-bg-primary: #F2F2F7;
+                --ios-bg-secondary: #FFFFFF;
+                --ios-bg-tertiary: #F2F2F7;
+                --ios-separator: rgba(60, 60, 67, 0.29);
+                --ios-label-primary: #000000;
+                --ios-label-secondary: rgba(60, 60, 67, 0.6);
+                --ios-label-tertiary: rgba(60, 60, 67, 0.3);
+                --ios-fill-primary: rgba(120, 120, 128, 0.2);
+                --ios-fill-secondary: rgba(120, 120, 128, 0.16);
+                --ios-blue: #007AFF;
+                --ios-red: #FF3B30;
+                --ios-tint: #007AFF;
+            }
         }
 
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            height: 100%;
         }
 
         body {
-            font-family: var(--font-heading);
-            background-color: var(--color-background);
-            color: var(--color-text-primary);
-            min-height: 100dvh;
+            font-family: var(--ios-font);
+            background-color: var(--ios-bg-primary);
+            color: var(--ios-label-primary);
             -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
-        .login-screen {
+        .ios-screen {
             min-height: 100dvh;
             display: flex;
             flex-direction: column;
-            padding: 80px 16px 48px;
+            padding: calc(60px + var(--ios-safe-top)) 20px calc(40px + var(--ios-safe-bottom));
             max-width: 428px;
             margin: 0 auto;
-            animation: blurFadeIn 0.6s ease-out forwards;
         }
 
-        .login-content {
+        .ios-content {
             flex: 1;
             display: flex;
             flex-direction: column;
         }
 
-        .login-title {
-            font-size: 32px;
-            font-weight: 500;
-            letter-spacing: -0.02em;
+        /* iOS Large Title */
+        .ios-large-title {
+            font-size: 34px;
+            font-weight: 700;
+            letter-spacing: 0.37px;
             margin-bottom: 8px;
         }
 
-        .login-subtitle {
-            font-size: 15px;
-            font-weight: 500;
-            color: var(--color-text-secondary);
+        .ios-subtitle {
+            font-size: 17px;
+            font-weight: 400;
+            color: var(--ios-label-secondary);
+            letter-spacing: -0.41px;
             margin-bottom: 40px;
         }
 
-        .form-group {
-            margin-bottom: 16px;
+        /* iOS Form */
+        .ios-form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .ios-input-group {
             position: relative;
         }
 
-        .form-input {
+        .ios-input {
             width: 100%;
-            height: 56px;
-            padding: 0 20px;
-            background-color: var(--color-input-bg);
-            border: 1px solid var(--color-input-border);
-            border-radius: var(--radius-input);
-            font-family: var(--font-heading);
-            font-size: 16px;
-            font-weight: 500;
-            color: var(--color-text-primary);
+            height: 50px;
+            padding: 0 16px;
+            background: var(--ios-bg-secondary);
+            border: none;
+            border-radius: 10px;
+            font-family: var(--ios-font);
+            font-size: 17px;
+            color: var(--ios-label-primary);
             outline: none;
-            transition: border-color 0.2s ease;
+            letter-spacing: -0.41px;
         }
 
-        .form-input.has-icon {
+        .ios-input.has-icon {
             padding-right: 50px;
         }
 
-        .form-input::placeholder {
-            color: var(--color-text-secondary);
+        .ios-input::placeholder {
+            color: var(--ios-label-tertiary);
         }
 
-        .form-input:focus {
-            border-color: var(--color-surface);
+        .ios-input:focus {
+            box-shadow: 0 0 0 4px rgba(10, 132, 255, 0.3);
         }
 
-        .password-toggle {
+        @media (prefers-color-scheme: light) {
+            .ios-input:focus {
+                box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.3);
+            }
+        }
+
+        /* Password Toggle */
+        .ios-password-toggle {
             position: absolute;
-            right: 16px;
-            top: 18px;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 44px;
+            height: 44px;
             background: none;
             border: none;
             cursor: pointer;
-            padding: 0;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: var(--color-text-secondary);
-            transition: color 0.2s ease;
+            color: var(--ios-label-secondary);
+            border-radius: 22px;
         }
 
-        .password-toggle:hover {
-            color: var(--color-text-primary);
+        .ios-password-toggle:active {
+            background: var(--ios-fill-secondary);
         }
 
-        .password-toggle svg {
-            width: 20px;
-            height: 20px;
+        .ios-password-toggle svg {
+            width: 22px;
+            height: 22px;
             stroke: currentColor;
+            fill: none;
         }
 
-        .login-actions {
+        /* iOS Actions */
+        .ios-actions {
             margin-top: auto;
             padding-top: 32px;
             display: flex;
@@ -154,74 +192,197 @@
             gap: 16px;
         }
 
-        .btn-primary {
+        /* iOS Primary Button */
+        .ios-btn-primary {
             width: 100%;
-            height: 56px;
-            background-color: var(--color-surface);
-            color: var(--color-background);
+            height: 50px;
+            background: var(--ios-tint);
+            color: #FFFFFF;
             border: none;
-            border-radius: var(--radius-pill);
-            font-family: var(--font-heading);
+            border-radius: 12px;
+            font-family: var(--ios-font);
             font-size: 17px;
-            font-weight: 500;
+            font-weight: 600;
+            letter-spacing: -0.41px;
             cursor: pointer;
-            transition: opacity 0.2s ease;
+            transition: opacity 0.15s ease, transform 0.1s ease;
         }
 
-        .link-secondary {
-            font-size: 15px;
-            font-weight: 500;
-            color: var(--color-text-secondary);
+        .ios-btn-primary:active {
+            opacity: 0.8;
+            transform: scale(0.98);
+        }
+
+        .ios-btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* iOS Link */
+        .ios-link {
+            font-size: 17px;
+            font-weight: 400;
+            color: var(--ios-tint);
             text-decoration: none;
-            transition: color 0.2s ease;
+            letter-spacing: -0.41px;
         }
 
-        .link-secondary:active {
-            color: var(--color-text-primary);
+        .ios-link:active {
+            opacity: 0.6;
         }
 
-        .btn-primary:active {
-            opacity: 0.85;
+        /* iOS Alert Modal */
+        .ios-alert-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s ease, visibility 0.2s ease;
+            padding: 20px;
         }
 
-        @keyframes blurFadeIn {
-            0% {
-                opacity: 0;
-                filter: blur(12px);
-            }
-            100% {
-                opacity: 1;
-                filter: blur(0);
-            }
+        .ios-alert-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .ios-alert {
+            background: var(--ios-bg-secondary);
+            border-radius: 14px;
+            width: 100%;
+            max-width: 270px;
+            overflow: hidden;
+            transform: scale(0.95);
+            transition: transform 0.2s ease;
+        }
+
+        .ios-alert-overlay.visible .ios-alert {
+            transform: scale(1);
+        }
+
+        .ios-alert-content {
+            padding: 20px 16px;
+            text-align: center;
+        }
+
+        .ios-alert-title {
+            font-size: 17px;
+            font-weight: 600;
+            letter-spacing: -0.41px;
+            margin-bottom: 4px;
+        }
+
+        .ios-alert-message {
+            font-size: 13px;
+            color: var(--ios-label-secondary);
+            line-height: 1.4;
+        }
+
+        .ios-alert-actions {
+            display: flex;
+            border-top: 0.5px solid var(--ios-separator);
+        }
+
+        .ios-alert-btn {
+            flex: 1;
+            padding: 12px;
+            font-family: var(--ios-font);
+            font-size: 17px;
+            font-weight: 600;
+            letter-spacing: -0.41px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            color: var(--ios-tint);
+        }
+
+        .ios-alert-btn:active {
+            background: var(--ios-fill-primary);
+        }
+
+        /* Signup Link */
+        .ios-signup-prompt {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 15px;
+            color: var(--ios-label-secondary);
+        }
+
+        .ios-signup-prompt a {
+            color: var(--ios-tint);
+            text-decoration: none;
+            font-weight: 500;
         }
     </style>
 </head>
 <body>
-    <main class="login-screen">
-        <section class="login-content">
-            <h1 class="login-title">Welcome back</h1>
-            <p class="login-subtitle">Sign in to continue</p>
+    <main class="ios-screen">
+        <section class="ios-content">
+            <h1 class="ios-large-title">Welcome back</h1>
+            <p class="ios-subtitle">Sign in to continue</p>
 
-            <form id="loginForm">
-                <div class="form-group">
-                    <input type="email" class="form-input" id="email" placeholder="Email" required>
+            <form class="ios-form" id="loginForm">
+                <div class="ios-input-group">
+                    <input
+                        type="email"
+                        class="ios-input"
+                        id="email"
+                        placeholder="Email"
+                        autocomplete="email"
+                        autocapitalize="none"
+                        autocorrect="off"
+                        spellcheck="false"
+                        required
+                    >
                 </div>
-                <div class="form-group">
-                    <input type="password" class="form-input has-icon" id="password" placeholder="Password" required>
-                    <button type="button" class="password-toggle" id="togglePassword">
-                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="eyeIcon">
+                <div class="ios-input-group">
+                    <input
+                        type="password"
+                        class="ios-input has-icon"
+                        id="password"
+                        placeholder="Password"
+                        autocomplete="current-password"
+                        required
+                    >
+                    <button type="button" class="ios-password-toggle" id="togglePassword" aria-label="Toggle password visibility">
+                        <svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" id="eyeIcon">
                             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
                             <circle cx="12" cy="12" r="3"/>
                         </svg>
                     </button>
                 </div>
-                <div class="login-actions">
-                    <button type="submit" class="btn-primary" id="submitBtn">Sign In</button>
-                    <a href="forgot-password.html" class="link-secondary">Forgot password?</a>
+
+                <div class="ios-actions">
+                    <button type="submit" class="ios-btn-primary" id="submitBtn">Sign In</button>
+                    <a href="forgot-password.html" class="ios-link">Forgot Password?</a>
                 </div>
             </form>
+
+            <div class="ios-signup-prompt">
+                Don't have an account? <a href="signup.html">Sign Up</a>
+            </div>
         </section>
     </main>
+
+    <!-- iOS Alert Modal -->
+    <div class="ios-alert-overlay" id="alertOverlay">
+        <div class="ios-alert">
+            <div class="ios-alert-content">
+                <div class="ios-alert-title" id="alertTitle">Error</div>
+                <div class="ios-alert-message" id="alertMessage">Message</div>
+            </div>
+            <div class="ios-alert-actions">
+                <button class="ios-alert-btn" id="alertBtn">OK</button>
+            </div>
+        </div>
+    </div>
+
     <script src="js/api.js"></script>
     <script>
         const form = document.getElementById('loginForm');
@@ -230,11 +391,32 @@
         const passwordInput = document.getElementById('password');
         const togglePassword = document.getElementById('togglePassword');
         const eyeIcon = document.getElementById('eyeIcon');
+        const alertOverlay = document.getElementById('alertOverlay');
+        const alertTitle = document.getElementById('alertTitle');
+        const alertMessage = document.getElementById('alertMessage');
+        const alertBtn = document.getElementById('alertBtn');
 
+        // iOS-style Alert
+        function showAlert(title, message) {
+            return new Promise((resolve) => {
+                alertTitle.textContent = title;
+                alertMessage.textContent = message;
+                alertOverlay.classList.add('visible');
+
+                const handler = () => {
+                    alertOverlay.classList.remove('visible');
+                    alertBtn.removeEventListener('click', handler);
+                    resolve();
+                };
+                alertBtn.addEventListener('click', handler);
+            });
+        }
+
+        // Password visibility toggle
         togglePassword.addEventListener('click', () => {
             const type = passwordInput.type === 'password' ? 'text' : 'password';
             passwordInput.type = type;
-            
+
             if (type === 'text') {
                 eyeIcon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
             } else {
@@ -242,6 +424,7 @@
             }
         });
 
+        // Form submission
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
 
@@ -252,7 +435,7 @@
                 await SparkAPI.auth.login(emailInput.value, passwordInput.value);
                 window.location.href = 'match.html';
             } catch (error) {
-                alert(error.message || 'Invalid credentials');
+                await showAlert('Sign In Failed', error.message || 'Invalid email or password. Please try again.');
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Sign In';
             }
