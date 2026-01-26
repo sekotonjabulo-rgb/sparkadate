@@ -7,7 +7,29 @@ struct SplashScreenView: View {
     @StateObject private var authManager = AuthManager.shared
     
     var onNavigate: (String) -> Void
-    
+
+    // Computed property for logo image to avoid Group modifier issues
+    private var logoImage: Image {
+        // Try asset catalog first
+        if let image = UIImage(named: "LaunchIcon") {
+            return Image(uiImage: image)
+        } else if let image = UIImage(named: "spark-icon") {
+            return Image(uiImage: image)
+        }
+        // Try bundle resources (for files included in the app bundle)
+        else if let bundlePath = Bundle.main.path(forResource: "spark-icon", ofType: "png"),
+                  let image = UIImage(contentsOfFile: bundlePath) {
+            return Image(uiImage: image)
+        }
+        // Try from sparkadate subdirectory (where web assets are)
+        else if let bundlePath = Bundle.main.path(forResource: "sparkadate/spark-icon", ofType: "png"),
+                  let image = UIImage(contentsOfFile: bundlePath) {
+            return Image(uiImage: image)
+        }
+        // Fallback to system icon
+        return Image(systemName: "heart.fill")
+    }
+
     var body: some View {
         ZStack {
             Color.black
@@ -15,32 +37,10 @@ struct SplashScreenView: View {
             
             VStack(spacing: 20) {
                 // Logo - try multiple possible asset names and bundle paths
-                Group {
-                    // Try asset catalog first
-                    if let image = UIImage(named: "LaunchIcon") {
-                        Image(uiImage: image)
-                    } else if let image = UIImage(named: "spark-icon") {
-                        Image(uiImage: image)
-                    } 
-                    // Try bundle resources (for files included in the app bundle)
-                    else if let bundlePath = Bundle.main.path(forResource: "spark-icon", ofType: "png"),
-                              let image = UIImage(contentsOfFile: bundlePath) {
-                        Image(uiImage: image)
-                    } 
-                    // Try from sparkadate subdirectory (where web assets are)
-                    else if let bundlePath = Bundle.main.path(forResource: "sparkadate/spark-icon", ofType: "png"),
-                              let image = UIImage(contentsOfFile: bundlePath) {
-                        Image(uiImage: image)
-                    }
-                    // Fallback to system icon
-                    else {
-                        Image(systemName: "heart.fill")
-                            .foregroundColor(.white)
-                    }
-                }
-                .resizable()
-                .scaledToFit()
-                .frame(width: 80, height: 80)
+                logoImage
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 80, height: 80)
                 
                 // Wordmark
                 Text("Spark")
