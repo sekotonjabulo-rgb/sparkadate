@@ -47,11 +47,11 @@ class SplashViewController: UIViewController {
               let mainVC = window.rootViewController as? ViewController else {
             return
         }
-        
+
         let baseURL = rootUrl.deletingLastPathComponent()
         let targetURL = baseURL.appendingPathComponent(page)
-        
-        mainVC.webView.load(URLRequest(url: targetURL))
+
+        Spark.webView.load(URLRequest(url: targetURL))
         mainVC.webviewView.isHidden = false
         mainVC.loadingView.isHidden = false
     }
