@@ -2,308 +2,664 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#000000">
+    <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+    <meta name="theme-color" content="#F2F2F7" media="(prefers-color-scheme: light)">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Spark">
     <link rel="apple-touch-icon" href="spark-icon.png">
     <title>Spark – Settings</title>
-    
+
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-8F6YCX65EM"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
-
   gtag('config', 'G-8F6YCX65EM');
 </script>
 
     <style>
-        @font-face {
-            font-family: 'CabinetGrotesk-Medium';
-            src: url('./fonts/CabinetGrotesk-Medium.woff2') format('woff2'),
-                 url('./fonts/CabinetGrotesk-Medium.woff') format('woff'),
-                 url('./fonts/CabinetGrotesk-Medium.ttf') format('truetype');
-            font-weight: 500;
-            font-display: swap;
-            font-style: normal;
+        /* iOS System Font Stack */
+        :root {
+            --ios-font: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+
+            /* iOS Dark Mode Colors (default) */
+            --ios-bg-primary: #000000;
+            --ios-bg-secondary: #1C1C1E;
+            --ios-bg-tertiary: #2C2C2E;
+            --ios-bg-grouped: #1C1C1E;
+            --ios-separator: rgba(84, 84, 88, 0.65);
+            --ios-label-primary: #FFFFFF;
+            --ios-label-secondary: rgba(235, 235, 245, 0.6);
+            --ios-label-tertiary: rgba(235, 235, 245, 0.3);
+            --ios-fill-primary: rgba(120, 120, 128, 0.36);
+            --ios-blue: #0A84FF;
+            --ios-green: #30D158;
+            --ios-red: #FF453A;
+            --ios-orange: #FF9F0A;
+            --ios-tint: #0A84FF;
+
+            /* iOS Sizing */
+            --ios-cell-height: 44px;
+            --ios-cell-padding: 16px;
+            --ios-section-spacing: 35px;
+            --ios-corner-radius: 10px;
+            --ios-safe-top: env(safe-area-inset-top, 0px);
+            --ios-safe-bottom: env(safe-area-inset-bottom, 0px);
+            --ios-safe-left: env(safe-area-inset-left, 0px);
+            --ios-safe-right: env(safe-area-inset-right, 0px);
         }
 
-        :root {
-            --color-background: #000000;
-            --color-surface: #FFFFFF;
-            --color-text-primary: #FFFFFF;
-            --color-text-secondary: rgba(255, 255, 255, 0.65);
-            --color-input-bg: rgba(255, 255, 255, 0.08);
-            --color-input-border: rgba(255, 255, 255, 0.12);
-            --color-danger: #FF453A;
-            --color-success: #30D158;
-            --radius-pill: 28px;
-            --font-heading: 'CabinetGrotesk-Medium', -apple-system, BlinkMacSystemFont, sans-serif;
+        /* iOS Light Mode */
+        @media (prefers-color-scheme: light) {
+            :root {
+                --ios-bg-primary: #F2F2F7;
+                --ios-bg-secondary: #FFFFFF;
+                --ios-bg-tertiary: #F2F2F7;
+                --ios-bg-grouped: #FFFFFF;
+                --ios-separator: rgba(60, 60, 67, 0.29);
+                --ios-label-primary: #000000;
+                --ios-label-secondary: rgba(60, 60, 67, 0.6);
+                --ios-label-tertiary: rgba(60, 60, 67, 0.3);
+                --ios-fill-primary: rgba(120, 120, 128, 0.2);
+                --ios-blue: #007AFF;
+                --ios-green: #34C759;
+                --ios-red: #FF3B30;
+                --ios-orange: #FF9500;
+                --ios-tint: #007AFF;
+            }
         }
 
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
 
         html, body {
             height: 100%;
+            overflow: hidden;
         }
 
         body {
-            font-family: var(--font-heading);
-            background-color: var(--color-background);
-            color: var(--color-text-primary);
+            font-family: var(--ios-font);
+            background-color: var(--ios-bg-primary);
+            color: var(--ios-label-primary);
             -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
-        .settings-container {
-            min-height: 100dvh;
+        /* iOS Navigation Bar */
+        .ios-nav-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: var(--ios-bg-secondary);
+            backdrop-filter: saturate(180%) blur(20px);
+            -webkit-backdrop-filter: saturate(180%) blur(20px);
+            border-bottom: 0.5px solid var(--ios-separator);
+            padding-top: var(--ios-safe-top);
+        }
+
+        .ios-nav-bar-content {
+            height: 44px;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px;
+            position: relative;
+            padding: 0 var(--ios-cell-padding);
         }
 
-        @media (max-width: 500px) {
-            .settings-container {
-                padding: 0;
-                align-items: flex-start;
-            }
+        .ios-nav-title {
+            font-size: 17px;
+            font-weight: 600;
+            letter-spacing: -0.41px;
         }
 
-        .settings-screen {
-            width: 100%;
-            max-width: 480px;
-            height: 100dvh;
-            display: flex;
-            flex-direction: column;
-            animation: blurFadeIn 0.6s ease-out forwards;
-            border-radius: 24px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            background: linear-gradient(145deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
-            overflow: hidden;
-        }
-
-        @media (max-width: 500px) {
-            .settings-screen {
-                border-radius: 0;
-                border: none;
-                background: transparent;
-            }
-        }
-
-        .settings-header {
+        .ios-back-btn {
+            position: absolute;
+            left: 8px;
             display: flex;
             align-items: center;
-            gap: 12px;
-            padding: 16px 20px;
-            border-bottom: 1px solid var(--color-input-border);
-            background: rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            flex-shrink: 0;
-        }
-
-        .back-btn {
-            width: 36px;
-            height: 36px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: none;
-            border: 1px solid var(--color-input-border);
-            border-radius: 50%;
-            cursor: pointer;
-            transition: border-color 0.2s ease, background-color 0.2s ease;
+            gap: 4px;
+            color: var(--ios-tint);
             text-decoration: none;
+            font-size: 17px;
+            padding: 8px;
+            margin: -8px;
         }
 
-        .back-btn:hover {
-            border-color: rgba(255, 255, 255, 0.3);
-            background-color: var(--color-input-bg);
+        .ios-back-btn svg {
+            width: 12px;
+            height: 20px;
+            stroke: currentColor;
+            stroke-width: 2.5;
+            fill: none;
         }
 
-        .back-btn svg {
-            width: 18px;
-            height: 18px;
-            stroke: var(--color-text-primary);
-        }
-
-        .settings-title {
-            font-size: 18px;
-            font-weight: 500;
-        }
-
-        .settings-content {
-            flex: 1;
-            padding: 20px;
+        /* Scrollable Content */
+        .ios-scroll-view {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
             overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding-top: calc(var(--ios-safe-top) + 44px);
+            padding-bottom: var(--ios-safe-bottom);
         }
 
-        .settings-section {
-            margin-bottom: 28px;
+        .ios-content {
+            padding: 20px var(--ios-cell-padding) calc(100px + var(--ios-safe-bottom));
+            max-width: 700px;
+            margin: 0 auto;
         }
 
-        .section-title {
-            font-size: 12px;
-            color: var(--color-text-secondary);
+        /* iOS Large Title */
+        .ios-large-title {
+            font-size: 34px;
+            font-weight: 700;
+            letter-spacing: 0.37px;
+            margin-bottom: 20px;
+            padding: 0 4px;
+        }
+
+        /* iOS Grouped Table Section */
+        .ios-section {
+            margin-bottom: var(--ios-section-spacing);
+        }
+
+        .ios-section-header {
+            font-size: 13px;
+            font-weight: 400;
+            color: var(--ios-label-secondary);
             text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 12px;
-            padding-left: 4px;
+            letter-spacing: -0.08px;
+            padding: 0 20px 8px;
         }
 
-        .settings-group {
-            background: var(--color-input-bg);
-            border-radius: 16px;
+        .ios-section-footer {
+            font-size: 13px;
+            color: var(--ios-label-secondary);
+            padding: 8px 20px 0;
+            line-height: 1.4;
+        }
+
+        .ios-grouped-list {
+            background: var(--ios-bg-grouped);
+            border-radius: var(--ios-corner-radius);
             overflow: hidden;
         }
 
-        /* Profile Section */
-        .profile-header {
+        /* iOS Cell/Row */
+        .ios-cell {
             display: flex;
             align-items: center;
-            gap: 16px;
-            padding: 16px;
+            min-height: var(--ios-cell-height);
+            padding: 11px var(--ios-cell-padding);
+            background: var(--ios-bg-grouped);
+            position: relative;
         }
 
-        .profile-avatar {
-            width: 70px;
-            height: 70px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.15);
+        .ios-cell:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: var(--ios-cell-padding);
+            right: 0;
+            height: 0.5px;
+            background: var(--ios-separator);
+        }
+
+        .ios-cell.has-icon:not(:last-child)::after {
+            left: 60px;
+        }
+
+        .ios-cell:active {
+            background: var(--ios-fill-primary);
+        }
+
+        .ios-cell-icon {
+            width: 29px;
+            height: 29px;
+            border-radius: 6px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 28px;
-            font-weight: 500;
-            overflow: hidden;
+            margin-right: 12px;
             flex-shrink: 0;
         }
 
-        .profile-avatar img {
+        .ios-cell-icon svg {
+            width: 17px;
+            height: 17px;
+            stroke: white;
+            fill: none;
+        }
+
+        .ios-cell-icon.blue { background: var(--ios-blue); }
+        .ios-cell-icon.green { background: var(--ios-green); }
+        .ios-cell-icon.red { background: var(--ios-red); }
+        .ios-cell-icon.orange { background: var(--ios-orange); }
+        .ios-cell-icon.gray { background: #8E8E93; }
+
+        .ios-cell-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .ios-cell-title {
+            font-size: 17px;
+            letter-spacing: -0.41px;
+            color: var(--ios-label-primary);
+        }
+
+        .ios-cell-subtitle {
+            font-size: 13px;
+            color: var(--ios-label-secondary);
+            margin-top: 2px;
+        }
+
+        .ios-cell-value {
+            font-size: 17px;
+            color: var(--ios-label-secondary);
+            margin-right: 6px;
+        }
+
+        .ios-cell-accessory {
+            color: var(--ios-label-tertiary);
+            display: flex;
+            align-items: center;
+        }
+
+        .ios-cell-accessory svg {
+            width: 14px;
+            height: 22px;
+            stroke: currentColor;
+            stroke-width: 2.5;
+            fill: none;
+        }
+
+        /* iOS Link Cell */
+        .ios-cell-link {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        /* iOS Destructive Cell */
+        .ios-cell.destructive .ios-cell-title {
+            color: var(--ios-red);
+        }
+
+        /* iOS Toggle Switch */
+        .ios-toggle {
+            width: 51px;
+            height: 31px;
+            background: var(--ios-fill-primary);
+            border-radius: 15.5px;
+            position: relative;
+            cursor: pointer;
+            transition: background-color 0.25s ease;
+            flex-shrink: 0;
+        }
+
+        .ios-toggle.active {
+            background: var(--ios-green);
+        }
+
+        .ios-toggle::after {
+            content: '';
+            position: absolute;
+            width: 27px;
+            height: 27px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15), 0 1px 1px rgba(0, 0, 0, 0.16), 0 3px 1px rgba(0, 0, 0, 0.1);
+            transition: transform 0.25s ease;
+        }
+
+        .ios-toggle.active::after {
+            transform: translateX(20px);
+        }
+
+        /* iOS Profile Header */
+        .ios-profile-header {
+            display: flex;
+            align-items: center;
+            padding: 14px var(--ios-cell-padding);
+            background: var(--ios-bg-grouped);
+            border-radius: var(--ios-corner-radius);
+            margin-bottom: var(--ios-section-spacing);
+        }
+
+        .ios-profile-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--ios-fill-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 500;
+            color: var(--ios-label-secondary);
+            overflow: hidden;
+            flex-shrink: 0;
+            margin-right: 14px;
+        }
+
+        .ios-profile-avatar img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
 
-        .profile-info {
+        .ios-profile-info {
             flex: 1;
             min-width: 0;
         }
 
-        .profile-name-display {
+        .ios-profile-name {
             font-size: 20px;
-            font-weight: 500;
-            margin-bottom: 4px;
+            font-weight: 600;
+            letter-spacing: 0.38px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        .profile-email {
-            font-size: 13px;
-            color: var(--color-text-secondary);
+        .ios-profile-email {
+            font-size: 14px;
+            color: var(--ios-label-secondary);
+            margin-top: 2px;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
         }
 
-        .pro-badge {
-            display: inline-block;
+        .ios-pro-badge {
+            display: inline-flex;
             padding: 2px 8px;
             background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
             color: #000;
-            font-size: 10px;
-            font-weight: 500;
+            font-size: 11px;
+            font-weight: 600;
             border-radius: 10px;
-            margin-left: 8px;
-            vertical-align: middle;
+            letter-spacing: 0.5px;
         }
 
-        /* Form Fields */
-        .form-field {
-            padding: 14px 16px;
-            border-top: 1px solid var(--color-input-border);
+        /* iOS Form Fields */
+        .ios-form-field {
+            display: flex;
+            align-items: center;
+            min-height: var(--ios-cell-height);
+            padding: 11px var(--ios-cell-padding);
+            background: var(--ios-bg-grouped);
+            position: relative;
         }
 
-        .form-field:first-child {
-            border-top: none;
+        .ios-form-field:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: var(--ios-cell-padding);
+            right: 0;
+            height: 0.5px;
+            background: var(--ios-separator);
         }
 
-        .form-label {
-            display: block;
-            font-size: 12px;
-            color: var(--color-text-secondary);
-            margin-bottom: 6px;
+        .ios-form-label {
+            font-size: 17px;
+            color: var(--ios-label-primary);
+            min-width: 100px;
+            flex-shrink: 0;
         }
 
-        .form-input {
-            width: 100%;
+        .ios-form-input {
+            flex: 1;
+            font-family: var(--ios-font);
+            font-size: 17px;
+            color: var(--ios-label-primary);
             background: transparent;
             border: none;
-            color: var(--color-text-primary);
-            font-family: var(--font-heading);
-            font-size: 15px;
             outline: none;
+            text-align: right;
+            padding: 0;
         }
 
-        .form-input::placeholder {
-            color: rgba(255, 255, 255, 0.3);
+        .ios-form-input::placeholder {
+            color: var(--ios-label-tertiary);
         }
 
-        /* Photo Grid */
-        .photo-grid {
+        /* iOS Select */
+        .ios-select-wrapper {
+            flex: 1;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+        }
+
+        .ios-select {
+            font-family: var(--ios-font);
+            font-size: 17px;
+            color: var(--ios-label-secondary);
+            background: transparent;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            padding-right: 20px;
+            appearance: none;
+            -webkit-appearance: none;
+            text-align: right;
+            direction: rtl;
+        }
+
+        .ios-select-wrapper::after {
+            content: '';
+            position: absolute;
+            right: var(--ios-cell-padding);
+            width: 10px;
+            height: 10px;
+            border-right: 2px solid var(--ios-label-tertiary);
+            border-bottom: 2px solid var(--ios-label-tertiary);
+            transform: rotate(45deg) translateY(-25%);
+            pointer-events: none;
+        }
+
+        /* iOS Slider */
+        .ios-slider-cell {
+            display: block;
+            padding: 14px var(--ios-cell-padding);
+            background: var(--ios-bg-grouped);
+            position: relative;
+        }
+
+        .ios-slider-cell:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: var(--ios-cell-padding);
+            right: 0;
+            height: 0.5px;
+            background: var(--ios-separator);
+        }
+
+        .ios-slider-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .ios-slider-label {
+            font-size: 17px;
+            color: var(--ios-label-primary);
+        }
+
+        .ios-slider-value {
+            font-size: 17px;
+            color: var(--ios-label-secondary);
+        }
+
+        .ios-slider {
+            width: 100%;
+            height: 28px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: transparent;
+            cursor: pointer;
+        }
+
+        .ios-slider::-webkit-slider-runnable-track {
+            height: 4px;
+            background: var(--ios-fill-primary);
+            border-radius: 2px;
+        }
+
+        .ios-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 28px;
+            height: 28px;
+            background: white;
+            border-radius: 50%;
+            margin-top: -12px;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15), 0 1px 1px rgba(0, 0, 0, 0.16), 0 3px 1px rgba(0, 0, 0, 0.1);
+        }
+
+        .ios-slider::-moz-range-track {
+            height: 4px;
+            background: var(--ios-fill-primary);
+            border-radius: 2px;
+        }
+
+        .ios-slider::-moz-range-thumb {
+            width: 28px;
+            height: 28px;
+            background: white;
+            border-radius: 50%;
+            border: none;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15), 0 1px 1px rgba(0, 0, 0, 0.16), 0 3px 1px rgba(0, 0, 0, 0.1);
+        }
+
+        /* iOS Double Range Slider */
+        .ios-double-slider {
+            position: relative;
+            height: 28px;
+        }
+
+        .ios-double-slider input {
+            position: absolute;
+            width: 100%;
+            pointer-events: none;
+            -webkit-appearance: none;
+            appearance: none;
+            background: transparent;
+            height: 28px;
+        }
+
+        .ios-double-slider input::-webkit-slider-thumb {
+            pointer-events: all;
+            -webkit-appearance: none;
+            appearance: none;
+            width: 28px;
+            height: 28px;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15), 0 1px 1px rgba(0, 0, 0, 0.16), 0 3px 1px rgba(0, 0, 0, 0.1);
+            position: relative;
+            z-index: 2;
+        }
+
+        .ios-double-slider input::-moz-range-thumb {
+            pointer-events: all;
+            width: 28px;
+            height: 28px;
+            background: white;
+            border-radius: 50%;
+            border: none;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15), 0 1px 1px rgba(0, 0, 0, 0.16), 0 3px 1px rgba(0, 0, 0, 0.1);
+        }
+
+        .ios-slider-track {
+            position: absolute;
+            height: 4px;
+            background: var(--ios-fill-primary);
+            border-radius: 2px;
+            width: 100%;
+            top: 12px;
+        }
+
+        .ios-slider-track-fill {
+            position: absolute;
+            height: 4px;
+            background: var(--ios-tint);
+            border-radius: 2px;
+            top: 12px;
+        }
+
+        /* iOS Photo Grid */
+        .ios-photo-section {
+            padding: var(--ios-cell-padding);
+            background: var(--ios-bg-grouped);
+            border-radius: var(--ios-corner-radius);
+        }
+
+        .ios-photo-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 8px;
-            padding: 16px;
         }
 
-        .photo-slot {
+        .ios-photo-slot {
             aspect-ratio: 1;
-            border-radius: 12px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            background: var(--ios-fill-primary);
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             position: relative;
             overflow: hidden;
-            transition: border-color 0.2s ease;
+            transition: transform 0.1s ease;
         }
 
-        .photo-slot:hover {
-            border-color: rgba(255, 255, 255, 0.4);
+        .ios-photo-slot:active {
+            transform: scale(0.97);
         }
 
-        .photo-slot.has-photo {
-            border: none;
+        .ios-photo-slot.has-photo {
+            background: transparent;
         }
 
-        .photo-slot img {
+        .ios-photo-slot img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
 
-        .photo-slot svg {
-            width: 24px;
-            height: 24px;
-            stroke: var(--color-text-secondary);
+        .ios-photo-slot svg {
+            width: 28px;
+            height: 28px;
+            stroke: var(--ios-label-tertiary);
         }
 
-        .photo-delete {
+        .ios-photo-delete {
             position: absolute;
-            top: 6px;
-            right: 6px;
-            width: 24px;
-            height: 24px;
-            background: rgba(0, 0, 0, 0.7);
+            top: 4px;
+            right: 4px;
+            width: 22px;
+            height: 22px;
+            background: rgba(0, 0, 0, 0.6);
             border: none;
             border-radius: 50%;
             display: flex;
@@ -314,319 +670,167 @@
             transition: opacity 0.2s ease;
         }
 
-        .photo-slot:hover .photo-delete {
+        .ios-photo-slot:hover .ios-photo-delete {
             opacity: 1;
         }
 
-        .photo-delete svg {
-            width: 14px;
-            height: 14px;
+        .ios-photo-delete svg {
+            width: 12px;
+            height: 12px;
             stroke: white;
         }
 
-        .photo-primary-badge {
+        .ios-photo-badge {
             position: absolute;
-            bottom: 6px;
-            left: 6px;
+            bottom: 4px;
+            left: 4px;
             padding: 2px 6px;
-            background: var(--color-surface);
-            color: var(--color-background);
-            font-size: 9px;
-            font-weight: 500;
+            background: var(--ios-tint);
+            color: white;
+            font-size: 10px;
+            font-weight: 600;
             border-radius: 4px;
         }
 
-        /* Range Slider */
-        .range-field {
-            padding: 14px 16px;
-            border-top: 1px solid var(--color-input-border);
+        /* iOS Floating Save Bar */
+        .ios-save-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 12px var(--ios-cell-padding);
+            padding-bottom: calc(12px + var(--ios-safe-bottom));
+            background: var(--ios-bg-secondary);
+            backdrop-filter: saturate(180%) blur(20px);
+            -webkit-backdrop-filter: saturate(180%) blur(20px);
+            border-top: 0.5px solid var(--ios-separator);
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+            z-index: 99;
         }
 
-        .range-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
+        .ios-save-bar.visible {
+            transform: translateY(0);
         }
 
-        .range-label {
-            font-size: 14px;
-        }
-
-        .range-value {
-            font-size: 14px;
-            color: var(--color-text-secondary);
-        }
-
-        .range-slider {
+        .ios-btn-primary {
             width: 100%;
-            height: 4px;
-            -webkit-appearance: none;
-            appearance: none;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 2px;
-            outline: none;
-        }
-
-        .range-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 20px;
-            height: 20px;
-            background: var(--color-surface);
-            border-radius: 50%;
-            cursor: pointer;
-        }
-
-        .range-slider::-moz-range-thumb {
-            width: 20px;
-            height: 20px;
-            background: var(--color-surface);
-            border-radius: 50%;
-            cursor: pointer;
+            height: 50px;
+            background: var(--ios-tint);
+            color: white;
             border: none;
-        }
-
-        /* Double Range for Age */
-        .double-range {
-            position: relative;
-            height: 20px;
-        }
-
-        .double-range input {
-            position: absolute;
-            width: 100%;
-            pointer-events: none;
-            -webkit-appearance: none;
-            appearance: none;
-            background: transparent;
-        }
-
-        .double-range input::-webkit-slider-thumb {
-            pointer-events: all;
-            -webkit-appearance: none;
-            appearance: none;
-            width: 20px;
-            height: 20px;
-            background: var(--color-surface);
-            border-radius: 50%;
+            border-radius: 12px;
+            font-family: var(--ios-font);
+            font-size: 17px;
+            font-weight: 600;
             cursor: pointer;
-            position: relative;
-            z-index: 2;
+            transition: opacity 0.15s ease, transform 0.1s ease;
         }
 
-        .double-range input::-moz-range-thumb {
-            pointer-events: all;
-            width: 20px;
-            height: 20px;
-            background: var(--color-surface);
-            border-radius: 50%;
-            cursor: pointer;
-            border: none;
+        .ios-btn-primary:active {
+            opacity: 0.8;
+            transform: scale(0.98);
         }
 
-        .range-track {
-            position: absolute;
-            height: 4px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 2px;
-            width: 100%;
-            top: 8px;
-        }
-
-        .range-track-fill {
-            position: absolute;
-            height: 4px;
-            background: var(--color-surface);
-            border-radius: 2px;
-            top: 8px;
-        }
-
-        /* Select Field */
-        .select-field {
-            padding: 14px 16px;
-            border-top: 1px solid var(--color-input-border);
-        }
-
-        .select-input {
-            width: 100%;
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid var(--color-input-border);
-            border-radius: 10px;
-            color: var(--color-text-primary);
-            font-family: var(--font-heading);
-            font-size: 14px;
-            padding: 10px 12px;
-            outline: none;
-            cursor: pointer;
-            margin-top: 6px;
-        }
-
-        .select-input option {
-            background: #1a1a1a;
-            color: var(--color-text-primary);
-        }
-
-        /* Toggle Switch */
-        .toggle-field {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 14px 16px;
-            border-top: 1px solid var(--color-input-border);
-        }
-
-        .toggle-field:first-child {
-            border-top: none;
-        }
-
-        .toggle-info {
-            flex: 1;
-        }
-
-        .toggle-label {
-            font-size: 14px;
-            margin-bottom: 2px;
-        }
-
-        .toggle-description {
-            font-size: 12px;
-            color: var(--color-text-secondary);
-        }
-
-        .toggle-switch {
-            width: 50px;
-            height: 30px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 15px;
-            position: relative;
-            cursor: pointer;
-            transition: background-color 0.2s ease;
-            flex-shrink: 0;
-            margin-left: 12px;
-        }
-
-        .toggle-switch.active {
-            background: var(--color-success);
-        }
-
-        .toggle-switch::after {
-            content: '';
-            position: absolute;
-            width: 26px;
-            height: 26px;
-            background: white;
-            border-radius: 50%;
-            top: 2px;
-            left: 2px;
-            transition: transform 0.2s ease;
-        }
-
-        .toggle-switch.active::after {
-            transform: translateX(20px);
-        }
-
-        /* Settings Item Button */
-        .settings-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 14px 16px;
-            border: none;
-            background: transparent;
-            width: 100%;
-            color: var(--color-text-primary);
-            font-family: var(--font-heading);
-            font-size: 15px;
-            cursor: pointer;
-            text-decoration: none;
-            transition: background-color 0.15s ease;
-            text-align: left;
-            border-top: 1px solid var(--color-input-border);
-        }
-
-        .settings-item:first-child {
-            border-top: none;
-        }
-
-        .settings-item:hover {
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        .settings-item svg {
-            width: 20px;
-            height: 20px;
-            stroke: var(--color-text-secondary);
-            flex-shrink: 0;
-        }
-
-        .settings-item-content {
-            flex: 1;
-        }
-
-        .settings-item-arrow {
-            width: 16px;
-            height: 16px;
-            stroke: var(--color-text-secondary);
-        }
-
-        .settings-item.danger {
-            color: var(--color-danger);
-        }
-
-        .settings-item.danger svg {
-            stroke: var(--color-danger);
-        }
-
-        /* Save Button */
-        .save-bar {
-            padding: 16px 20px;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border-top: 1px solid var(--color-input-border);
-            display: none;
-            flex-shrink: 0;
-        }
-
-        .save-bar.visible {
-            display: block;
-        }
-
-        .save-btn {
-            width: 100%;
-            height: 48px;
-            background: var(--color-surface);
-            color: var(--color-background);
-            border: none;
-            border-radius: var(--radius-pill);
-            font-family: var(--font-heading);
-            font-size: 15px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: opacity 0.2s ease;
-        }
-
-        .save-btn:disabled {
+        .ios-btn-primary:disabled {
             opacity: 0.5;
             cursor: not-allowed;
         }
 
-        .save-btn:active:not(:disabled) {
-            opacity: 0.85;
+        /* iOS Version Footer */
+        .ios-version {
+            text-align: center;
+            padding: 24px;
+            font-size: 13px;
+            color: var(--ios-label-tertiary);
         }
 
-        /* Photo Upload Input */
-        .photo-upload-input {
+        /* Hidden file input */
+        .hidden-input {
             display: none;
         }
 
-        /* Version */
-        .version-info {
-            text-align: center;
+        /* iOS Alert (Modal) */
+        .ios-alert-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s ease, visibility 0.2s ease;
             padding: 20px;
-            color: var(--color-text-secondary);
-            font-size: 12px;
+        }
+
+        .ios-alert-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .ios-alert {
+            background: var(--ios-bg-secondary);
+            border-radius: 14px;
+            width: 100%;
+            max-width: 270px;
+            overflow: hidden;
+            transform: scale(0.95);
+            transition: transform 0.2s ease;
+        }
+
+        .ios-alert-overlay.visible .ios-alert {
+            transform: scale(1);
+        }
+
+        .ios-alert-content {
+            padding: 20px 16px;
+            text-align: center;
+        }
+
+        .ios-alert-title {
+            font-size: 17px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .ios-alert-message {
+            font-size: 13px;
+            color: var(--ios-label-secondary);
+            line-height: 1.4;
+        }
+
+        .ios-alert-actions {
+            display: flex;
+            border-top: 0.5px solid var(--ios-separator);
+        }
+
+        .ios-alert-btn {
+            flex: 1;
+            padding: 12px;
+            font-family: var(--ios-font);
+            font-size: 17px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            color: var(--ios-tint);
+        }
+
+        .ios-alert-btn:not(:last-child) {
+            border-right: 0.5px solid var(--ios-separator);
+        }
+
+        .ios-alert-btn.destructive {
+            color: var(--ios-red);
+        }
+
+        .ios-alert-btn.bold {
+            font-weight: 600;
+        }
+
+        .ios-alert-btn:active {
+            background: var(--ios-fill-primary);
         }
 
         /* Loading state */
@@ -634,91 +838,97 @@
             opacity: 0.5;
             pointer-events: none;
         }
-
-        @keyframes blurFadeIn {
-            0% {
-                opacity: 0;
-                filter: blur(12px);
-            }
-            100% {
-                opacity: 1;
-                filter: blur(0);
-            }
-        }
     </style>
 </head>
 <body>
-    <div class="settings-container">
-        <main class="settings-screen">
-            <header class="settings-header">
-                <a href="chat.html" class="back-btn">
-                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M19 12H5M12 19l-7-7 7-7"/>
+    <!-- iOS Navigation Bar -->
+    <nav class="ios-nav-bar">
+        <div class="ios-nav-bar-content">
+            <a href="chat.html" class="ios-back-btn">
+                <svg viewBox="0 0 12 20" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M10 2L2 10L10 18"/>
+                </svg>
+                <span>Back</span>
+            </a>
+            <span class="ios-nav-title">Settings</span>
+        </div>
+    </nav>
+
+    <!-- Scrollable Content -->
+    <div class="ios-scroll-view">
+        <div class="ios-content">
+
+            <!-- Profile Header -->
+            <div class="ios-profile-header" id="profileHeader">
+                <div class="ios-profile-avatar" id="profileAvatar"></div>
+                <div class="ios-profile-info">
+                    <div class="ios-profile-name" id="profileName">
+                        <span id="profileNameText">Loading...</span>
+                        <span class="ios-pro-badge" id="proBadge" style="display: none;">PRO</span>
+                    </div>
+                    <div class="ios-profile-email" id="profileEmail"></div>
+                </div>
+                <div class="ios-cell-accessory">
+                    <svg viewBox="0 0 14 22" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M2 2L12 11L2 20"/>
                     </svg>
-                </a>
-                <h1 class="settings-title">Settings</h1>
-            </header>
+                </div>
+            </div>
 
-            <div class="settings-content">
-                <!-- Profile Section -->
-                <div class="settings-section">
-                    <div class="section-title">Profile</div>
-                    <div class="settings-group">
-                        <div class="profile-header">
-                            <div class="profile-avatar" id="profileAvatar"></div>
-                            <div class="profile-info">
-                                <div class="profile-name-display" id="profileNameDisplay">Loading...<span class="pro-badge" id="proBadge" style="display: none;">PRO</span></div>
-                                <div class="profile-email" id="profileEmail"></div>
-                            </div>
-                        </div>
-                        <div class="form-field">
-                            <label class="form-label">Display Name</label>
-                            <input type="text" class="form-input" id="displayNameInput" placeholder="Your name">
-                        </div>
-                        <div class="form-field">
-                            <label class="form-label">Location</label>
-                            <input type="text" class="form-input" id="locationInput" placeholder="City, Country">
-                        </div>
+            <!-- Profile Section -->
+            <section class="ios-section">
+                <h3 class="ios-section-header">Profile</h3>
+                <div class="ios-grouped-list">
+                    <div class="ios-form-field">
+                        <label class="ios-form-label">Name</label>
+                        <input type="text" class="ios-form-input" id="displayNameInput" placeholder="Enter name">
+                    </div>
+                    <div class="ios-form-field">
+                        <label class="ios-form-label">Location</label>
+                        <input type="text" class="ios-form-input" id="locationInput" placeholder="City, Country">
                     </div>
                 </div>
+            </section>
 
-                <!-- Photos Section -->
-                <div class="settings-section">
-                    <div class="section-title">Photos</div>
-                    <div class="settings-group">
-                        <div class="photo-grid" id="photoGrid">
-                            <!-- Photos will be dynamically added -->
+            <!-- Photos Section -->
+            <section class="ios-section">
+                <h3 class="ios-section-header">Photos</h3>
+                <div class="ios-photo-section">
+                    <div class="ios-photo-grid" id="photoGrid">
+                        <!-- Photos populated by JS -->
+                    </div>
+                </div>
+                <p class="ios-section-footer">Add up to 6 photos. The first photo will be your main profile picture.</p>
+                <input type="file" class="hidden-input" id="photoUploadInput" accept="image/*">
+            </section>
+
+            <!-- Match Preferences Section -->
+            <section class="ios-section">
+                <h3 class="ios-section-header">Match Preferences</h3>
+                <div class="ios-grouped-list">
+                    <div class="ios-slider-cell">
+                        <div class="ios-slider-header">
+                            <span class="ios-slider-label">Age Range</span>
+                            <span class="ios-slider-value" id="ageRangeValue">18 - 30</span>
+                        </div>
+                        <div class="ios-double-slider">
+                            <div class="ios-slider-track"></div>
+                            <div class="ios-slider-track-fill" id="ageTrackFill"></div>
+                            <input type="range" min="18" max="65" value="18" id="ageMinSlider">
+                            <input type="range" min="18" max="65" value="30" id="ageMaxSlider">
                         </div>
                     </div>
-                    <input type="file" class="photo-upload-input" id="photoUploadInput" accept="image/*">
-                </div>
-
-                <!-- Match Preferences Section -->
-                <div class="settings-section">
-                    <div class="section-title">Match Preferences</div>
-                    <div class="settings-group">
-                        <div class="range-field">
-                            <div class="range-header">
-                                <span class="range-label">Age Range</span>
-                                <span class="range-value" id="ageRangeValue">18 - 30</span>
-                            </div>
-                            <div class="double-range">
-                                <div class="range-track"></div>
-                                <div class="range-track-fill" id="ageTrackFill"></div>
-                                <input type="range" min="18" max="65" value="18" id="ageMinSlider">
-                                <input type="range" min="18" max="65" value="30" id="ageMaxSlider">
-                            </div>
+                    <div class="ios-slider-cell">
+                        <div class="ios-slider-header">
+                            <span class="ios-slider-label">Maximum Distance</span>
+                            <span class="ios-slider-value" id="distanceValue">50 km</span>
                         </div>
-                        <div class="range-field">
-                            <div class="range-header">
-                                <span class="range-label">Maximum Distance</span>
-                                <span class="range-value" id="distanceValue">50 km</span>
-                            </div>
-                            <input type="range" class="range-slider" min="5" max="200" value="50" id="distanceSlider">
-                        </div>
-                        <div class="select-field">
-                            <label class="form-label">Looking For</label>
-                            <select class="select-input" id="relationshipIntent">
+                        <input type="range" class="ios-slider" min="5" max="200" value="50" id="distanceSlider">
+                    </div>
+                    <div class="ios-form-field" style="position: relative;">
+                        <label class="ios-form-label">Looking For</label>
+                        <div class="ios-select-wrapper">
+                            <select class="ios-select" id="relationshipIntent">
                                 <option value="casual">Something casual</option>
                                 <option value="serious">Something serious</option>
                                 <option value="friends">New friends</option>
@@ -727,98 +937,124 @@
                         </div>
                     </div>
                 </div>
+            </section>
 
-                <!-- Notifications Section -->
-                <div class="settings-section">
-                    <div class="section-title">Notifications</div>
-                    <div class="settings-group">
-                        <div class="toggle-field">
-                            <div class="toggle-info">
-                                <div class="toggle-label">Push Notifications</div>
-                                <div class="toggle-description">Get notified about new messages</div>
-                            </div>
-                            <div class="toggle-switch" id="pushToggle"></div>
+            <!-- Notifications Section -->
+            <section class="ios-section">
+                <h3 class="ios-section-header">Notifications</h3>
+                <div class="ios-grouped-list">
+                    <div class="ios-cell">
+                        <div class="ios-cell-content">
+                            <div class="ios-cell-title">Push Notifications</div>
+                            <div class="ios-cell-subtitle">Receive message alerts</div>
                         </div>
+                        <div class="ios-toggle" id="pushToggle"></div>
                     </div>
                 </div>
+            </section>
 
-                <!-- Support Section -->
-                <div class="settings-section">
-                    <div class="section-title">Support</div>
-                    <div class="settings-group">
-                        <a href="plan.html" class="settings-item">
+            <!-- Support Section -->
+            <section class="ios-section">
+                <h3 class="ios-section-header">Support</h3>
+                <div class="ios-grouped-list">
+                    <a href="plan.html" class="ios-cell ios-cell-link has-icon">
+                        <div class="ios-cell-icon orange">
                             <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
                             </svg>
-                            <span class="settings-item-content">Upgrade to Pro</span>
-                            <svg class="settings-item-arrow" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M9 18l6-6-6-6"/>
+                        </div>
+                        <div class="ios-cell-content">
+                            <div class="ios-cell-title">Upgrade to Pro</div>
+                        </div>
+                        <div class="ios-cell-accessory">
+                            <svg viewBox="0 0 14 22" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M2 2L12 11L2 20"/>
                             </svg>
-                        </a>
-                        <a href="support.html" class="settings-item">
+                        </div>
+                    </a>
+                    <a href="support.html" class="ios-cell ios-cell-link has-icon">
+                        <div class="ios-cell-icon blue">
                             <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <circle cx="12" cy="12" r="10"/>
                                 <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
                                 <line x1="12" y1="17" x2="12.01" y2="17"/>
                             </svg>
-                            <span class="settings-item-content">Help & Support</span>
-                            <svg class="settings-item-arrow" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M9 18l6-6-6-6"/>
+                        </div>
+                        <div class="ios-cell-content">
+                            <div class="ios-cell-title">Help & Support</div>
+                        </div>
+                        <div class="ios-cell-accessory">
+                            <svg viewBox="0 0 14 22" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M2 2L12 11L2 20"/>
                             </svg>
-                        </a>
-                        <a href="privacy.html" class="settings-item">
+                        </div>
+                    </a>
+                    <a href="privacy.html" class="ios-cell ios-cell-link has-icon">
+                        <div class="ios-cell-icon green">
                             <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                             </svg>
-                            <span class="settings-item-content">Privacy Policy</span>
-                            <svg class="settings-item-arrow" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M9 18l6-6-6-6"/>
+                        </div>
+                        <div class="ios-cell-content">
+                            <div class="ios-cell-title">Privacy Policy</div>
+                        </div>
+                        <div class="ios-cell-accessory">
+                            <svg viewBox="0 0 14 22" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M2 2L12 11L2 20"/>
                             </svg>
-                        </a>
-                    </div>
+                        </div>
+                    </a>
                 </div>
+            </section>
 
-                <!-- Account Actions -->
-                <div class="settings-section">
-                    <div class="section-title">Account</div>
-                    <div class="settings-group">
-                        <button class="settings-item danger" id="logoutBtn">
-                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                                <polyline points="16 17 21 12 16 7"/>
-                                <line x1="21" y1="12" x2="9" y2="12"/>
-                            </svg>
-                            <span class="settings-item-content">Log out</span>
-                        </button>
-                        <button class="settings-item danger" id="deleteAccountBtn">
-                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M3 6h18"/>
-                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/>
-                                <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                                <line x1="10" y1="11" x2="10" y2="17"/>
-                                <line x1="14" y1="11" x2="14" y2="17"/>
-                            </svg>
-                            <span class="settings-item-content">Delete account</span>
-                        </button>
-                    </div>
+            <!-- Account Section -->
+            <section class="ios-section">
+                <h3 class="ios-section-header">Account</h3>
+                <div class="ios-grouped-list">
+                    <button class="ios-cell destructive" id="logoutBtn">
+                        <div class="ios-cell-content">
+                            <div class="ios-cell-title">Log Out</div>
+                        </div>
+                    </button>
+                    <button class="ios-cell destructive" id="deleteAccountBtn">
+                        <div class="ios-cell-content">
+                            <div class="ios-cell-title">Delete Account</div>
+                        </div>
+                    </button>
                 </div>
+            </section>
 
-                <div class="version-info">
-                    Spark v1.0.0
-                </div>
+            <!-- Version -->
+            <div class="ios-version">
+                Spark v1.0.0
             </div>
 
-            <div class="save-bar" id="saveBar">
-                <button class="save-btn" id="saveBtn">Save Changes</button>
+        </div>
+    </div>
+
+    <!-- iOS Save Bar -->
+    <div class="ios-save-bar" id="saveBar">
+        <button class="ios-btn-primary" id="saveBtn">Save Changes</button>
+    </div>
+
+    <!-- iOS Alert Modal -->
+    <div class="ios-alert-overlay" id="alertOverlay">
+        <div class="ios-alert">
+            <div class="ios-alert-content">
+                <div class="ios-alert-title" id="alertTitle">Title</div>
+                <div class="ios-alert-message" id="alertMessage">Message</div>
             </div>
-        </main>
+            <div class="ios-alert-actions" id="alertActions">
+                <!-- Buttons added dynamically -->
+            </div>
+        </div>
     </div>
 
     <script src="js/api.js"></script>
     <script>
         // Elements
         const profileAvatar = document.getElementById('profileAvatar');
-        const profileNameDisplay = document.getElementById('profileNameDisplay');
+        const profileNameText = document.getElementById('profileNameText');
         const profileEmail = document.getElementById('profileEmail');
         const proBadge = document.getElementById('proBadge');
         const displayNameInput = document.getElementById('displayNameInput');
@@ -837,6 +1073,10 @@
         const saveBtn = document.getElementById('saveBtn');
         const logoutBtn = document.getElementById('logoutBtn');
         const deleteAccountBtn = document.getElementById('deleteAccountBtn');
+        const alertOverlay = document.getElementById('alertOverlay');
+        const alertTitle = document.getElementById('alertTitle');
+        const alertMessage = document.getElementById('alertMessage');
+        const alertActions = document.getElementById('alertActions');
 
         // State
         let userData = null;
@@ -846,18 +1086,39 @@
         let uploadingPhotoSlot = null;
 
         if (!SparkAPI.auth.requireVerification()) {
-            // User will be redirected by requireVerification()
+            // User will be redirected
         } else {
             SparkAPI.navigation.saveCurrentPage();
         }
 
+        // iOS-style Alert
+        function showAlert(title, message, actions = [{ text: 'OK', style: 'bold' }]) {
+            return new Promise((resolve) => {
+                alertTitle.textContent = title;
+                alertMessage.textContent = message;
+                alertActions.innerHTML = '';
+
+                actions.forEach((action, index) => {
+                    const btn = document.createElement('button');
+                    btn.className = 'ios-alert-btn';
+                    if (action.style === 'destructive') btn.classList.add('destructive');
+                    if (action.style === 'bold' || actions.length === 1) btn.classList.add('bold');
+                    btn.textContent = action.text;
+                    btn.addEventListener('click', () => {
+                        alertOverlay.classList.remove('visible');
+                        resolve(index);
+                    });
+                    alertActions.appendChild(btn);
+                });
+
+                alertOverlay.classList.add('visible');
+            });
+        }
+
         // Track changes
-        function markChanged(fieldName = 'unknown') {
-            console.log('[Settings Debug] markChanged called from:', fieldName);
-            console.log('[Settings Debug] hasChanges before:', hasChanges);
+        function markChanged() {
             hasChanges = true;
             saveBar.classList.add('visible');
-            console.log('[Settings Debug] hasChanges after:', hasChanges, '- save bar visible');
         }
 
         // Load profile data
@@ -877,9 +1138,9 @@
                     profileAvatar.textContent = initial;
                 }
 
-                profileNameDisplay.innerHTML = user.display_name || 'User';
+                profileNameText.textContent = user.display_name || 'User';
                 if (user.subscription_tier === 'pro') {
-                    profileNameDisplay.innerHTML += '<span class="pro-badge">PRO</span>';
+                    proBadge.style.display = 'inline-flex';
                 }
                 profileEmail.textContent = user.email || '';
 
@@ -916,15 +1177,15 @@
             for (let i = 0; i < maxPhotos; i++) {
                 const photo = userPhotos[i];
                 const slot = document.createElement('div');
-                slot.className = 'photo-slot' + (photo ? ' has-photo' : '');
+                slot.className = 'ios-photo-slot' + (photo ? ' has-photo' : '');
                 slot.dataset.index = i;
 
                 if (photo) {
                     slot.innerHTML = `
                         <img src="${photo.photo_url}" alt="Photo ${i + 1}">
-                        ${photo.is_primary ? '<span class="photo-primary-badge">Main</span>' : ''}
-                        <button class="photo-delete" data-photo-id="${photo.id}">
-                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        ${photo.is_primary ? '<span class="ios-photo-badge">Main</span>' : ''}
+                        <button class="ios-photo-delete" data-photo-id="${photo.id}">
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                                 <line x1="18" y1="6" x2="6" y2="18"/>
                                 <line x1="6" y1="6" x2="18" y2="18"/>
                             </svg>
@@ -940,8 +1201,8 @@
                 }
 
                 slot.addEventListener('click', (e) => {
-                    if (e.target.closest('.photo-delete')) {
-                        const photoId = e.target.closest('.photo-delete').dataset.photoId;
+                    if (e.target.closest('.ios-photo-delete')) {
+                        const photoId = e.target.closest('.ios-photo-delete').dataset.photoId;
                         deletePhoto(photoId);
                     } else if (!photo) {
                         uploadingPhotoSlot = i;
@@ -961,7 +1222,7 @@
             try {
                 const slot = photoGrid.querySelector(`[data-index="${uploadingPhotoSlot}"]`);
                 slot.classList.add('loading');
-                slot.innerHTML = '<span style="color: var(--color-text-secondary); font-size: 12px;">Uploading...</span>';
+                slot.innerHTML = '<span style="color: var(--ios-label-secondary); font-size: 12px;">Uploading...</span>';
 
                 const reader = new FileReader();
                 reader.onload = async (event) => {
@@ -971,7 +1232,7 @@
                         renderPhotos();
                     } catch (error) {
                         console.error('Upload error:', error);
-                        alert('Failed to upload photo');
+                        await showAlert('Upload Failed', 'Failed to upload photo. Please try again.');
                         renderPhotos();
                     }
                 };
@@ -985,7 +1246,16 @@
 
         // Delete photo
         async function deletePhoto(photoId) {
-            if (!confirm('Delete this photo?')) return;
+            const result = await showAlert(
+                'Delete Photo',
+                'Are you sure you want to delete this photo?',
+                [
+                    { text: 'Cancel', style: 'normal' },
+                    { text: 'Delete', style: 'destructive' }
+                ]
+            );
+
+            if (result !== 1) return;
 
             try {
                 await SparkAPI.users.deletePhoto(photoId);
@@ -993,7 +1263,7 @@
                 renderPhotos();
             } catch (error) {
                 console.error('Delete photo error:', error);
-                alert('Failed to delete photo');
+                await showAlert('Error', 'Failed to delete photo.');
             }
         }
 
@@ -1017,14 +1287,12 @@
         }
 
         ageMinSlider.addEventListener('input', () => {
-            console.log('[Settings Debug] ageMinSlider changed to:', ageMinSlider.value);
             updateAgeRange();
-            markChanged('ageMinSlider');
+            markChanged();
         });
         ageMaxSlider.addEventListener('input', () => {
-            console.log('[Settings Debug] ageMaxSlider changed to:', ageMaxSlider.value);
             updateAgeRange();
-            markChanged('ageMaxSlider');
+            markChanged();
         });
 
         // Distance slider
@@ -1033,26 +1301,18 @@
         }
 
         distanceSlider.addEventListener('input', () => {
-            console.log('[Settings Debug] distanceSlider changed to:', distanceSlider.value);
             updateDistance();
-            markChanged('distanceSlider');
+            markChanged();
         });
 
         // Relationship intent
         relationshipIntent.addEventListener('change', () => {
-            console.log('[Settings Debug] relationshipIntent changed to:', relationshipIntent.value);
-            markChanged('relationshipIntent');
+            markChanged();
         });
 
         // Profile inputs
-        displayNameInput.addEventListener('input', () => {
-            console.log('[Settings Debug] displayNameInput changed to:', displayNameInput.value);
-            markChanged('displayNameInput');
-        });
-        locationInput.addEventListener('input', () => {
-            console.log('[Settings Debug] locationInput changed to:', locationInput.value);
-            markChanged('locationInput');
-        });
+        displayNameInput.addEventListener('input', () => markChanged());
+        locationInput.addEventListener('input', () => markChanged());
 
         // Push notifications
         async function checkPushStatus() {
@@ -1063,21 +1323,18 @@
 
         pushToggle.addEventListener('click', async () => {
             if (!('Notification' in window)) {
-                alert('Push notifications are not supported in this browser');
+                await showAlert('Not Supported', 'Push notifications are not supported in this browser.');
                 return;
             }
 
             if (pushToggle.classList.contains('active')) {
-                // Disable - just remove the active class (can't truly revoke)
                 pushToggle.classList.remove('active');
             } else {
-                // Enable
                 try {
                     const permission = await Notification.requestPermission();
                     if (permission === 'granted') {
                         pushToggle.classList.add('active');
 
-                        // Subscribe to push
                         if ('serviceWorker' in navigator) {
                             const registration = await navigator.serviceWorker.ready;
                             const { key } = await SparkAPI.push.getVapidKey();
@@ -1098,63 +1355,32 @@
 
         // Save changes
         saveBtn.addEventListener('click', async () => {
-            console.log('[Settings Debug] Save button clicked');
-            console.log('[Settings Debug] Current values:', {
-                display_name: displayNameInput.value,
-                location: locationInput.value,
-                age_min: ageMinSlider.value,
-                age_max: ageMaxSlider.value,
-                max_distance_km: distanceSlider.value,
-                relationship_intent: relationshipIntent.value
-            });
-
             saveBtn.disabled = true;
             saveBtn.textContent = 'Saving...';
 
             try {
                 // Update profile
-                const profileData = {
+                await SparkAPI.users.updateProfile({
                     display_name: displayNameInput.value,
                     location: locationInput.value
-                };
-                console.log('[Settings Debug] Updating profile with:', profileData);
-                const profileResult = await SparkAPI.users.updateProfile(profileData);
-                console.log('[Settings Debug] Profile update result:', profileResult);
+                });
 
                 // Update preferences
-                const preferencesData = {
+                await SparkAPI.users.updatePreferences({
                     age_min: parseInt(ageMinSlider.value),
                     age_max: parseInt(ageMaxSlider.value),
                     max_distance_km: parseInt(distanceSlider.value),
                     relationship_intent: relationshipIntent.value
-                };
-                console.log('[Settings Debug] Updating preferences with:', preferencesData);
-                const preferencesResult = await SparkAPI.users.updatePreferences(preferencesData);
-                console.log('[Settings Debug] Preferences update result:', preferencesResult);
+                });
 
                 hasChanges = false;
                 saveBar.classList.remove('visible');
                 saveBtn.textContent = 'Saved!';
-                console.log('[Settings Debug] Save completed successfully');
 
-                // Update local state with new values
-                userData.display_name = displayNameInput.value;
-                userData.location = locationInput.value;
-                userPreferences = {
-                    ...userPreferences,
-                    age_min: parseInt(ageMinSlider.value),
-                    age_max: parseInt(ageMaxSlider.value),
-                    max_distance_km: parseInt(distanceSlider.value),
-                    relationship_intent: relationshipIntent.value
-                };
+                // Update header
+                profileNameText.textContent = displayNameInput.value || 'User';
 
-                // Update display name in header
-                profileNameDisplay.innerHTML = displayNameInput.value || 'User';
-                if (userData?.subscription_tier === 'pro') {
-                    profileNameDisplay.innerHTML += '<span class="pro-badge">PRO</span>';
-                }
-
-                // Update localStorage with new user data for other pages
+                // Update localStorage
                 const currentUser = JSON.parse(localStorage.getItem('sparkUser') || '{}');
                 currentUser.display_name = displayNameInput.value;
                 localStorage.setItem('sparkUser', JSON.stringify(currentUser));
@@ -1165,46 +1391,64 @@
                 }, 1500);
 
             } catch (error) {
-                console.error('[Settings Debug] Save error:', error);
-                console.error('[Settings Debug] Error details:', error.message, error.stack);
-                const errorMsg = error.message || 'Unknown error';
-                alert(`Failed to save changes: ${errorMsg}`);
+                console.error('Save error:', error);
+                await showAlert('Save Failed', 'Failed to save changes. Please try again.');
                 saveBtn.textContent = 'Save Changes';
                 saveBtn.disabled = false;
             }
         });
 
         // Logout
-        logoutBtn.addEventListener('click', () => {
-            if (confirm('Are you sure you want to log out?')) {
+        logoutBtn.addEventListener('click', async () => {
+            const result = await showAlert(
+                'Log Out',
+                'Are you sure you want to log out?',
+                [
+                    { text: 'Cancel', style: 'normal' },
+                    { text: 'Log Out', style: 'destructive' }
+                ]
+            );
+
+            if (result === 1) {
                 SparkAPI.auth.logout();
             }
         });
 
         // Delete account
         deleteAccountBtn.addEventListener('click', async () => {
-            const firstConfirm = confirm('Are you sure you want to delete your account? This action cannot be undone.');
-            if (!firstConfirm) return;
+            const firstResult = await showAlert(
+                'Delete Account',
+                'Are you sure you want to delete your account? This action cannot be undone.',
+                [
+                    { text: 'Cancel', style: 'normal' },
+                    { text: 'Delete', style: 'destructive' }
+                ]
+            );
 
-            const secondConfirm = confirm('All your data, photos, matches, and messages will be permanently deleted. Are you absolutely sure?');
-            if (!secondConfirm) return;
+            if (firstResult !== 1) return;
 
-            deleteAccountBtn.disabled = true;
-            deleteAccountBtn.querySelector('.settings-item-content').textContent = 'Deleting...';
+            const secondResult = await showAlert(
+                'Confirm Deletion',
+                'All your data, photos, matches, and messages will be permanently deleted.',
+                [
+                    { text: 'Cancel', style: 'normal' },
+                    { text: 'Delete Account', style: 'destructive' }
+                ]
+            );
+
+            if (secondResult !== 1) return;
+
+            deleteAccountBtn.querySelector('.ios-cell-title').textContent = 'Deleting...';
 
             try {
                 await SparkAPI.users.deleteAccount();
-
-                // Clear all local data
                 localStorage.clear();
-
-                alert('Your account has been deleted.');
+                await showAlert('Account Deleted', 'Your account has been deleted.');
                 window.location.href = 'index.html';
             } catch (error) {
                 console.error('Delete account error:', error);
-                alert('Failed to delete account. Please try again.');
-                deleteAccountBtn.disabled = false;
-                deleteAccountBtn.querySelector('.settings-item-content').textContent = 'Delete account';
+                await showAlert('Error', 'Failed to delete account. Please try again.');
+                deleteAccountBtn.querySelector('.ios-cell-title').textContent = 'Delete Account';
             }
         });
 
@@ -1213,4 +1457,3 @@
     </script>
 </body>
 </html>
-
