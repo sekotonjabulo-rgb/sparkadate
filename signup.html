@@ -2,235 +2,397 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#000000">
+    <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+    <meta name="theme-color" content="#F2F2F7" media="(prefers-color-scheme: light)">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Spark">
-    <link rel="apple-touch-icon" href="blueocean.jpeg">
+    <link rel="apple-touch-icon" href="spark-icon.png">
     <title>Spark – Create Account</title>
-    
+
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-8F6YCX65EM"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
-
   gtag('config', 'G-8F6YCX65EM');
 </script>
 
     <style>
-        @font-face {
-            font-family: 'CabinetGrotesk-Medium';
-            src: url('./fonts/CabinetGrotesk-Medium.woff2') format('woff2'),
-                 url('./fonts/CabinetGrotesk-Medium.woff') format('woff'),
-                 url('./fonts/CabinetGrotesk-Medium.ttf') format('truetype');
-            font-weight: 500;
-            font-display: swap;
-            font-style: normal;
+        :root {
+            --ios-font: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+
+            /* iOS Dark Mode Colors (default) */
+            --ios-bg-primary: #000000;
+            --ios-bg-secondary: #1C1C1E;
+            --ios-bg-tertiary: #2C2C2E;
+            --ios-separator: rgba(84, 84, 88, 0.65);
+            --ios-label-primary: #FFFFFF;
+            --ios-label-secondary: rgba(235, 235, 245, 0.6);
+            --ios-label-tertiary: rgba(235, 235, 245, 0.3);
+            --ios-fill-primary: rgba(120, 120, 128, 0.36);
+            --ios-blue: #0A84FF;
+            --ios-red: #FF453A;
+            --ios-tint: #0A84FF;
+
+            --ios-safe-top: env(safe-area-inset-top, 0px);
+            --ios-safe-bottom: env(safe-area-inset-bottom, 0px);
         }
 
-        :root {
-            --color-background: #000000;
-            --color-surface: #FFFFFF;
-            --color-text-primary: #FFFFFF;
-            --color-text-secondary: rgba(255, 255, 255, 0.65);
-            --color-input-bg: rgba(255, 255, 255, 0.08);
-            --color-input-border: rgba(255, 255, 255, 0.15);
-            --color-error: #FF453A;
-            --radius-pill: 28px;
-            --radius-input: 16px;
-            --font-heading: 'CabinetGrotesk-Medium', -apple-system, BlinkMacSystemFont, sans-serif;
+        @media (prefers-color-scheme: light) {
+            :root {
+                --ios-bg-primary: #F2F2F7;
+                --ios-bg-secondary: #FFFFFF;
+                --ios-bg-tertiary: #F2F2F7;
+                --ios-separator: rgba(60, 60, 67, 0.29);
+                --ios-label-primary: #000000;
+                --ios-label-secondary: rgba(60, 60, 67, 0.6);
+                --ios-label-tertiary: rgba(60, 60, 67, 0.3);
+                --ios-fill-primary: rgba(120, 120, 128, 0.2);
+                --ios-blue: #007AFF;
+                --ios-red: #FF3B30;
+                --ios-tint: #007AFF;
+            }
         }
 
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
 
         html, body {
             height: 100%;
-            overflow: hidden;
         }
 
         body {
-            font-family: var(--font-heading);
-            background-color: var(--color-background);
-            color: var(--color-text-primary);
+            font-family: var(--ios-font);
+            background-color: var(--ios-bg-primary);
+            color: var(--ios-label-primary);
             -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
-        .signup-screen {
-            height: 100dvh;
+        .ios-screen {
+            min-height: 100dvh;
             display: flex;
             flex-direction: column;
-            padding: 16px 16px 24px;
+            padding: calc(60px + var(--ios-safe-top)) 20px calc(40px + var(--ios-safe-bottom));
             max-width: 428px;
             margin: 0 auto;
-            animation: blurFadeIn 0.6s ease-out forwards;
-            overflow: hidden;
         }
 
-        .signup-content {
+        .ios-content {
             flex: 1;
             display: flex;
             flex-direction: column;
-            padding-top: 48px;
         }
 
-        .signup-title {
-            font-size: 28px;
-            font-weight: 500;
-            letter-spacing: -0.02em;
+        /* iOS Large Title */
+        .ios-large-title {
+            font-size: 34px;
+            font-weight: 700;
+            letter-spacing: 0.37px;
             margin-bottom: 8px;
         }
 
-        .signup-subtitle {
-            font-size: 14px;
-            color: var(--color-text-secondary);
+        .ios-subtitle {
+            font-size: 17px;
+            font-weight: 400;
+            color: var(--ios-label-secondary);
+            letter-spacing: -0.41px;
             margin-bottom: 32px;
         }
 
-        .form-group {
-            margin-bottom: 16px;
+        /* iOS Form */
+        .ios-form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
         }
 
-        .form-input {
+        .ios-input-group {
+            position: relative;
+        }
+
+        .ios-input {
             width: 100%;
-            height: 52px;
-            padding: 0 20px;
-            background-color: var(--color-input-bg);
-            border: 1px solid var(--color-input-border);
-            border-radius: var(--radius-input);
-            font-family: var(--font-heading);
-            font-size: 16px;
-            font-weight: 500;
-            color: var(--color-text-primary);
+            height: 50px;
+            padding: 0 16px;
+            background: var(--ios-bg-secondary);
+            border: none;
+            border-radius: 10px;
+            font-family: var(--ios-font);
+            font-size: 17px;
+            color: var(--ios-label-primary);
             outline: none;
-            transition: border-color 0.2s ease;
+            letter-spacing: -0.41px;
         }
 
-        .form-input::placeholder {
-            color: var(--color-text-secondary);
+        .ios-input::placeholder {
+            color: var(--ios-label-tertiary);
         }
 
-        .form-input:focus {
-            border-color: var(--color-surface);
+        .ios-input:focus {
+            box-shadow: 0 0 0 4px rgba(10, 132, 255, 0.3);
         }
 
-        .form-input.error {
-            border-color: var(--color-error);
+        @media (prefers-color-scheme: light) {
+            .ios-input:focus {
+                box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.3);
+            }
         }
 
-        .form-error {
-            font-size: 12px;
-            color: var(--color-error);
-            margin-top: 8px;
+        .ios-input.error {
+            box-shadow: 0 0 0 2px var(--ios-red);
+        }
+
+        .ios-input.error:focus {
+            box-shadow: 0 0 0 4px rgba(255, 69, 58, 0.3);
+        }
+
+        /* Form Messages */
+        .ios-form-hint {
+            font-size: 13px;
+            color: var(--ios-label-secondary);
+            margin-top: 6px;
+            padding-left: 4px;
+        }
+
+        .ios-form-error {
+            font-size: 13px;
+            color: var(--ios-red);
+            margin-top: 6px;
+            padding-left: 4px;
             display: none;
         }
 
-        .form-error.visible {
+        .ios-form-error.visible {
             display: block;
         }
 
-        .form-hint {
-            font-size: 12px;
-            color: var(--color-text-secondary);
-            margin-top: 8px;
-        }
-
-        .signup-actions {
+        /* iOS Actions */
+        .ios-actions {
             margin-top: auto;
-            padding-top: 16px;
+            padding-top: 24px;
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 16px;
         }
 
-        .btn-primary {
+        /* iOS Primary Button */
+        .ios-btn-primary {
             width: 100%;
-            height: 52px;
-            background-color: var(--color-surface);
-            color: var(--color-background);
+            height: 50px;
+            background: var(--ios-tint);
+            color: #FFFFFF;
             border: none;
-            border-radius: var(--radius-pill);
-            font-family: var(--font-heading);
-            font-size: 16px;
-            font-weight: 500;
+            border-radius: 12px;
+            font-family: var(--ios-font);
+            font-size: 17px;
+            font-weight: 600;
+            letter-spacing: -0.41px;
             cursor: pointer;
-            transition: opacity 0.2s ease;
-            -webkit-tap-highlight-color: transparent;
-            touch-action: manipulation;
+            transition: opacity 0.15s ease, transform 0.1s ease;
         }
 
-        .btn-primary:active {
-            opacity: 0.85;
+        .ios-btn-primary:active {
+            opacity: 0.8;
+            transform: scale(0.98);
         }
 
-        .btn-primary:disabled {
+        .ios-btn-primary:disabled {
             opacity: 0.4;
             cursor: not-allowed;
+            transform: none;
         }
 
-        .link-secondary {
-            font-size: 14px;
-            font-weight: 500;
-            color: var(--color-text-secondary);
+        /* iOS Link */
+        .ios-link {
+            font-size: 17px;
+            font-weight: 400;
+            color: var(--ios-tint);
             text-decoration: none;
-            transition: color 0.2s ease;
+            letter-spacing: -0.41px;
         }
 
-        .link-secondary:active {
-            color: var(--color-text-primary);
+        .ios-link:active {
+            opacity: 0.6;
         }
 
-        @keyframes blurFadeIn {
-            0% {
-                opacity: 0;
-                filter: blur(12px);
-            }
-            100% {
-                opacity: 1;
-                filter: blur(0);
-            }
+        /* iOS Alert Modal */
+        .ios-alert-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s ease, visibility 0.2s ease;
+            padding: 20px;
+        }
+
+        .ios-alert-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .ios-alert {
+            background: var(--ios-bg-secondary);
+            border-radius: 14px;
+            width: 100%;
+            max-width: 270px;
+            overflow: hidden;
+            transform: scale(0.95);
+            transition: transform 0.2s ease;
+        }
+
+        .ios-alert-overlay.visible .ios-alert {
+            transform: scale(1);
+        }
+
+        .ios-alert-content {
+            padding: 20px 16px;
+            text-align: center;
+        }
+
+        .ios-alert-title {
+            font-size: 17px;
+            font-weight: 600;
+            letter-spacing: -0.41px;
+            margin-bottom: 4px;
+        }
+
+        .ios-alert-message {
+            font-size: 13px;
+            color: var(--ios-label-secondary);
+            line-height: 1.4;
+        }
+
+        .ios-alert-actions {
+            display: flex;
+            border-top: 0.5px solid var(--ios-separator);
+        }
+
+        .ios-alert-btn {
+            flex: 1;
+            padding: 12px;
+            font-family: var(--ios-font);
+            font-size: 17px;
+            font-weight: 600;
+            letter-spacing: -0.41px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            color: var(--ios-tint);
+        }
+
+        .ios-alert-btn:active {
+            background: var(--ios-fill-primary);
+        }
+
+        /* Login Link */
+        .ios-login-prompt {
+            text-align: center;
+            margin-top: 16px;
+            font-size: 15px;
+            color: var(--ios-label-secondary);
+        }
+
+        .ios-login-prompt a {
+            color: var(--ios-tint);
+            text-decoration: none;
+            font-weight: 500;
         }
     </style>
 </head>
 <body>
-    <main class="signup-screen">
-        <section class="signup-content">
-            <h1 class="signup-title">Create your account</h1>
-            <p class="signup-subtitle">Almost there. Just need a few more details.</p>
+    <main class="ios-screen">
+        <section class="ios-content">
+            <h1 class="ios-large-title">Create Account</h1>
+            <p class="ios-subtitle">Almost there. Just a few more details.</p>
 
-            <form id="signupForm">
-                <div class="form-group">
-                    <input type="text" class="form-input" id="nameInput" placeholder="Display name" required>
+            <form class="ios-form" id="signupForm">
+                <div class="ios-input-group">
+                    <input
+                        type="text"
+                        class="ios-input"
+                        id="nameInput"
+                        placeholder="Display Name"
+                        autocomplete="name"
+                        autocapitalize="words"
+                        required
+                    >
                 </div>
-                <div class="form-group">
-                    <input type="email" class="form-input" id="emailInput" placeholder="Email" required>
-                    <p class="form-error" id="emailError">Please enter a valid email address.</p>
+                <div class="ios-input-group">
+                    <input
+                        type="email"
+                        class="ios-input"
+                        id="emailInput"
+                        placeholder="Email"
+                        autocomplete="email"
+                        autocapitalize="none"
+                        autocorrect="off"
+                        spellcheck="false"
+                        required
+                    >
+                    <p class="ios-form-error" id="emailError">Please enter a valid email address</p>
                 </div>
-                <div class="form-group">
-                    <input type="password" class="form-input" id="passwordInput" placeholder="Password" required>
-                    <p class="form-hint">At least 8 characters.</p>
-                    <p class="form-error" id="passwordError">Password must be at least 8 characters.</p>
+                <div class="ios-input-group">
+                    <input
+                        type="password"
+                        class="ios-input"
+                        id="passwordInput"
+                        placeholder="Password"
+                        autocomplete="new-password"
+                        required
+                    >
+                    <p class="ios-form-hint">At least 8 characters</p>
+                    <p class="ios-form-error" id="passwordError">Password must be at least 8 characters</p>
                 </div>
-                <div class="form-group">
-                    <input type="password" class="form-input" id="confirmPasswordInput" placeholder="Confirm password" required>
-                    <p class="form-error" id="confirmError">Passwords do not match.</p>
+                <div class="ios-input-group">
+                    <input
+                        type="password"
+                        class="ios-input"
+                        id="confirmPasswordInput"
+                        placeholder="Confirm Password"
+                        autocomplete="new-password"
+                        required
+                    >
+                    <p class="ios-form-error" id="confirmError">Passwords do not match</p>
+                </div>
+
+                <div class="ios-actions">
+                    <button type="button" class="ios-btn-primary" id="createBtn" disabled>Create Account</button>
                 </div>
             </form>
 
-            <div class="signup-actions">
-                <button type="button" class="btn-primary" id="createBtn" disabled>Create Account</button>
-                <a href="login.html" class="link-secondary">Already have an account?</a>
+            <div class="ios-login-prompt">
+                Already have an account? <a href="login.html">Sign In</a>
             </div>
         </section>
     </main>
+
+    <!-- iOS Alert Modal -->
+    <div class="ios-alert-overlay" id="alertOverlay">
+        <div class="ios-alert">
+            <div class="ios-alert-content">
+                <div class="ios-alert-title" id="alertTitle">Error</div>
+                <div class="ios-alert-message" id="alertMessage">Message</div>
+            </div>
+            <div class="ios-alert-actions">
+                <button class="ios-alert-btn" id="alertBtn">OK</button>
+            </div>
+        </div>
+    </div>
 
     <script src="js/api.js"></script>
     <script>
@@ -242,6 +404,26 @@
         const emailError = document.getElementById('emailError');
         const passwordError = document.getElementById('passwordError');
         const confirmError = document.getElementById('confirmError');
+        const alertOverlay = document.getElementById('alertOverlay');
+        const alertTitle = document.getElementById('alertTitle');
+        const alertMessage = document.getElementById('alertMessage');
+        const alertBtn = document.getElementById('alertBtn');
+
+        // iOS-style Alert
+        function showAlert(title, message) {
+            return new Promise((resolve) => {
+                alertTitle.textContent = title;
+                alertMessage.textContent = message;
+                alertOverlay.classList.add('visible');
+
+                const handler = () => {
+                    alertOverlay.classList.remove('visible');
+                    alertBtn.removeEventListener('click', handler);
+                    resolve();
+                };
+                alertBtn.addEventListener('click', handler);
+            });
+        }
 
         function validateEmail(email) {
             return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -309,33 +491,27 @@
         createBtn.addEventListener('click', async (event) => {
             event.preventDefault();
             event.stopPropagation();
-            
+
             if (createBtn.disabled) return;
 
             createBtn.disabled = true;
             createBtn.textContent = 'Creating account...';
 
-            console.log('Starting signup process');
-
             let onboardingData;
             try {
                 const rawData = localStorage.getItem('sparkUserData');
-                console.log('Raw localStorage data:', rawData);
-                
+
                 if (!rawData) {
                     throw new Error('No onboarding data found');
                 }
-                
+
                 onboardingData = JSON.parse(rawData);
-                console.log('Parsed onboarding data:', onboardingData);
-                
+
                 if (!onboardingData.age || !onboardingData.gender || !onboardingData.seeking || !onboardingData.location) {
-                    console.error('Incomplete onboarding data:', onboardingData);
                     throw new Error('Missing required profile information');
                 }
             } catch (error) {
-                console.error('Error reading onboarding data:', error);
-                alert('Session expired or incomplete. Please start over.');
+                await showAlert('Session Expired', 'Your session has expired. Please start over.');
                 localStorage.removeItem('sparkUserData');
                 window.location.href = 'index.html';
                 return;
@@ -351,22 +527,16 @@
                 location: onboardingData.location
             };
 
-            console.log('User data being sent to API:', userData);
-
             try {
-                const signupResponse = await SparkAPI.auth.signup(userData);
-                console.log('Signup successful:', signupResponse);
+                await SparkAPI.auth.signup(userData);
 
                 if (onboardingData.photos && onboardingData.photos.length > 0) {
                     createBtn.textContent = 'Uploading photos...';
-                    console.log('Starting photo upload, count:', onboardingData.photos.length);
 
                     try {
                         for (let i = 0; i < onboardingData.photos.length; i++) {
-                            console.log(`Uploading photo ${i + 1}/${onboardingData.photos.length}`);
                             await SparkAPI.users.uploadPhoto(onboardingData.photos[i], i);
                         }
-                        console.log('All photos uploaded successfully');
                     } catch (photoError) {
                         console.warn('Photo upload failed:', photoError);
                     }
@@ -375,26 +545,18 @@
                 localStorage.setItem('sparkVerifyEmail', emailInput.value.trim());
                 localStorage.removeItem('sparkUserData');
 
-                console.log('Redirecting to verification page');
                 window.location.href = 'verify-email.html';
-                
+
             } catch (error) {
-                console.error('Signup error details:', {
-                    message: error.message,
-                    stack: error.stack,
-                    error: error
-                });
-                
                 let errorMessage = 'Failed to create account. Please try again.';
-                
+
                 if (error.response) {
-                    console.error('API response error:', error.response);
                     errorMessage = error.response.data?.message || error.response.statusText || errorMessage;
                 } else if (error.message) {
                     errorMessage = error.message;
                 }
-                
-                alert(errorMessage);
+
+                await showAlert('Sign Up Failed', errorMessage);
                 createBtn.disabled = false;
                 createBtn.textContent = 'Create Account';
             }
