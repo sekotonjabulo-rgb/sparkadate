@@ -3,11 +3,11 @@ import SwiftUI
 
 class OnboardingViewController: UIViewController {
     private var hostingController: UIHostingController<OnboardingView>?
-    
+    var onNavigate: ((String) -> Void)?
+
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        // Set black background to match OnboardingView
         view.backgroundColor = .black
 
         let onboardingView = OnboardingView { [weak self] page in
@@ -29,34 +29,36 @@ class OnboardingViewController: UIViewController {
         ])
         hostingController.didMove(toParent: self)
     }
-    
+
+    override var preferredStatusBarStyle: UIStatusBarStyle {
+        return .lightContent
+    }
+
     private func navigateToPage(_ page: String) {
-        // Convert page name to URL and load in WebView
-        let baseURL = rootUrl.deletingLastPathComponent()
-        let targetURL = baseURL.appendingPathComponent(page)
-        
-        // Navigate to the page in the WebView
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
-            
-            // Dismiss onboarding screen and load the target page
-            self.dismiss(animated: true) {
-                if Spark.webView != nil {
-                    Spark.webView.load(URLRequest(url: targetURL))
-                } else {
-                    // Fallback: load root URL
-                    Spark.webView?.load(URLRequest(url: rootUrl))
-                }
-                
-                // Show the main view controller's WebView
-                if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-                   let window = windowScene.windows.first,
-                   let mainVC = window.rootViewController as? ViewController {
-                    mainVC.webviewView.isHidden = false
-                    mainVC.loadingView.isHidden = false
+
+            if let onNavigate = self.onNavigate {
+                // Use the callback if provided (when presented from ViewController)
+                onNavigate(page)
+            } else {
+                // Fallback: navigate via WebView directly
+                let baseURL = rootUrl.deletingLastPathComponent()
+                let targetURL = baseURL.appendingPathComponent(page)
+
+                self.dismiss(animated: true) {
+                    if Spark.webView != nil {
+                        Spark.webView.load(URLRequest(url: targetURL))
+                    }
+
+                    if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                       let window = windowScene.windows.first,
+                       let mainVC = window.rootViewController as? ViewController {
+                        mainVC.webviewView.isHidden = false
+                        mainVC.loadingView.isHidden = false
+                    }
                 }
             }
         }
     }
 }
-

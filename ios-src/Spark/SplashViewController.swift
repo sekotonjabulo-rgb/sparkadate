@@ -4,16 +4,18 @@ import WebKit
 
 class SplashViewController: UIViewController {
     private var hostingController: UIHostingController<SplashScreenView>?
+    var onComplete: ((String) -> Void)?
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        let splashView = SplashScreenView { [weak self] page in
-            // Just dismiss splash - app.html is already loading in webview underneath
+        let splashView = SplashScreenView { [weak self] destination in
+            self?.onComplete?(destination)
             self?.dismissSplash()
         }
 
         let hostingController = UIHostingController(rootView: splashView)
+        hostingController.view.backgroundColor = .black
         self.hostingController = hostingController
 
         addChild(hostingController)
@@ -28,8 +30,11 @@ class SplashViewController: UIViewController {
         hostingController.didMove(toParent: self)
     }
 
+    override var preferredStatusBarStyle: UIStatusBarStyle {
+        return .lightContent
+    }
+
     private func dismissSplash() {
-        // Simply dismiss - app.html is already loading underneath
         self.dismiss(animated: false, completion: nil)
     }
 }

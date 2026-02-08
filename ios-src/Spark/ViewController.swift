@@ -36,7 +36,8 @@ class ViewController: UIViewController, WKNavigationDelegate, UIDocumentInteract
         initWebView()
         initToolbarView()
 
-        // Load app.html directly - let HTML handle splash and onboarding
+        // Show splash screen while WebView loads in the background
+        showSplashScreen()
         loadRootUrl()
 
         NotificationCenter.default.addObserver(self, selector: #selector(self.keyboardWillHide(_:)), name: UIResponder.keyboardWillHideNotification , object: nil)
@@ -47,16 +48,45 @@ class ViewController: UIViewController, WKNavigationDelegate, UIDocumentInteract
         let splashVC = SplashViewController()
         splashVC.modalPresentationStyle = .fullScreen
         splashViewController = splashVC
-        
-        // Hide WebView initially
+
+        // Hide WebView initially so splash is visible
         webviewView.isHidden = true
         loadingView.isHidden = true
-        
-        present(splashVC, animated: false) { [weak self] in
-            // After splash screen navigates, it will load the appropriate page
+
+        splashVC.onComplete = { [weak self] destination in
+            guard let self = self else { return }
+
+            // If navigating to native onboarding, show it
+            if destination == "onboarding" {
+                self.showOnboarding()
+            } else {
+                // Load the destination page in WebView
+                if let url = URL(string: "https://sparkadate.online/\(destination)") {
+                    Spark.webView.load(URLRequest(url: url))
+                }
+                self.webviewView.isHidden = false
+                self.loadingView.isHidden = false
+            }
         }
+
+        present(splashVC, animated: false, completion: nil)
     }
-    
+
+    private func showOnboarding() {
+        let onboardingVC = OnboardingViewController()
+        onboardingVC.modalPresentationStyle = .fullScreen
+        onboardingVC.onNavigate = { [weak self] page in
+            guard let self = self else { return }
+            if let url = URL(string: "https://sparkadate.online/\(page)") {
+                Spark.webView.load(URLRequest(url: url))
+            }
+            self.webviewView.isHidden = false
+            self.loadingView.isHidden = false
+            onboardingVC.dismiss(animated: false, completion: nil)
+        }
+        self.present(onboardingVC, animated: false, completion: nil)
+    }
+
     func hideSplashScreen() {
         splashViewController?.dismiss(animated: false) { [weak self] in
             self?.webviewView.isHidden = false
