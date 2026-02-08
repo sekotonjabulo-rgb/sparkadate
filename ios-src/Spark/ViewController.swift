@@ -82,14 +82,74 @@ class ViewController: UIViewController, WKNavigationDelegate, UIDocumentInteract
         onboardingVC.modalPresentationStyle = .fullScreen
         onboardingVC.onNavigate = { [weak self] page in
             guard let self = self else { return }
-            if let url = URL(string: "https://sparkadate.online/\(page)") {
-                Spark.webView.load(URLRequest(url: url))
+
+            // Route to native screens instead of web
+            if page == "onboarding1.html" {
+                onboardingVC.dismiss(animated: false) {
+                    self.showOnboarding1()
+                }
+            } else if page == "login.html" {
+                onboardingVC.dismiss(animated: false) {
+                    self.showLogin()
+                }
+            } else {
+                if let url = URL(string: "https://sparkadate.online/\(page)") {
+                    Spark.webView.load(URLRequest(url: url))
+                }
+                onboardingVC.dismiss(animated: false, completion: nil)
             }
-            onboardingVC.dismiss(animated: false, completion: nil)
         }
         // Delay presentation to ensure we're in the window hierarchy
         DispatchQueue.main.async {
             self.present(onboardingVC, animated: false, completion: nil)
+        }
+    }
+
+    private func showOnboarding1() {
+        let onboarding1VC = Onboarding1ViewController()
+        onboarding1VC.modalPresentationStyle = .fullScreen
+        onboarding1VC.onNavigateToSignup = { [weak self] userData in
+            guard let self = self else { return }
+
+            // Save user data to UserDefaults so signup.html can read it
+            if let jsonData = try? JSONSerialization.data(withJSONObject: userData),
+               let jsonString = String(data: jsonData, encoding: .utf8) {
+                // Inject data into WebView's localStorage then navigate to signup
+                let js = "localStorage.setItem('sparkUserData', '\(jsonString.replacingOccurrences(of: "'", with: "\\'"))'); window.location.href = 'signup.html';"
+                Spark.webView.evaluateJavaScript(js)
+            }
+
+            onboarding1VC.dismiss(animated: false, completion: nil)
+        }
+        DispatchQueue.main.async {
+            self.present(onboarding1VC, animated: false, completion: nil)
+        }
+    }
+
+    private func showLogin() {
+        let loginVC = LoginViewController()
+        loginVC.modalPresentationStyle = .fullScreen
+        loginVC.onLoginSuccess = { [weak self] in
+            guard let self = self else { return }
+
+            // Login succeeded - inject token into WebView and navigate to match
+            if let token = UserDefaults.standard.string(forKey: "sparkToken") {
+                let js = "localStorage.setItem('sparkToken', '\(token)'); window.location.href = 'match.html';"
+                Spark.webView.evaluateJavaScript(js)
+            }
+
+            loginVC.dismiss(animated: false, completion: nil)
+        }
+        loginVC.onForgotPassword = { [weak self] in
+            guard let self = self else { return }
+            // Navigate to forgot password web page
+            if let url = URL(string: "https://sparkadate.online/forgot-password.html") {
+                Spark.webView.load(URLRequest(url: url))
+            }
+            loginVC.dismiss(animated: false, completion: nil)
+        }
+        DispatchQueue.main.async {
+            self.present(loginVC, animated: false, completion: nil)
         }
     }
 
