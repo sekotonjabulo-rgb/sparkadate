@@ -23,6 +23,10 @@
 		595F23B325CEFBFE0053416C /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 595F23AB25CEFBFE0053416C /* OnboardingView.swift */; };
 		595F23B425CEFBFE0053416C /* OnboardingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 595F23A925CEFBFE0053416C /* OnboardingViewController.swift */; };
 		595F23B525CEFBFE0053416C /* FontExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 595F23B725CEFBFE0053416C /* FontExtensions.swift */; };
+		AA0001012600000000000001 /* Onboarding1View.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001002600000000000001 /* Onboarding1View.swift */; };
+		AA0001032600000000000002 /* Onboarding1ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001022600000000000002 /* Onboarding1ViewController.swift */; };
+		AA0001052600000000000003 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001042600000000000003 /* LoginView.swift */; };
+		AA0001072600000000000004 /* LoginViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001062600000000000004 /* LoginViewController.swift */; };
 		CDC0FE292388222C002C8D56 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = CDC0FE252388222B002C8D56 /* Main.storyboard */; };
 		CDC0FE2A2388222C002C8D56 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = CDC0FE272388222B002C8D56 /* LaunchScreen.storyboard */; };
 /* End PBXBuildFile section */
@@ -46,6 +50,10 @@
 		595F23AB25CEFBFE0053416C /* OnboardingView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = OnboardingView.swift; path = "Spark/OnboardingView.swift"; sourceTree = "<group>"; };
 		595F23A925CEFBFE0053416C /* OnboardingViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = OnboardingViewController.swift; path = "Spark/OnboardingViewController.swift"; sourceTree = "<group>"; };
 		595F23B725CEFBFE0053416C /* FontExtensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = FontExtensions.swift; path = "Spark/FontExtensions.swift"; sourceTree = "<group>"; };
+		AA0001002600000000000001 /* Onboarding1View.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Onboarding1View.swift; path = "Spark/Onboarding1View.swift"; sourceTree = "<group>"; };
+		AA0001022600000000000002 /* Onboarding1ViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Onboarding1ViewController.swift; path = "Spark/Onboarding1ViewController.swift"; sourceTree = "<group>"; };
+		AA0001042600000000000003 /* LoginView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = LoginView.swift; path = "Spark/LoginView.swift"; sourceTree = "<group>"; };
+		AA0001062600000000000004 /* LoginViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = LoginViewController.swift; path = "Spark/LoginViewController.swift"; sourceTree = "<group>"; };
 		CDC0FE262388222B002C8D56 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = "Spark/Base.lproj/Main.storyboard"; sourceTree = "<group>"; };
 		CDC0FE282388222B002C8D56 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = "Spark/Base.lproj/LaunchScreen.storyboard"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -80,6 +88,10 @@
 				595F23AB25CEFBFE0053416C /* OnboardingView.swift */,
 				595F23A925CEFBFE0053416C /* OnboardingViewController.swift */,
 				595F23B725CEFBFE0053416C /* FontExtensions.swift */,
+				AA0001002600000000000001 /* Onboarding1View.swift */,
+				AA0001022600000000000002 /* Onboarding1ViewController.swift */,
+				AA0001042600000000000003 /* LoginView.swift */,
+				AA0001062600000000000004 /* LoginViewController.swift */,
 				CDC0FE272388222B002C8D56 /* LaunchScreen.storyboard */,
 				CDC0FE252388222B002C8D56 /* Main.storyboard */,
 				595F23A425CEFBFE0053416C /* WebView.swift */,
@@ -174,6 +186,10 @@
 				595F23B325CEFBFE0053416C /* OnboardingView.swift in Sources */,
 				595F23B425CEFBFE0053416C /* OnboardingViewController.swift in Sources */,
 				595F23B525CEFBFE0053416C /* FontExtensions.swift in Sources */,
+				AA0001012600000000000001 /* Onboarding1View.swift in Sources */,
+				AA0001032600000000000002 /* Onboarding1ViewController.swift in Sources */,
+				AA0001052600000000000003 /* LoginView.swift in Sources */,
+				AA0001072600000000000004 /* LoginViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
