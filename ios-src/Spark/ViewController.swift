@@ -65,9 +65,17 @@ class ViewController: UIViewController, WKNavigationDelegate, UIDocumentInteract
             splashVC.removeFromParent()
             self.splashViewController = nil
 
-            // If navigating to native onboarding, show it
+            // Route to native screens or WebView
             if destination == "onboarding" {
                 self.showOnboarding()
+            } else if destination == "match.html" {
+                self.showMatch()
+            } else if destination == "plan.html" {
+                self.showPlan()
+            } else if destination == "timer.html" {
+                self.showTimer(matchData: nil)
+            } else if destination == "reveal.html" {
+                self.showReveal(matchData: nil)
             } else {
                 // Load the destination page in WebView
                 if let url = URL(string: "https://sparkadate.online/\(destination)") {
@@ -132,13 +140,20 @@ class ViewController: UIViewController, WKNavigationDelegate, UIDocumentInteract
         loginVC.onLoginSuccess = { [weak self] in
             guard let self = self else { return }
 
-            // Login succeeded - inject token into WebView and navigate to match
+            // Login succeeded - inject token into WebView and show native match
             if let token = UserDefaults.standard.string(forKey: "sparkToken") {
-                let js = "localStorage.setItem('sparkToken', '\(token)'); window.location.href = 'match.html';"
+                let js = "localStorage.setItem('sparkToken', '\(token)');"
                 Spark.webView.evaluateJavaScript(js)
             }
 
-            loginVC.dismiss(animated: false, completion: nil)
+            loginVC.dismiss(animated: false) {
+                // Check if plan is completed, show plan or match
+                if UserDefaults.standard.string(forKey: "sparkPlanCompleted") != nil {
+                    self.showMatch()
+                } else {
+                    self.showPlan()
+                }
+            }
         }
         loginVC.onForgotPassword = { [weak self] in
             guard let self = self else { return }
@@ -150,6 +165,106 @@ class ViewController: UIViewController, WKNavigationDelegate, UIDocumentInteract
         }
         DispatchQueue.main.async {
             self.present(loginVC, animated: false, completion: nil)
+        }
+    }
+
+    private func showMatch() {
+        let matchVC = MatchViewController()
+        matchVC.modalPresentationStyle = .fullScreen
+        matchVC.onNavigateToChat = { [weak self] in
+            guard let self = self else { return }
+            // Navigate to chat in WebView
+            if let url = URL(string: "https://sparkadate.online/chat.html") {
+                Spark.webView.load(URLRequest(url: url))
+            }
+            matchVC.dismiss(animated: false, completion: nil)
+        }
+        matchVC.onNavigateToPlan = { [weak self] in
+            guard let self = self else { return }
+            matchVC.dismiss(animated: false) {
+                self.showPlan()
+            }
+        }
+        DispatchQueue.main.async {
+            self.present(matchVC, animated: false, completion: nil)
+        }
+    }
+
+    private func showPlan() {
+        let planVC = PlanViewController()
+        planVC.modalPresentationStyle = .fullScreen
+        planVC.onNavigateToMatch = { [weak self] in
+            guard let self = self else { return }
+            planVC.dismiss(animated: false) {
+                self.showMatch()
+            }
+        }
+        planVC.onSelectPro = { [weak self] checkoutURL in
+            guard let self = self else { return }
+            // Open Lemonsqueezy checkout in WebView
+            if let url = URL(string: checkoutURL) {
+                Spark.webView.load(URLRequest(url: url))
+            }
+            planVC.dismiss(animated: false, completion: nil)
+        }
+        DispatchQueue.main.async {
+            self.present(planVC, animated: false, completion: nil)
+        }
+    }
+
+    private func showTimer(matchData: [String: Any]?) {
+        let timerVC = TimerViewController()
+        timerVC.modalPresentationStyle = .fullScreen
+        timerVC.matchData = matchData
+        timerVC.onBack = { [weak self] in
+            guard let self = self else { return }
+            timerVC.dismiss(animated: false) {
+                self.showMatch()
+            }
+        }
+        timerVC.onRevealed = { [weak self] in
+            guard let self = self else { return }
+            timerVC.dismiss(animated: false) {
+                self.showReveal(matchData: matchData)
+            }
+        }
+        timerVC.onSkip = { [weak self] in
+            guard let self = self else { return }
+            timerVC.dismiss(animated: false) {
+                self.showMatch()
+            }
+        }
+        timerVC.onUpgrade = { [weak self] in
+            guard let self = self else { return }
+            timerVC.dismiss(animated: false) {
+                self.showPlan()
+            }
+        }
+        DispatchQueue.main.async {
+            self.present(timerVC, animated: false, completion: nil)
+        }
+    }
+
+    private func showReveal(matchData: [String: Any]?) {
+        let revealVC = RevealViewController()
+        revealVC.modalPresentationStyle = .fullScreen
+        revealVC.matchData = matchData
+        revealVC.onBack = { [weak self] in
+            guard let self = self else { return }
+            revealVC.dismiss(animated: false) {
+                self.showMatch()
+            }
+        }
+        revealVC.onRevealed = { [weak self] in
+            guard let self = self else { return }
+            // Navigate to chat after reveal
+            if let url = URL(string: "https://sparkadate.online/chat.html") {
+                Spark.webView.load(URLRequest(url: url))
+            }
+            revealVC.dismiss(animated: false, completion: nil)
+        }
+        DispatchQueue.main.async {
+            self.present(revealVC, animated: false, completion: nil)
         }
     }
 

@@ -46,6 +46,42 @@ class SparkAPIService {
         return (token, user)
     }
 
+    // Generic API request method for all endpoints
+    func apiRequest(_ endpoint: String, method: String = "GET", body: [String: Any]? = nil) async throws -> [String: Any] {
+        guard let url = URL(string: "\(baseURL)\(endpoint)") else {
+            throw APIError.invalidURL
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = method
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        if let token = UserDefaults.standard.string(forKey: "sparkToken") {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+
+        if let body = body {
+            request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        }
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.networkError
+        }
+
+        guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            throw APIError.invalidResponse
+        }
+
+        if httpResponse.statusCode >= 400 {
+            let errorMsg = json["error"] as? String ?? "Request failed"
+            throw APIError.serverError(errorMsg)
+        }
+
+        return json
+    }
+
     enum APIError: LocalizedError {
         case invalidURL
         case networkError
