@@ -179,49 +179,53 @@ struct SettingsView: View {
     var onNavigateToSupport: (() -> Void)?
 
     var body: some View {
+        settingsContent
+            .onAppear {
+                viewModel.loadProfile()
+                withAnimation(.easeOut(duration: 0.5)) { opacity = 1 }
+            }
+            .sheet(item: Binding(
+                get: { showPhotoPickerForSlot.map { SettingsPhotoSlot(slot: $0) } },
+                set: { showPhotoPickerForSlot = $0?.slot }
+            )) { slotItem in
+                ImagePicker(onImagePicked: { image in
+                    viewModel.uploadPhoto(image: image, slot: slotItem.slot)
+                    showPhotoPickerForSlot = nil
+                })
+            }
+            .alert("Log out?", isPresented: $showLogoutAlert) {
+                Button("Cancel", role: .cancel) {}
+                Button("Log out", role: .destructive) {
+                    viewModel.logout()
+                    onLogout?()
+                }
+            }
+            .alert("Delete Account", isPresented: $showDeleteAccountAlert) {
+                Button("Cancel", role: .cancel) {}
+                Button("Delete permanently", role: .destructive) {
+                    viewModel.deleteAccount()
+                    onLogout?()
+                }
+            } message: {
+                Text("This will permanently delete your account and all data. This cannot be undone.")
+            }
+    }
+
+    private var settingsContent: some View {
         ZStack {
             Color.black.ignoresSafeArea()
 
             VStack(spacing: 0) {
-                // Header
-                HStack {
-                    Button(action: { onBack?() }) {
-                        Image(systemName: "chevron.left")
-                            .font(.system(size: 18, weight: .medium))
-                            .foregroundColor(.white)
-                            .frame(width: 36, height: 36)
-                    }
-                    Spacer()
-                    Text("Settings")
-                        .font(.customFont("CabinetGrotesk-Medium", size: 17))
-                        .foregroundColor(.white)
-                    Spacer()
-                    Color.clear.frame(width: 36, height: 36)
-                }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
+                settingsHeader
 
                 if viewModel.isLoading {
                     Spacer()
                     ProgressView().tint(.white)
                     Spacer()
                 } else {
-                    ScrollView(showsIndicators: false) {
-                        VStack(spacing: 28) {
-                            profileSection
-                            photosSection
-                            preferencesSection
-                            linksSection
-                            dangerSection
-                            versionLabel
-                        }
-                        .padding(.horizontal, 16)
-                        .padding(.top, 16)
-                        .padding(.bottom, viewModel.hasChanges ? 80 : 32)
-                    }
+                    settingsScrollContent
                 }
 
-                // Save bar
                 if viewModel.hasChanges {
                     saveBar
                 }
@@ -229,34 +233,40 @@ struct SettingsView: View {
             .frame(maxWidth: 428)
             .opacity(opacity)
         }
-        .onAppear {
-            viewModel.loadProfile()
-            withAnimation(.easeOut(duration: 0.5)) { opacity = 1 }
-        }
-        .sheet(item: Binding(
-            get: { showPhotoPickerForSlot.map { SettingsPhotoSlot(slot: $0) } },
-            set: { showPhotoPickerForSlot = $0?.slot }
-        )) { slotItem in
-            ImagePicker(onImagePicked: { image in
-                viewModel.uploadPhoto(image: image, slot: slotItem.slot)
-                showPhotoPickerForSlot = nil
-            })
-        }
-        .alert("Log out?", isPresented: $showLogoutAlert) {
-            Button("Cancel", role: .cancel) {}
-            Button("Log out", role: .destructive) {
-                viewModel.logout()
-                onLogout?()
+    }
+
+    private var settingsHeader: some View {
+        HStack {
+            Button(action: { onBack?() }) {
+                Image(systemName: "chevron.left")
+                    .font(.system(size: 18, weight: .medium))
+                    .foregroundColor(.white)
+                    .frame(width: 36, height: 36)
             }
+            Spacer()
+            Text("Settings")
+                .font(.customFont("CabinetGrotesk-Medium", size: 17))
+                .foregroundColor(.white)
+            Spacer()
+            Color.clear.frame(width: 36, height: 36)
         }
-        .alert("Delete Account", isPresented: $showDeleteAccountAlert) {
-            Button("Cancel", role: .cancel) {}
-            Button("Delete permanently", role: .destructive) {
-                viewModel.deleteAccount()
-                onLogout?()
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+    }
+
+    private var settingsScrollContent: some View {
+        ScrollView(showsIndicators: false) {
+            VStack(spacing: 28) {
+                profileSection
+                photosSection
+                preferencesSection
+                linksSection
+                dangerSection
+                versionLabel
             }
-        } message: {
-            Text("This will permanently delete your account and all data. This cannot be undone.")
+            .padding(.horizontal, 16)
+            .padding(.top, 16)
+            .padding(.bottom, viewModel.hasChanges ? 80 : 32)
         }
     }
 

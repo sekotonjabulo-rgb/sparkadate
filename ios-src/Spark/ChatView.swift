@@ -347,83 +347,75 @@ struct ChatView: View {
     var onLogout: (() -> Void)?
 
     var body: some View {
+        chatContent
+            .onAppear { viewModel.loadInitialData(matchData: matchData) }
+            .onDisappear { viewModel.cleanup() }
+            .onChange(of: viewModel.revealStatus) { status in
+                if status == "revealed-unseen" {
+                    onNavigateToRevealed?()
+                }
+            }
+    }
+
+    private var chatContent: some View {
         ZStack {
             Color.black.ignoresSafeArea()
 
             VStack(spacing: 0) {
-                // Header
                 chatHeader
-
-                // Messages
-                ScrollViewReader { proxy in
-                    ScrollView {
-                        LazyVStack(spacing: 10) {
-                            ForEach(groupedMessages, id: \.0) { dateKey, msgs in
-                                dateSeparator(dateKey)
-                                ForEach(msgs) { msg in
-                                    MessageBubbleView(
-                                        message: msg,
-                                        replyMessage: msg.replyToId.flatMap { id in viewModel.messages.first(where: { $0.id == id }) },
-                                        onReply: { startReply(msg) },
-                                        onEdit: { startEdit(msg) },
-                                        onDelete: { viewModel.deleteMessage(id: msg.id) }
-                                    )
-                                    .id(msg.id)
-                                }
-                            }
-
-                            if viewModel.isPartnerTyping {
-                                typingIndicator
-                            }
-                        }
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 12)
-                    }
-                    .onChange(of: viewModel.messages.count) { _ in
-                        if let last = viewModel.messages.last {
-                            withAnimation(.easeOut(duration: 0.2)) {
-                                proxy.scrollTo(last.id, anchor: .bottom)
-                            }
-                        }
-                    }
-                    .onAppear {
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                            if let last = viewModel.messages.last {
-                                proxy.scrollTo(last.id, anchor: .bottom)
-                            }
-                        }
-                    }
-                }
-
-                // Reply/Edit bar
-                if replyToMessage != nil {
-                    replyBar
-                }
-                if editingMessage != nil {
-                    editBar
-                }
-
-                // Input
+                messagesScrollView
+                if replyToMessage != nil { replyBar }
+                if editingMessage != nil { editBar }
                 chatInputBar
             }
             .frame(maxWidth: .infinity)
+        }
+    }
 
-            // Menu overlay
-            if showMenu {
-                Color.black.opacity(0.01)
-                    .ignoresSafeArea()
-                    .onTapGesture { showMenu = false }
+    private var messagesScrollView: some View {
+        ScrollViewReader { proxy in
+            ScrollView {
+                LazyVStack(spacing: 10) {
+                    ForEach(groupedMessages, id: \.0) { dateKey, msgs in
+                        dateSeparator(dateKey)
+                        ForEach(msgs) { msg in
+                            MessageBubbleView(
+                                message: msg,
+                                replyMessage: findReplyMessage(for: msg),
+                                onReply: { startReply(msg) },
+                                onEdit: { startEdit(msg) },
+                                onDelete: { viewModel.deleteMessage(id: msg.id) }
+                            )
+                            .id(msg.id)
+                        }
+                    }
+
+                    if viewModel.isPartnerTyping {
+                        typingIndicator
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+            }
+            .onChange(of: viewModel.messages.count) { _ in
+                scrollToBottom(proxy: proxy)
+            }
+            .onAppear {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    scrollToBottom(proxy: proxy)
+                }
             }
         }
-        .onAppear {
-            viewModel.loadInitialData(matchData: matchData)
-        }
-        .onDisappear {
-            viewModel.cleanup()
-        }
-        .onChange(of: viewModel.revealStatus) { status in
-            if status == "revealed-unseen" {
-                onNavigateToRevealed?()
+    }
+
+    private func findReplyMessage(for msg: ChatMessage) -> ChatMessage? {
+        msg.replyToId.flatMap { id in viewModel.messages.first(where: { $0.id == id }) }
+    }
+
+    private func scrollToBottom(proxy: ScrollViewProxy) {
+        if let last = viewModel.messages.last {
+            withAnimation(.easeOut(duration: 0.2)) {
+                proxy.scrollTo(last.id, anchor: .bottom)
             }
         }
     }
@@ -457,66 +449,75 @@ struct ChatView: View {
     // MARK: - Header
     private var chatHeader: some View {
         HStack {
-            VStack(alignment: .leading, spacing: 1) {
-                Text(viewModel.partnerName)
-                    .font(.customFont("CabinetGrotesk-Medium", size: 16))
-                    .foregroundColor(.white)
-                Text(viewModel.partnerStatus)
-                    .font(.customFont("CabinetGrotesk-Medium", size: 12))
-                    .foregroundColor(Color.white.opacity(0.65))
-            }
-
+            headerPartnerInfo
             Spacer()
-
-            HStack(spacing: 6) {
-                // Timer button
-                Button(action: { onNavigateToTimer?() }) {
-                    headerIconButton(systemName: "clock")
-                }
-
-                // Reveal button
-                Button(action: { handleRevealTap() }) {
-                    ZStack(alignment: .topTrailing) {
-                        headerIconButton(systemName: "eye")
-                        if viewModel.revealBadge {
-                            Circle()
-                                .fill(Color(red: 1, green: 0.23, blue: 0.19))
-                                .frame(width: 16, height: 16)
-                                .overlay(
-                                    Text("1")
-                                        .font(.system(size: 10, weight: .medium))
-                                        .foregroundColor(.white)
-                                )
-                                .offset(x: 4, y: -4)
-                        }
-                    }
-                }
-
-                // Menu button
-                Menu {
-                    Button(action: { onNavigateToSettings?() }) {
-                        Label("Settings", systemImage: "gearshape")
-                    }
-                    Button(action: { onNavigateToPlan?() }) {
-                        Label("Upgrade to Pro", systemImage: "star")
-                    }
-                    Divider()
-                    Button(role: .destructive, action: { onLogout?() }) {
-                        Label("Log out", systemImage: "rectangle.portrait.and.arrow.right")
-                    }
-                } label: {
-                    headerIconButton(systemName: "ellipsis")
-                        .rotationEffect(.degrees(90))
-                }
-            }
+            headerActions
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
-        .background(
-            Color.black.opacity(0.4)
-                .background(.ultraThinMaterial)
-                .environment(\.colorScheme, .dark)
-        )
+        .background(inputBarBackground)
+    }
+
+    private var headerPartnerInfo: some View {
+        VStack(alignment: .leading, spacing: 1) {
+            Text(viewModel.partnerName)
+                .font(.customFont("CabinetGrotesk-Medium", size: 16))
+                .foregroundColor(.white)
+            Text(viewModel.partnerStatus)
+                .font(.customFont("CabinetGrotesk-Medium", size: 12))
+                .foregroundColor(Color.white.opacity(0.65))
+        }
+    }
+
+    private var headerActions: some View {
+        HStack(spacing: 6) {
+            Button(action: { onNavigateToTimer?() }) {
+                headerIconButton(systemName: "clock")
+            }
+            revealButton
+            headerMenu
+        }
+    }
+
+    private var revealButton: some View {
+        Button(action: { handleRevealTap() }) {
+            ZStack(alignment: .topTrailing) {
+                headerIconButton(systemName: "eye")
+                if viewModel.revealBadge {
+                    notificationBadge
+                }
+            }
+        }
+    }
+
+    private var notificationBadge: some View {
+        Circle()
+            .fill(Color(red: 1, green: 0.23, blue: 0.19))
+            .frame(width: 16, height: 16)
+            .overlay(
+                Text("1")
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundColor(.white)
+            )
+            .offset(x: 4, y: -4)
+    }
+
+    private var headerMenu: some View {
+        Menu {
+            Button(action: { onNavigateToSettings?() }) {
+                Label("Settings", systemImage: "gearshape")
+            }
+            Button(action: { onNavigateToPlan?() }) {
+                Label("Upgrade to Pro", systemImage: "star")
+            }
+            Divider()
+            Button(role: .destructive, action: { onLogout?() }) {
+                Label("Log out", systemImage: "rectangle.portrait.and.arrow.right")
+            }
+        } label: {
+            headerIconButton(systemName: "ellipsis")
+                .rotationEffect(.degrees(90))
+        }
     }
 
     private func headerIconButton(systemName: String) -> some View {
@@ -633,6 +634,16 @@ struct ChatView: View {
     // MARK: - Input Bar
     private var chatInputBar: some View {
         HStack(spacing: 8) {
+            chatTextField
+        }
+        .padding(.horizontal, 16)
+        .padding(.top, 12)
+        .padding(.bottom, 20)
+        .background(inputBarBackground)
+    }
+
+    private var chatTextField: some View {
+        ZStack(alignment: .trailing) {
             TextField("", text: $messageText)
                 .placeholder(when: messageText.isEmpty) {
                     Text("Type a message...").foregroundColor(Color.white.opacity(0.65))
@@ -651,30 +662,31 @@ struct ChatView: View {
                 .focused($isInputFocused)
                 .onChange(of: messageText) { _ in handleTypingInput() }
                 .onSubmit { handleSend() }
-                .overlay(alignment: .trailing) {
-                    if !messageText.trimmingCharacters(in: .whitespaces).isEmpty {
-                        Button(action: { handleSend() }) {
-                            Image(systemName: "arrow.right")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundColor(.black)
-                                .frame(width: 36, height: 36)
-                                .background(Color.white)
-                                .clipShape(Circle())
-                        }
-                        .padding(.trailing, 5)
-                        .transition(.scale.combined(with: .opacity))
-                    }
-                }
-                .animation(.easeOut(duration: 0.2), value: messageText.isEmpty)
+
+            if !messageText.trimmingCharacters(in: .whitespaces).isEmpty {
+                sendButton
+            }
         }
-        .padding(.horizontal, 16)
-        .padding(.top, 12)
-        .padding(.bottom, 20)
-        .background(
-            Color.black.opacity(0.4)
-                .background(.ultraThinMaterial)
-                .environment(\.colorScheme, .dark)
-        )
+        .animation(.easeOut(duration: 0.2), value: messageText.isEmpty)
+    }
+
+    private var sendButton: some View {
+        Button(action: { handleSend() }) {
+            Image(systemName: "arrow.right")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(.black)
+                .frame(width: 36, height: 36)
+                .background(Color.white)
+                .clipShape(Circle())
+        }
+        .padding(.trailing, 5)
+        .transition(.scale.combined(with: .opacity))
+    }
+
+    private var inputBarBackground: some View {
+        Color.black.opacity(0.4)
+            .background(.ultraThinMaterial)
+            .environment(\.colorScheme, .dark)
     }
 
     // MARK: - Actions
