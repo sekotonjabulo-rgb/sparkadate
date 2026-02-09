@@ -27,6 +27,14 @@
 		AA0001032600000000000002 /* Onboarding1ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001022600000000000002 /* Onboarding1ViewController.swift */; };
 		AA0001052600000000000003 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001042600000000000003 /* LoginView.swift */; };
 		AA0001072600000000000004 /* LoginViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001062600000000000004 /* LoginViewController.swift */; };
+		AA0001092600000000000005 /* MatchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001082600000000000005 /* MatchView.swift */; };
+		AA00010B2600000000000006 /* MatchViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00010A2600000000000006 /* MatchViewController.swift */; };
+		AA00010D2600000000000007 /* PlanView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00010C2600000000000007 /* PlanView.swift */; };
+		AA00010F2600000000000008 /* PlanViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00010E2600000000000008 /* PlanViewController.swift */; };
+		AA0001112600000000000009 /* TimerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001102600000000000009 /* TimerView.swift */; };
+		AA000113260000000000000A /* TimerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000112260000000000000A /* TimerViewController.swift */; };
+		AA000115260000000000000B /* RevealView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000114260000000000000B /* RevealView.swift */; };
+		AA000117260000000000000C /* RevealViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000116260000000000000C /* RevealViewController.swift */; };
 		CDC0FE292388222C002C8D56 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = CDC0FE252388222B002C8D56 /* Main.storyboard */; };
 		CDC0FE2A2388222C002C8D56 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = CDC0FE272388222B002C8D56 /* LaunchScreen.storyboard */; };
 /* End PBXBuildFile section */
@@ -54,6 +62,14 @@
 		AA0001022600000000000002 /* Onboarding1ViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Onboarding1ViewController.swift; path = "Spark/Onboarding1ViewController.swift"; sourceTree = "<group>"; };
 		AA0001042600000000000003 /* LoginView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = LoginView.swift; path = "Spark/LoginView.swift"; sourceTree = "<group>"; };
 		AA0001062600000000000004 /* LoginViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = LoginViewController.swift; path = "Spark/LoginViewController.swift"; sourceTree = "<group>"; };
+		AA0001082600000000000005 /* MatchView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = MatchView.swift; path = "Spark/MatchView.swift"; sourceTree = "<group>"; };
+		AA00010A2600000000000006 /* MatchViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = MatchViewController.swift; path = "Spark/MatchViewController.swift"; sourceTree = "<group>"; };
+		AA00010C2600000000000007 /* PlanView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = PlanView.swift; path = "Spark/PlanView.swift"; sourceTree = "<group>"; };
+		AA00010E2600000000000008 /* PlanViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = PlanViewController.swift; path = "Spark/PlanViewController.swift"; sourceTree = "<group>"; };
+		AA0001102600000000000009 /* TimerView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = TimerView.swift; path = "Spark/TimerView.swift"; sourceTree = "<group>"; };
+		AA000112260000000000000A /* TimerViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = TimerViewController.swift; path = "Spark/TimerViewController.swift"; sourceTree = "<group>"; };
+		AA000114260000000000000B /* RevealView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RevealView.swift; path = "Spark/RevealView.swift"; sourceTree = "<group>"; };
+		AA000116260000000000000C /* RevealViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RevealViewController.swift; path = "Spark/RevealViewController.swift"; sourceTree = "<group>"; };
 		CDC0FE262388222B002C8D56 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = "Spark/Base.lproj/Main.storyboard"; sourceTree = "<group>"; };
 		CDC0FE282388222B002C8D56 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = "Spark/Base.lproj/LaunchScreen.storyboard"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -92,6 +108,14 @@
 				AA0001022600000000000002 /* Onboarding1ViewController.swift */,
 				AA0001042600000000000003 /* LoginView.swift */,
 				AA0001062600000000000004 /* LoginViewController.swift */,
+				AA0001082600000000000005 /* MatchView.swift */,
+				AA00010A2600000000000006 /* MatchViewController.swift */,
+				AA00010C2600000000000007 /* PlanView.swift */,
+				AA00010E2600000000000008 /* PlanViewController.swift */,
+				AA0001102600000000000009 /* TimerView.swift */,
+				AA000112260000000000000A /* TimerViewController.swift */,
+				AA000114260000000000000B /* RevealView.swift */,
+				AA000116260000000000000C /* RevealViewController.swift */,
 				CDC0FE272388222B002C8D56 /* LaunchScreen.storyboard */,
 				CDC0FE252388222B002C8D56 /* Main.storyboard */,
 				595F23A425CEFBFE0053416C /* WebView.swift */,
@@ -190,6 +214,14 @@
 				AA0001032600000000000002 /* Onboarding1ViewController.swift in Sources */,
 				AA0001052600000000000003 /* LoginView.swift in Sources */,
 				AA0001072600000000000004 /* LoginViewController.swift in Sources */,
+				AA0001092600000000000005 /* MatchView.swift in Sources */,
+				AA00010B2600000000000006 /* MatchViewController.swift in Sources */,
+				AA00010D2600000000000007 /* PlanView.swift in Sources */,
+				AA00010F2600000000000008 /* PlanViewController.swift in Sources */,
+				AA0001112600000000000009 /* TimerView.swift in Sources */,
+				AA000113260000000000000A /* TimerViewController.swift in Sources */,
+				AA000115260000000000000B /* RevealView.swift in Sources */,
+				AA000117260000000000000C /* RevealViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -316,13 +316,15 @@ struct PhotoSlotView: View {
     var body: some View {
         ZStack {
             if let img = image {
-                Image(uiImage: img)
-                    .resizable()
-                    .scaledToFill()
-                    .frame(maxWidth: .infinity)
-                    .aspectRatio(3/4, contentMode: .fill)
-                    .clipped()
-                    .cornerRadius(16)
+                GeometryReader { geo in
+                    Image(uiImage: img)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: geo.size.width, height: geo.size.width * 4/3)
+                        .clipped()
+                }
+                .aspectRatio(3/4, contentMode: .fit)
+                .cornerRadius(16)
 
                 // Remove button
                 VStack {
