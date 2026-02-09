@@ -65,23 +65,8 @@ class ViewController: UIViewController, WKNavigationDelegate, UIDocumentInteract
             splashVC.removeFromParent()
             self.splashViewController = nil
 
-            // Route to native screens or WebView
-            if destination == "onboarding" {
-                self.showOnboarding()
-            } else if destination == "match.html" {
-                self.showMatch()
-            } else if destination == "plan.html" {
-                self.showPlan()
-            } else if destination == "timer.html" {
-                self.showTimer(matchData: nil)
-            } else if destination == "reveal.html" {
-                self.showReveal(matchData: nil)
-            } else {
-                // Load the destination page in WebView
-                if let url = URL(string: "https://sparkadate.online/\(destination)") {
-                    Spark.webView.load(URLRequest(url: url))
-                }
-            }
+            // Route all known pages to native screens
+            self.routeToPage(destination)
         }
     }
 
@@ -107,10 +92,7 @@ class ViewController: UIViewController, WKNavigationDelegate, UIDocumentInteract
                 onboardingVC.dismiss(animated: false, completion: nil)
             }
         }
-        // Delay presentation to ensure we're in the window hierarchy
-        DispatchQueue.main.async {
-            self.present(onboardingVC, animated: false, completion: nil)
-        }
+        presentNative(onboardingVC)
     }
 
     private func showOnboarding1() {
@@ -118,20 +100,11 @@ class ViewController: UIViewController, WKNavigationDelegate, UIDocumentInteract
         onboarding1VC.modalPresentationStyle = .fullScreen
         onboarding1VC.onNavigateToSignup = { [weak self] userData in
             guard let self = self else { return }
-
-            // Save user data to UserDefaults so signup.html can read it
-            if let jsonData = try? JSONSerialization.data(withJSONObject: userData),
-               let jsonString = String(data: jsonData, encoding: .utf8) {
-                // Inject data into WebView's localStorage then navigate to signup
-                let js = "localStorage.setItem('sparkUserData', '\(jsonString.replacingOccurrences(of: "'", with: "\\'"))'); window.location.href = 'signup.html';"
-                Spark.webView.evaluateJavaScript(js)
+            onboarding1VC.dismiss(animated: false) {
+                self.showSignup(userData: userData)
             }
-
-            onboarding1VC.dismiss(animated: false, completion: nil)
         }
-        DispatchQueue.main.async {
-            self.present(onboarding1VC, animated: false, completion: nil)
-        }
+        presentNative(onboarding1VC)
     }
 
     private func showLogin() {
@@ -140,14 +113,13 @@ class ViewController: UIViewController, WKNavigationDelegate, UIDocumentInteract
         loginVC.onLoginSuccess = { [weak self] in
             guard let self = self else { return }
 
-            // Login succeeded - inject token into WebView and show native match
+            // Sync token to WebView
             if let token = UserDefaults.standard.string(forKey: "sparkToken") {
                 let js = "localStorage.setItem('sparkToken', '\(token)');"
                 Spark.webView.evaluateJavaScript(js)
             }
 
             loginVC.dismiss(animated: false) {
-                // Check if plan is completed, show plan or match
                 if UserDefaults.standard.string(forKey: "sparkPlanCompleted") != nil {
                     self.showMatch()
                 } else {
@@ -157,15 +129,9 @@ class ViewController: UIViewController, WKNavigationDelegate, UIDocumentInteract
         }
         loginVC.onForgotPassword = { [weak self] in
             guard let self = self else { return }
-            // Navigate to forgot password web page
-            if let url = URL(string: "https://sparkadate.online/forgot-password.html") {
-                Spark.webView.load(URLRequest(url: url))
-            }
-            loginVC.dismiss(animated: false, completion: nil)
+            loginVC.dismiss(animated: false) { self.showForgotPassword() }
         }
-        DispatchQueue.main.async {
-            self.present(loginVC, animated: false, completion: nil)
-        }
+        presentNative(loginVC)
     }
 
     private func showMatch() {
@@ -173,21 +139,13 @@ class ViewController: UIViewController, WKNavigationDelegate, UIDocumentInteract
         matchVC.modalPresentationStyle = .fullScreen
         matchVC.onNavigateToChat = { [weak self] in
             guard let self = self else { return }
-            // Navigate to chat in WebView
-            if let url = URL(string: "https://sparkadate.online/chat.html") {
-                Spark.webView.load(URLRequest(url: url))
-            }
-            matchVC.dismiss(animated: false, completion: nil)
+            matchVC.dismiss(animated: false) { self.showChat(matchData: nil) }
         }
         matchVC.onNavigateToPlan = { [weak self] in
             guard let self = self else { return }
-            matchVC.dismiss(animated: false) {
-                self.showPlan()
-            }
+            matchVC.dismiss(animated: false) { self.showPlan() }
         }
-        DispatchQueue.main.async {
-            self.present(matchVC, animated: false, completion: nil)
-        }
+        presentNative(matchVC)
     }
 
     private func showPlan() {
@@ -195,21 +153,16 @@ class ViewController: UIViewController, WKNavigationDelegate, UIDocumentInteract
         planVC.modalPresentationStyle = .fullScreen
         planVC.onNavigateToMatch = { [weak self] in
             guard let self = self else { return }
-            planVC.dismiss(animated: false) {
-                self.showMatch()
-            }
+            planVC.dismiss(animated: false) { self.showMatch() }
         }
         planVC.onSelectPro = { [weak self] checkoutURL in
             guard let self = self else { return }
-            // Open Lemonsqueezy checkout in WebView
             if let url = URL(string: checkoutURL) {
                 Spark.webView.load(URLRequest(url: url))
             }
             planVC.dismiss(animated: false, completion: nil)
         }
-        DispatchQueue.main.async {
-            self.present(planVC, animated: false, completion: nil)
-        }
+        presentNative(planVC)
     }
 
     private func showTimer(matchData: [String: Any]?) {
@@ -218,31 +171,21 @@ class ViewController: UIViewController, WKNavigationDelegate, UIDocumentInteract
         timerVC.matchData = matchData
         timerVC.onBack = { [weak self] in
             guard let self = self else { return }
-            timerVC.dismiss(animated: false) {
-                self.showMatch()
-            }
+            timerVC.dismiss(animated: false) { self.showChat(matchData: matchData) }
         }
         timerVC.onRevealed = { [weak self] in
             guard let self = self else { return }
-            timerVC.dismiss(animated: false) {
-                self.showReveal(matchData: matchData)
-            }
+            timerVC.dismiss(animated: false) { self.showReveal(matchData: matchData) }
         }
         timerVC.onSkip = { [weak self] in
             guard let self = self else { return }
-            timerVC.dismiss(animated: false) {
-                self.showMatch()
-            }
+            timerVC.dismiss(animated: false) { self.showMatch() }
         }
         timerVC.onUpgrade = { [weak self] in
             guard let self = self else { return }
-            timerVC.dismiss(animated: false) {
-                self.showPlan()
-            }
+            timerVC.dismiss(animated: false) { self.showPlan() }
         }
-        DispatchQueue.main.async {
-            self.present(timerVC, animated: false, completion: nil)
-        }
+        presentNative(timerVC)
     }
 
     private func showReveal(matchData: [String: Any]?) {
@@ -251,20 +194,267 @@ class ViewController: UIViewController, WKNavigationDelegate, UIDocumentInteract
         revealVC.matchData = matchData
         revealVC.onBack = { [weak self] in
             guard let self = self else { return }
-            revealVC.dismiss(animated: false) {
-                self.showMatch()
-            }
+            revealVC.dismiss(animated: false) { self.showChat(matchData: matchData) }
         }
         revealVC.onRevealed = { [weak self] in
             guard let self = self else { return }
-            // Navigate to chat after reveal
-            if let url = URL(string: "https://sparkadate.online/chat.html") {
+            revealVC.dismiss(animated: false) { self.showRevealed(matchData: matchData) }
+        }
+        presentNative(revealVC)
+    }
+
+    // MARK: - Route Helper
+    private func routeToPage(_ page: String) {
+        switch page {
+        case "onboarding":
+            showOnboarding()
+        case "match.html":
+            showMatch()
+        case "plan.html":
+            showPlan()
+        case "timer.html":
+            showTimer(matchData: nil)
+        case "reveal.html":
+            showReveal(matchData: nil)
+        case "chat.html":
+            showChat(matchData: nil)
+        case "settings.html":
+            showSettings()
+        case "revealed.html":
+            showRevealed(matchData: nil)
+        case "revealrequest.html":
+            showRevealRequest(matchData: nil)
+        case "left.html":
+            showLeft(partnerName: "")
+        case "exit.html":
+            showExit(partnerName: "", partnerAge: 0)
+        case "prosuccess.html":
+            showProSuccess()
+        case "support.html":
+            showSupport()
+        case "login.html":
+            showLogin()
+        case "signup.html":
+            showSignup(userData: nil)
+        case "verify-email.html":
+            showVerifyEmail()
+        case "forgot-password.html":
+            showForgotPassword()
+        default:
+            // Fall back to WebView for unknown pages
+            if let url = URL(string: "https://sparkadate.online/\(page)") {
                 Spark.webView.load(URLRequest(url: url))
             }
-            revealVC.dismiss(animated: false, completion: nil)
         }
+    }
+
+    // MARK: - Chat
+    private func showChat(matchData: [String: Any]?) {
+        let chatVC = ChatViewController()
+        chatVC.modalPresentationStyle = .fullScreen
+        chatVC.matchData = matchData
+        chatVC.onNavigateToTimer = { [weak self] in
+            guard let self = self else { return }
+            chatVC.dismiss(animated: false) { self.showTimer(matchData: matchData) }
+        }
+        chatVC.onNavigateToReveal = { [weak self] in
+            guard let self = self else { return }
+            chatVC.dismiss(animated: false) { self.showReveal(matchData: matchData) }
+        }
+        chatVC.onNavigateToRevealRequest = { [weak self] in
+            guard let self = self else { return }
+            chatVC.dismiss(animated: false) { self.showRevealRequest(matchData: matchData) }
+        }
+        chatVC.onNavigateToSettings = { [weak self] in
+            guard let self = self else { return }
+            chatVC.dismiss(animated: false) { self.showSettings() }
+        }
+        chatVC.onNavigateToPlan = { [weak self] in
+            guard let self = self else { return }
+            chatVC.dismiss(animated: false) { self.showPlan() }
+        }
+        chatVC.onNavigateToRevealed = { [weak self] in
+            guard let self = self else { return }
+            chatVC.dismiss(animated: false) { self.showRevealed(matchData: matchData) }
+        }
+        chatVC.onNavigateToLeft = { [weak self] in
+            guard let self = self else { return }
+            chatVC.dismiss(animated: false) { self.showLeft(partnerName: matchData?["name"] as? String ?? "") }
+        }
+        chatVC.onLogout = { [weak self] in
+            guard let self = self else { return }
+            self.performLogout(from: chatVC)
+        }
+        presentNative(chatVC)
+    }
+
+    // MARK: - Settings
+    private func showSettings() {
+        let settingsVC = SettingsViewController()
+        settingsVC.modalPresentationStyle = .fullScreen
+        settingsVC.onBack = { [weak self] in
+            guard let self = self else { return }
+            settingsVC.dismiss(animated: false) { self.showChat(matchData: nil) }
+        }
+        settingsVC.onLogout = { [weak self] in
+            guard let self = self else { return }
+            self.performLogout(from: settingsVC)
+        }
+        settingsVC.onNavigateToPlan = { [weak self] in
+            guard let self = self else { return }
+            settingsVC.dismiss(animated: false) { self.showPlan() }
+        }
+        settingsVC.onNavigateToSupport = { [weak self] in
+            guard let self = self else { return }
+            settingsVC.dismiss(animated: false) { self.showSupport() }
+        }
+        presentNative(settingsVC)
+    }
+
+    // MARK: - Revealed
+    private func showRevealed(matchData: [String: Any]?) {
+        let vc = RevealedViewController()
+        vc.modalPresentationStyle = .fullScreen
+        vc.matchData = matchData
+        vc.onKeepChatting = { [weak self] in
+            guard let self = self else { return }
+            vc.dismiss(animated: false) { self.showChat(matchData: matchData) }
+        }
+        vc.onLeave = { [weak self] in
+            guard let self = self else { return }
+            vc.dismiss(animated: false) {
+                self.showExit(
+                    partnerName: matchData?["name"] as? String ?? "",
+                    partnerAge: matchData?["age"] as? Int ?? 0
+                )
+            }
+        }
+        presentNative(vc)
+    }
+
+    // MARK: - Reveal Request
+    private func showRevealRequest(matchData: [String: Any]?) {
+        let vc = RevealRequestViewController()
+        vc.modalPresentationStyle = .fullScreen
+        vc.matchData = matchData
+        vc.onAccepted = { [weak self] in
+            guard let self = self else { return }
+            vc.dismiss(animated: false) { self.showRevealed(matchData: matchData) }
+        }
+        vc.onNotYet = { [weak self] in
+            guard let self = self else { return }
+            vc.dismiss(animated: false) { self.showChat(matchData: matchData) }
+        }
+        presentNative(vc)
+    }
+
+    // MARK: - Signup
+    private func showSignup(userData: [String: Any]?) {
+        let vc = SignupViewController()
+        vc.modalPresentationStyle = .fullScreen
+        vc.userData = userData
+        vc.onSignupComplete = { [weak self] in
+            guard let self = self else { return }
+            vc.dismiss(animated: false) { self.showVerifyEmail() }
+        }
+        vc.onNavigateToLogin = { [weak self] in
+            guard let self = self else { return }
+            vc.dismiss(animated: false) { self.showLogin() }
+        }
+        presentNative(vc)
+    }
+
+    // MARK: - Verify Email
+    private func showVerifyEmail() {
+        let vc = VerifyEmailViewController()
+        vc.modalPresentationStyle = .fullScreen
+        vc.onVerified = { [weak self] in
+            guard let self = self else { return }
+            vc.dismiss(animated: false) { self.showPlan() }
+        }
+        presentNative(vc)
+    }
+
+    // MARK: - Forgot Password
+    private func showForgotPassword() {
+        let vc = ForgotPasswordViewController()
+        vc.modalPresentationStyle = .fullScreen
+        vc.onBack = { [weak self] in
+            guard let self = self else { return }
+            vc.dismiss(animated: false) { self.showLogin() }
+        }
+        presentNative(vc)
+    }
+
+    // MARK: - Exit
+    private func showExit(partnerName: String, partnerAge: Int) {
+        let vc = ExitViewController()
+        vc.modalPresentationStyle = .fullScreen
+        vc.partnerName = partnerName
+        vc.partnerAge = partnerAge
+        vc.onFindNewMatch = { [weak self] in
+            guard let self = self else { return }
+            vc.dismiss(animated: false) { self.showMatch() }
+        }
+        presentNative(vc)
+    }
+
+    // MARK: - Left (partner left)
+    private func showLeft(partnerName: String) {
+        let vc = LeftViewController()
+        vc.modalPresentationStyle = .fullScreen
+        vc.partnerName = partnerName
+        vc.onFindNewMatch = { [weak self] in
+            guard let self = self else { return }
+            vc.dismiss(animated: false) { self.showMatch() }
+        }
+        presentNative(vc)
+    }
+
+    // MARK: - Pro Success
+    private func showProSuccess() {
+        let vc = ProSuccessViewController()
+        vc.modalPresentationStyle = .fullScreen
+        vc.onContinue = { [weak self] in
+            guard let self = self else { return }
+            vc.dismiss(animated: false) { self.showMatch() }
+        }
+        presentNative(vc)
+    }
+
+    // MARK: - Support
+    private func showSupport() {
+        let vc = SupportViewController()
+        vc.modalPresentationStyle = .fullScreen
+        vc.onBack = { [weak self] in
+            guard let self = self else { return }
+            vc.dismiss(animated: false) { self.showSettings() }
+        }
+        presentNative(vc)
+    }
+
+    // MARK: - Helpers
+    private func presentNative(_ vc: UIViewController) {
         DispatchQueue.main.async {
-            self.present(revealVC, animated: false, completion: nil)
+            // Dismiss any existing presented VC first
+            if let presented = self.presentedViewController {
+                presented.dismiss(animated: false) {
+                    self.present(vc, animated: false, completion: nil)
+                }
+            } else {
+                self.present(vc, animated: false, completion: nil)
+            }
+        }
+    }
+
+    private func performLogout(from vc: UIViewController) {
+        UserDefaults.standard.removeObject(forKey: "sparkToken")
+        UserDefaults.standard.removeObject(forKey: "sparkUser")
+        UserDefaults.standard.removeObject(forKey: "sparkCurrentMatch")
+        UserDefaults.standard.removeObject(forKey: "sparkLastPage")
+        UserDefaults.standard.removeObject(forKey: "sparkPlanCompleted")
+        vc.dismiss(animated: false) {
+            self.showOnboarding()
         }
     }
 
