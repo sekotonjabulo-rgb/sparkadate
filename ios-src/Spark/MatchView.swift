@@ -189,7 +189,7 @@ struct MatchView: View {
                 .opacity(showContent ? 1 : 0)
 
             if viewModel.partnerAge > 0 {
-                Text("\(viewModel.partnerAge)")
+                Text("\(viewModel.partnerAge) years old")
                     .font(.customFont("CabinetGrotesk-Medium", size: 16))
                     .foregroundColor(Color.white.opacity(0.5))
                     .opacity(showContent ? 1 : 0)

@@ -36,8 +36,10 @@ class ViewController: UIViewController, WKNavigationDelegate, UIDocumentInteract
         initWebView()
         initToolbarView()
 
-        // Load WebView in the background while splash shows
-        loadRootUrl()
+        // Keep WebView hidden - entire app is now native Swift
+        Spark.webView.isHidden = true
+        webviewView.isHidden = true
+        loadingView.isHidden = true
 
         NotificationCenter.default.addObserver(self, selector: #selector(self.keyboardWillHide(_:)), name: UIResponder.keyboardWillHideNotification , object: nil)
 
