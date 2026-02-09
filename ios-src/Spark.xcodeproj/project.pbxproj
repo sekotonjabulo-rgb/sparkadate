@@ -37,6 +37,17 @@
 		AA000117260000000000000C /* RevealViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000116260000000000000C /* RevealViewController.swift */; };
 		CDC0FE292388222C002C8D56 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = CDC0FE252388222B002C8D56 /* Main.storyboard */; };
 		CDC0FE2A2388222C002C8D56 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = CDC0FE272388222B002C8D56 /* LaunchScreen.storyboard */; };
+		BB0001012600000000000001 /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0001002600000000000001 /* ChatView.swift */; };
+		BB0001032600000000000002 /* ChatViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0001022600000000000002 /* ChatViewController.swift */; };
+		BB0001052600000000000003 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0001042600000000000003 /* SettingsView.swift */; };
+		BB0001072600000000000004 /* SettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0001062600000000000004 /* SettingsViewController.swift */; };
+		BB0001092600000000000005 /* RevealedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0001082600000000000005 /* RevealedView.swift */; };
+		BB00010B2600000000000006 /* RevealRequestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB00010A2600000000000006 /* RevealRequestView.swift */; };
+		BB00010D2600000000000007 /* SignupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB00010C2600000000000007 /* SignupView.swift */; };
+		BB00010F2600000000000008 /* VerifyEmailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB00010E2600000000000008 /* VerifyEmailView.swift */; };
+		BB0001112600000000000009 /* ForgotPasswordView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0001102600000000000009 /* ForgotPasswordView.swift */; };
+		BB000113260000000000000A /* TransitionViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000112260000000000000A /* TransitionViews.swift */; };
+		BB000115260000000000000B /* FlowViewControllers.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000114260000000000000B /* FlowViewControllers.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -72,6 +83,17 @@
 		AA000116260000000000000C /* RevealViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RevealViewController.swift; path = "Spark/RevealViewController.swift"; sourceTree = "<group>"; };
 		CDC0FE262388222B002C8D56 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = "Spark/Base.lproj/Main.storyboard"; sourceTree = "<group>"; };
 		CDC0FE282388222B002C8D56 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = "Spark/Base.lproj/LaunchScreen.storyboard"; sourceTree = "<group>"; };
+		BB0001002600000000000001 /* ChatView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ChatView.swift; path = "Spark/ChatView.swift"; sourceTree = "<group>"; };
+		BB0001022600000000000002 /* ChatViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ChatViewController.swift; path = "Spark/ChatViewController.swift"; sourceTree = "<group>"; };
+		BB0001042600000000000003 /* SettingsView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SettingsView.swift; path = "Spark/SettingsView.swift"; sourceTree = "<group>"; };
+		BB0001062600000000000004 /* SettingsViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SettingsViewController.swift; path = "Spark/SettingsViewController.swift"; sourceTree = "<group>"; };
+		BB0001082600000000000005 /* RevealedView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RevealedView.swift; path = "Spark/RevealedView.swift"; sourceTree = "<group>"; };
+		BB00010A2600000000000006 /* RevealRequestView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RevealRequestView.swift; path = "Spark/RevealRequestView.swift"; sourceTree = "<group>"; };
+		BB00010C2600000000000007 /* SignupView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SignupView.swift; path = "Spark/SignupView.swift"; sourceTree = "<group>"; };
+		BB00010E2600000000000008 /* VerifyEmailView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = VerifyEmailView.swift; path = "Spark/VerifyEmailView.swift"; sourceTree = "<group>"; };
+		BB0001102600000000000009 /* ForgotPasswordView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ForgotPasswordView.swift; path = "Spark/ForgotPasswordView.swift"; sourceTree = "<group>"; };
+		BB000112260000000000000A /* TransitionViews.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = TransitionViews.swift; path = "Spark/TransitionViews.swift"; sourceTree = "<group>"; };
+		BB000114260000000000000B /* FlowViewControllers.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = FlowViewControllers.swift; path = "Spark/FlowViewControllers.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -116,6 +138,17 @@
 				AA000112260000000000000A /* TimerViewController.swift */,
 				AA000114260000000000000B /* RevealView.swift */,
 				AA000116260000000000000C /* RevealViewController.swift */,
+				BB0001002600000000000001 /* ChatView.swift */,
+				BB0001022600000000000002 /* ChatViewController.swift */,
+				BB0001042600000000000003 /* SettingsView.swift */,
+				BB0001062600000000000004 /* SettingsViewController.swift */,
+				BB0001082600000000000005 /* RevealedView.swift */,
+				BB00010A2600000000000006 /* RevealRequestView.swift */,
+				BB00010C2600000000000007 /* SignupView.swift */,
+				BB00010E2600000000000008 /* VerifyEmailView.swift */,
+				BB0001102600000000000009 /* ForgotPasswordView.swift */,
+				BB000112260000000000000A /* TransitionViews.swift */,
+				BB000114260000000000000B /* FlowViewControllers.swift */,
 				CDC0FE272388222B002C8D56 /* LaunchScreen.storyboard */,
 				CDC0FE252388222B002C8D56 /* Main.storyboard */,
 				595F23A425CEFBFE0053416C /* WebView.swift */,
@@ -222,6 +255,17 @@
 				AA000113260000000000000A /* TimerViewController.swift in Sources */,
 				AA000115260000000000000B /* RevealView.swift in Sources */,
 				AA000117260000000000000C /* RevealViewController.swift in Sources */,
+				BB0001012600000000000001 /* ChatView.swift in Sources */,
+				BB0001032600000000000002 /* ChatViewController.swift in Sources */,
+				BB0001052600000000000003 /* SettingsView.swift in Sources */,
+				BB0001072600000000000004 /* SettingsViewController.swift in Sources */,
+				BB0001092600000000000005 /* RevealedView.swift in Sources */,
+				BB00010B2600000000000006 /* RevealRequestView.swift in Sources */,
+				BB00010D2600000000000007 /* SignupView.swift in Sources */,
+				BB00010F2600000000000008 /* VerifyEmailView.swift in Sources */,
+				BB0001112600000000000009 /* ForgotPasswordView.swift in Sources */,
+				BB000113260000000000000A /* TransitionViews.swift in Sources */,
+				BB000115260000000000000B /* FlowViewControllers.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
