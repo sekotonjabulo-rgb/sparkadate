@@ -183,6 +183,26 @@ struct SettingsView: View {
     }
 
     private var settingsPage: some View {
+        settingsContent
+            .sheet(isPresented: photoPickerBinding) {
+                ImagePicker(onImagePicked: { image in
+                    if let slot = showPhotoPickerForSlot {
+                        viewModel.uploadPhoto(image: image, slot: slot)
+                    }
+                    showPhotoPickerForSlot = nil
+                })
+            }
+            .alert("Log out?", isPresented: $showLogoutAlert) {
+                logoutAlertButtons
+            }
+            .alert("Delete Account", isPresented: $showDeleteAccountAlert) {
+                deleteAccountAlertButtons
+            } message: {
+                Text("This action cannot be undone.")
+            }
+    }
+
+    private var settingsContent: some View {
         ZStack {
             Color.black.ignoresSafeArea()
             VStack(spacing: 0) {
@@ -197,32 +217,30 @@ struct SettingsView: View {
             viewModel.loadProfile()
             withAnimation(.easeOut(duration: 0.5)) { opacity = 1 }
         }
-        .sheet(isPresented: Binding(
+    }
+
+    private var photoPickerBinding: Binding<Bool> {
+        Binding(
             get: { showPhotoPickerForSlot != nil },
             set: { if !$0 { showPhotoPickerForSlot = nil } }
-        )) {
-            ImagePicker(onImagePicked: { image in
-                if let slot = showPhotoPickerForSlot {
-                    viewModel.uploadPhoto(image: image, slot: slot)
-                }
-                showPhotoPickerForSlot = nil
-            })
+        )
+    }
+
+    @ViewBuilder
+    private var logoutAlertButtons: some View {
+        Button("Cancel", role: .cancel) {}
+        Button("Log out", role: .destructive) {
+            viewModel.logout()
+            onLogout?()
         }
-        .alert("Log out?", isPresented: $showLogoutAlert) {
-            Button("Cancel", role: .cancel) {}
-            Button("Log out", role: .destructive) {
-                viewModel.logout()
-                onLogout?()
-            }
-        }
-        .alert("Delete Account", isPresented: $showDeleteAccountAlert) {
-            Button("Cancel", role: .cancel) {}
-            Button("Delete permanently", role: .destructive) {
-                viewModel.deleteAccount()
-                onLogout?()
-            }
-        } message: {
-            Text("This action cannot be undone.")
+    }
+
+    @ViewBuilder
+    private var deleteAccountAlertButtons: some View {
+        Button("Cancel", role: .cancel) {}
+        Button("Delete permanently", role: .destructive) {
+            viewModel.deleteAccount()
+            onLogout?()
         }
     }
 
