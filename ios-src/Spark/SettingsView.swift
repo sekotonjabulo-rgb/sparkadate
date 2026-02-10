@@ -169,6 +169,7 @@ class SettingsViewModel: ObservableObject {
 struct SettingsView: View {
     @StateObject private var viewModel = SettingsViewModel()
     @State private var showPhotoPickerForSlot: Int? = nil
+    @State private var pickedImage: UIImage? = nil
     @State private var showDeleteAccountAlert = false
     @State private var showLogoutAlert = false
     @State private var opacity: Double = 0
@@ -185,12 +186,14 @@ struct SettingsView: View {
     private var settingsPage: some View {
         settingsContent
             .sheet(isPresented: photoPickerBinding) {
-                ImagePicker(onImagePicked: { image in
-                    if let slot = showPhotoPickerForSlot {
-                        viewModel.uploadPhoto(image: image, slot: slot)
-                    }
-                    showPhotoPickerForSlot = nil
-                })
+                ImagePicker(image: $pickedImage)
+            }
+            .onChange(of: pickedImage) { newImage in
+                if let image = newImage, let slot = showPhotoPickerForSlot {
+                    viewModel.uploadPhoto(image: image, slot: slot)
+                }
+                pickedImage = nil
+                showPhotoPickerForSlot = nil
             }
             .alert("Log out?", isPresented: $showLogoutAlert) {
                 logoutAlertButtons
