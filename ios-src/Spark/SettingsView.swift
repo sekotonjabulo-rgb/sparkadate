@@ -179,59 +179,68 @@ struct SettingsView: View {
     var onNavigateToSupport: (() -> Void)?
 
     var body: some View {
+        settingsPage
+    }
+
+    private var settingsPage: some View {
         settingsContent
-            .onAppear {
-                viewModel.loadProfile()
-                withAnimation(.easeOut(duration: 0.5)) { opacity = 1 }
-            }
-            .sheet(item: Binding(
-                get: { showPhotoPickerForSlot.map { SettingsPhotoSlot(slot: $0) } },
-                set: { showPhotoPickerForSlot = $0?.slot }
-            )) { slotItem in
+            .sheet(isPresented: photoPickerBinding) {
                 ImagePicker(onImagePicked: { image in
-                    viewModel.uploadPhoto(image: image, slot: slotItem.slot)
+                    if let slot = showPhotoPickerForSlot {
+                        viewModel.uploadPhoto(image: image, slot: slot)
+                    }
                     showPhotoPickerForSlot = nil
                 })
             }
             .alert("Log out?", isPresented: $showLogoutAlert) {
-                Button("Cancel", role: .cancel) {}
-                Button("Log out", role: .destructive) {
-                    viewModel.logout()
-                    onLogout?()
-                }
+                logoutAlertButtons
             }
             .alert("Delete Account", isPresented: $showDeleteAccountAlert) {
-                Button("Cancel", role: .cancel) {}
-                Button("Delete permanently", role: .destructive) {
-                    viewModel.deleteAccount()
-                    onLogout?()
-                }
+                deleteAccountAlertButtons
             } message: {
-                Text("This will permanently delete your account and all data. This cannot be undone.")
+                Text("This action cannot be undone.")
             }
     }
 
     private var settingsContent: some View {
         ZStack {
             Color.black.ignoresSafeArea()
-
             VStack(spacing: 0) {
                 settingsHeader
-
-                if viewModel.isLoading {
-                    Spacer()
-                    ProgressView().tint(.white)
-                    Spacer()
-                } else {
-                    settingsScrollContent
-                }
-
-                if viewModel.hasChanges {
-                    saveBar
-                }
+                settingsBody
+                if viewModel.hasChanges { saveBar }
             }
             .frame(maxWidth: 428)
             .opacity(opacity)
+        }
+        .onAppear {
+            viewModel.loadProfile()
+            withAnimation(.easeOut(duration: 0.5)) { opacity = 1 }
+        }
+    }
+
+    private var photoPickerBinding: Binding<Bool> {
+        Binding(
+            get: { showPhotoPickerForSlot != nil },
+            set: { if !$0 { showPhotoPickerForSlot = nil } }
+        )
+    }
+
+    @ViewBuilder
+    private var logoutAlertButtons: some View {
+        Button("Cancel", role: .cancel) {}
+        Button("Log out", role: .destructive) {
+            viewModel.logout()
+            onLogout?()
+        }
+    }
+
+    @ViewBuilder
+    private var deleteAccountAlertButtons: some View {
+        Button("Cancel", role: .cancel) {}
+        Button("Delete permanently", role: .destructive) {
+            viewModel.deleteAccount()
+            onLogout?()
         }
     }
 
@@ -254,294 +263,303 @@ struct SettingsView: View {
         .padding(.vertical, 12)
     }
 
-    private var settingsScrollContent: some View {
-        ScrollView(showsIndicators: false) {
-            VStack(spacing: 28) {
-                profileSection
-                photosSection
-                preferencesSection
-                linksSection
-                dangerSection
-                versionLabel
+    @ViewBuilder
+    private var settingsBody: some View {
+        if viewModel.isLoading {
+            Spacer()
+            ProgressView().tint(.white)
+            Spacer()
+        } else {
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 28) {
+                    profileSection
+                    photosSection
+                    preferencesSection
+                    linksSection
+                    dangerSection
+                    versionLabel
+                }
+                .padding(.horizontal, 16)
+                .padding(.top, 16)
+                .padding(.bottom, 32)
             }
-            .padding(.horizontal, 16)
-            .padding(.top, 16)
-            .padding(.bottom, viewModel.hasChanges ? 80 : 32)
         }
     }
+}
 
-    // MARK: - Profile Section
+// MARK: - Profile Section
+extension SettingsView {
     private var profileSection: some View {
         VStack(spacing: 16) {
             sectionHeader("PROFILE")
-
-            // Avatar
-            HStack(spacing: 16) {
-                ZStack {
-                    Circle()
-                        .fill(Color.white.opacity(0.12))
-                        .frame(width: 70, height: 70)
-                    if let firstPhoto = viewModel.photos.first(where: { $0.isPrimary }) ?? viewModel.photos.first,
-                       let url = URL(string: firstPhoto.url) {
-                        AsyncImage(url: url) { image in
-                            image.resizable().scaledToFill()
-                        } placeholder: {
-                            Text(String(viewModel.displayName.prefix(1)).uppercased())
-                                .font(.customFont("CabinetGrotesk-Medium", size: 24))
-                                .foregroundColor(.white)
-                        }
-                        .frame(width: 70, height: 70)
-                        .clipShape(Circle())
-                    } else {
-                        Text(String(viewModel.displayName.prefix(1)).uppercased())
-                            .font(.customFont("CabinetGrotesk-Medium", size: 24))
-                            .foregroundColor(.white)
-                    }
-                }
-
-                VStack(alignment: .leading, spacing: 2) {
-                    HStack(spacing: 8) {
-                        Text(viewModel.displayName)
-                            .font(.customFont("CabinetGrotesk-Medium", size: 20))
-                            .foregroundColor(.white)
-                        if viewModel.subscriptionTier == "pro" {
-                            Text("PRO")
-                                .font(.system(size: 10, weight: .bold))
-                                .foregroundColor(.black)
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 2)
-                                .background(
-                                    LinearGradient(colors: [.yellow, .orange], startPoint: .leading, endPoint: .trailing)
-                                )
-                                .cornerRadius(6)
-                        }
-                    }
-                    Text(viewModel.email)
-                        .font(.customFont("CabinetGrotesk-Medium", size: 13))
-                        .foregroundColor(Color.white.opacity(0.65))
-                }
-                Spacer()
-            }
-
-            // Name input
-            VStack(alignment: .leading, spacing: 6) {
-                Text("Display name")
-                    .font(.customFont("CabinetGrotesk-Medium", size: 12))
-                    .foregroundColor(Color.white.opacity(0.65))
-                SparkTextField(text: $viewModel.displayName, placeholder: "Your name")
-                    .onChange(of: viewModel.displayName) { _ in viewModel.markChanged() }
-            }
-
-            // Location input
-            VStack(alignment: .leading, spacing: 6) {
-                Text("Location")
-                    .font(.customFont("CabinetGrotesk-Medium", size: 12))
-                    .foregroundColor(Color.white.opacity(0.65))
-                SparkTextField(text: $viewModel.location, placeholder: "City, Country")
-                    .onChange(of: viewModel.location) { _ in viewModel.markChanged() }
-            }
+            profileAvatar
+            profileNameField
+            profileLocationField
         }
     }
 
-    // MARK: - Photos Section
+    private var profileAvatar: some View {
+        HStack(spacing: 16) {
+            avatarImage
+            avatarInfo
+            Spacer()
+        }
+    }
+
+    private var avatarImage: some View {
+        ZStack {
+            Circle()
+                .fill(Color.white.opacity(0.12))
+                .frame(width: 70, height: 70)
+            Text(String(viewModel.displayName.prefix(1)).uppercased())
+                .font(.customFont("CabinetGrotesk-Medium", size: 24))
+                .foregroundColor(.white)
+        }
+    }
+
+    private var avatarInfo: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            HStack(spacing: 8) {
+                Text(viewModel.displayName)
+                    .font(.customFont("CabinetGrotesk-Medium", size: 20))
+                    .foregroundColor(.white)
+                if viewModel.subscriptionTier == "pro" {
+                    proBadge
+                }
+            }
+            Text(viewModel.email)
+                .font(.customFont("CabinetGrotesk-Medium", size: 13))
+                .foregroundColor(Color.white.opacity(0.65))
+        }
+    }
+
+    private var proBadge: some View {
+        Text("PRO")
+            .font(.system(size: 10, weight: .bold))
+            .foregroundColor(.black)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 2)
+            .background(Color.orange)
+            .cornerRadius(6)
+    }
+
+    private var profileNameField: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Display name")
+                .font(.customFont("CabinetGrotesk-Medium", size: 12))
+                .foregroundColor(Color.white.opacity(0.65))
+            SparkTextField(text: $viewModel.displayName, placeholder: "Your name")
+                .onChange(of: viewModel.displayName) { _ in viewModel.markChanged() }
+        }
+    }
+
+    private var profileLocationField: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Location")
+                .font(.customFont("CabinetGrotesk-Medium", size: 12))
+                .foregroundColor(Color.white.opacity(0.65))
+            SparkTextField(text: $viewModel.location, placeholder: "City, Country")
+                .onChange(of: viewModel.location) { _ in viewModel.markChanged() }
+        }
+    }
+}
+
+// MARK: - Photos Section
+extension SettingsView {
     private var photosSection: some View {
         VStack(spacing: 12) {
             sectionHeader("PHOTOS")
+            photosGrid
+        }
+    }
 
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3), spacing: 8) {
-                ForEach(0..<6, id: \.self) { index in
-                    if index < viewModel.photos.count {
-                        let photo = viewModel.photos[index]
-                        ZStack(alignment: .topTrailing) {
-                            AsyncImage(url: URL(string: photo.url)) { image in
-                                image.resizable().scaledToFill()
-                            } placeholder: {
-                                Color.white.opacity(0.08)
-                            }
-                            .frame(minHeight: 120)
-                            .aspectRatio(1, contentMode: .fill)
-                            .clipped()
-                            .cornerRadius(12)
-
-                            Button(action: { viewModel.deletePhoto(id: photo.id) }) {
-                                Image(systemName: "xmark.circle.fill")
-                                    .font(.system(size: 22))
-                                    .foregroundColor(.white)
-                                    .shadow(radius: 4)
-                            }
-                            .padding(4)
-
-                            if photo.isPrimary {
-                                VStack {
-                                    Spacer()
-                                    HStack {
-                                        Text("Main")
-                                            .font(.system(size: 10, weight: .medium))
-                                            .foregroundColor(.white)
-                                            .padding(.horizontal, 6)
-                                            .padding(.vertical, 2)
-                                            .background(Color.black.opacity(0.6))
-                                            .cornerRadius(4)
-                                        Spacer()
-                                    }
-                                    .padding(6)
-                                }
-                            }
-                        }
-                        .aspectRatio(1, contentMode: .fit)
-                    } else {
-                        Button(action: { showPhotoPickerForSlot = index }) {
-                            RoundedRectangle(cornerRadius: 12)
-                                .strokeBorder(Color.white.opacity(0.2), style: StrokeStyle(lineWidth: 1, dash: [6]))
-                                .aspectRatio(1, contentMode: .fit)
-                                .overlay(
-                                    Image(systemName: "plus")
-                                        .font(.system(size: 24))
-                                        .foregroundColor(Color.white.opacity(0.3))
-                                )
-                        }
-                    }
-                }
+    private var photosGrid: some View {
+        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3), spacing: 8) {
+            ForEach(0..<6, id: \.self) { index in
+                settingsPhotoCell(index: index)
             }
         }
     }
 
-    // MARK: - Preferences Section
+    @ViewBuilder
+    private func settingsPhotoCell(index: Int) -> some View {
+        if index < viewModel.photos.count {
+            filledPhotoCell(photo: viewModel.photos[index])
+        } else {
+            emptyPhotoCell(index: index)
+        }
+    }
+
+    private func filledPhotoCell(photo: (id: String, url: String, isPrimary: Bool)) -> some View {
+        ZStack(alignment: .topTrailing) {
+            AsyncImage(url: URL(string: photo.url)) { image in
+                image.resizable().scaledToFill()
+            } placeholder: {
+                Color.white.opacity(0.08)
+            }
+            .frame(minHeight: 120)
+            .aspectRatio(1, contentMode: .fill)
+            .clipped()
+            .cornerRadius(12)
+
+            Button(action: { viewModel.deletePhoto(id: photo.id) }) {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.system(size: 22))
+                    .foregroundColor(.white)
+                    .shadow(radius: 4)
+            }
+            .padding(4)
+        }
+        .aspectRatio(1, contentMode: .fit)
+    }
+
+    private func emptyPhotoCell(index: Int) -> some View {
+        Button(action: { showPhotoPickerForSlot = index }) {
+            RoundedRectangle(cornerRadius: 12)
+                .strokeBorder(Color.white.opacity(0.2), style: StrokeStyle(lineWidth: 1, dash: [6]))
+                .aspectRatio(1, contentMode: .fit)
+                .overlay(
+                    Image(systemName: "plus")
+                        .font(.system(size: 24))
+                        .foregroundColor(Color.white.opacity(0.3))
+                )
+        }
+    }
+}
+
+// MARK: - Preferences Section
+extension SettingsView {
     private var preferencesSection: some View {
         VStack(spacing: 20) {
             sectionHeader("MATCH PREFERENCES")
+            ageRangeSlider
+            distanceSlider
+            intentPicker
+        }
+    }
 
-            // Age range
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Text("Age range")
-                        .font(.customFont("CabinetGrotesk-Medium", size: 14))
-                        .foregroundColor(.white)
-                    Spacer()
-                    Text("\(Int(viewModel.ageMin)) - \(Int(viewModel.ageMax))")
-                        .font(.customFont("CabinetGrotesk-Medium", size: 14))
-                        .foregroundColor(Color.white.opacity(0.65))
-                }
-                HStack(spacing: 12) {
-                    Slider(value: $viewModel.ageMin, in: 18...64, step: 1) {
-                        Text("Min")
-                    }
+    private var ageRangeSlider: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text("Age range")
+                    .font(.customFont("CabinetGrotesk-Medium", size: 14))
+                    .foregroundColor(.white)
+                Spacer()
+                Text("\(Int(viewModel.ageMin)) - \(Int(viewModel.ageMax))")
+                    .font(.customFont("CabinetGrotesk-Medium", size: 14))
+                    .foregroundColor(Color.white.opacity(0.65))
+            }
+            HStack(spacing: 12) {
+                Slider(value: $viewModel.ageMin, in: 18...64, step: 1)
                     .tint(.white)
                     .onChange(of: viewModel.ageMin) { val in
                         if val > viewModel.ageMax { viewModel.ageMax = val }
                         viewModel.markChanged()
                     }
-                    Slider(value: $viewModel.ageMax, in: 19...65, step: 1) {
-                        Text("Max")
-                    }
+                Slider(value: $viewModel.ageMax, in: 19...65, step: 1)
                     .tint(.white)
                     .onChange(of: viewModel.ageMax) { val in
                         if val < viewModel.ageMin { viewModel.ageMin = val }
                         viewModel.markChanged()
                     }
-                }
             }
+        }
+    }
 
-            // Distance
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Text("Maximum distance")
-                        .font(.customFont("CabinetGrotesk-Medium", size: 14))
-                        .foregroundColor(.white)
-                    Spacer()
-                    Text("\(Int(viewModel.maxDistance)) km")
-                        .font(.customFont("CabinetGrotesk-Medium", size: 14))
-                        .foregroundColor(Color.white.opacity(0.65))
-                }
-                Slider(value: $viewModel.maxDistance, in: 5...200, step: 1)
-                    .tint(.white)
-                    .onChange(of: viewModel.maxDistance) { _ in viewModel.markChanged() }
-            }
-
-            // Relationship intent
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Looking for")
+    private var distanceSlider: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text("Maximum distance")
                     .font(.customFont("CabinetGrotesk-Medium", size: 14))
                     .foregroundColor(.white)
-
-                Menu {
-                    ForEach(viewModel.intentOptions, id: \.self) { option in
-                        Button(option) {
-                            viewModel.relationshipIntent = option
-                            viewModel.markChanged()
-                        }
-                    }
-                } label: {
-                    HStack {
-                        Text(viewModel.relationshipIntent)
-                            .font(.customFont("CabinetGrotesk-Medium", size: 15))
-                            .foregroundColor(.white)
-                        Spacer()
-                        Image(systemName: "chevron.down")
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundColor(Color.white.opacity(0.65))
-                    }
-                    .padding(.horizontal, 16)
-                    .frame(height: 48)
-                    .background(Color.white.opacity(0.08))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color.white.opacity(0.12), lineWidth: 1)
-                    )
-                    .cornerRadius(12)
-                }
+                Spacer()
+                Text("\(Int(viewModel.maxDistance)) km")
+                    .font(.customFont("CabinetGrotesk-Medium", size: 14))
+                    .foregroundColor(Color.white.opacity(0.65))
             }
+            Slider(value: $viewModel.maxDistance, in: 5...200, step: 1)
+                .tint(.white)
+                .onChange(of: viewModel.maxDistance) { _ in viewModel.markChanged() }
         }
     }
 
-    // MARK: - Links Section
+    private var intentPicker: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Looking for")
+                .font(.customFont("CabinetGrotesk-Medium", size: 14))
+                .foregroundColor(.white)
+            intentMenuButton
+        }
+    }
+
+    private var intentMenuButton: some View {
+        Menu {
+            ForEach(viewModel.intentOptions, id: \.self) { option in
+                Button(option) {
+                    viewModel.relationshipIntent = option
+                    viewModel.markChanged()
+                }
+            }
+        } label: {
+            HStack {
+                Text(viewModel.relationshipIntent)
+                    .font(.customFont("CabinetGrotesk-Medium", size: 15))
+                    .foregroundColor(.white)
+                Spacer()
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(Color.white.opacity(0.65))
+            }
+            .padding(.horizontal, 16)
+            .frame(height: 48)
+            .background(Color.white.opacity(0.08))
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color.white.opacity(0.12), lineWidth: 1)
+            )
+            .cornerRadius(12)
+        }
+    }
+}
+
+// MARK: - Links, Danger, Save, Helpers
+extension SettingsView {
     private var linksSection: some View {
         VStack(spacing: 0) {
-            sectionHeader("SUPPORT")
-                .padding(.bottom, 8)
-
-            settingsLink(icon: "star", title: "Upgrade to Pro") {
-                onNavigateToPlan?()
-            }
+            sectionHeader("SUPPORT").padding(.bottom, 8)
+            settingsLink(icon: "star", title: "Upgrade to Pro") { onNavigateToPlan?() }
             Divider().background(Color.white.opacity(0.08))
-            settingsLink(icon: "questionmark.circle", title: "Help & Support") {
-                onNavigateToSupport?()
-            }
+            settingsLink(icon: "questionmark.circle", title: "Help & Support") { onNavigateToSupport?() }
         }
     }
 
-    // MARK: - Danger Section
     private var dangerSection: some View {
         VStack(spacing: 0) {
-            Button(action: { showLogoutAlert = true }) {
-                HStack(spacing: 12) {
-                    Image(systemName: "rectangle.portrait.and.arrow.right")
-                        .font(.system(size: 16))
-                        .foregroundColor(Color(red: 1, green: 0.27, blue: 0.23))
-                    Text("Log out")
-                        .font(.customFont("CabinetGrotesk-Medium", size: 15))
-                        .foregroundColor(Color(red: 1, green: 0.27, blue: 0.23))
-                    Spacer()
-                }
-                .padding(.vertical, 14)
+            dangerButton(icon: "rectangle.portrait.and.arrow.right", title: "Log out") {
+                showLogoutAlert = true
             }
             Divider().background(Color.white.opacity(0.08))
-            Button(action: { showDeleteAccountAlert = true }) {
-                HStack(spacing: 12) {
-                    Image(systemName: "trash")
-                        .font(.system(size: 16))
-                        .foregroundColor(Color(red: 1, green: 0.27, blue: 0.23))
-                    Text("Delete account")
-                        .font(.customFont("CabinetGrotesk-Medium", size: 15))
-                        .foregroundColor(Color(red: 1, green: 0.27, blue: 0.23))
-                    Spacer()
-                }
-                .padding(.vertical, 14)
+            dangerButton(icon: "trash", title: "Delete account") {
+                showDeleteAccountAlert = true
             }
         }
     }
 
-    // MARK: - Version
+    private func dangerButton(icon: String, title: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 12) {
+                Image(systemName: icon)
+                    .font(.system(size: 16))
+                    .foregroundColor(Color(red: 1, green: 0.27, blue: 0.23))
+                Text(title)
+                    .font(.customFont("CabinetGrotesk-Medium", size: 15))
+                    .foregroundColor(Color(red: 1, green: 0.27, blue: 0.23))
+                Spacer()
+            }
+            .padding(.vertical, 14)
+        }
+    }
+
     private var versionLabel: some View {
         Text("Spark v1.0.0")
             .font(.customFont("CabinetGrotesk-Medium", size: 12))
@@ -549,41 +567,34 @@ struct SettingsView: View {
             .padding(.top, 8)
     }
 
-    // MARK: - Save Bar
     private var saveBar: some View {
         VStack {
             Button(action: { viewModel.saveChanges() }) {
-                Group {
-                    switch viewModel.saveStatus {
-                    case .saving:
-                        ProgressView().tint(.black)
-                    case .saved:
-                        Text("Saved!")
-                            .font(.customFont("CabinetGrotesk-Medium", size: 16))
-                            .foregroundColor(.black)
-                    default:
-                        Text("Save changes")
-                            .font(.customFont("CabinetGrotesk-Medium", size: 16))
-                            .foregroundColor(.black)
-                    }
-                }
-                .frame(maxWidth: .infinity)
-                .frame(height: 52)
-                .background(Color.white)
-                .cornerRadius(28)
+                saveBarLabel
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 52)
+                    .background(Color.white)
+                    .cornerRadius(28)
             }
             .disabled(viewModel.isSaving)
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
         }
-        .background(
-            Color.black.opacity(0.8)
-                .background(.ultraThinMaterial)
-                .environment(\.colorScheme, .dark)
-        )
+        .background(Color.black.opacity(0.9))
     }
 
-    // MARK: - Helpers
+    @ViewBuilder
+    private var saveBarLabel: some View {
+        switch viewModel.saveStatus {
+        case .saving:
+            ProgressView().tint(.black)
+        case .saved:
+            Text("Saved!").font(.customFont("CabinetGrotesk-Medium", size: 16)).foregroundColor(.black)
+        default:
+            Text("Save changes").font(.customFont("CabinetGrotesk-Medium", size: 16)).foregroundColor(.black)
+        }
+    }
+
     private func sectionHeader(_ title: String) -> some View {
         HStack {
             Text(title)
@@ -597,16 +608,10 @@ struct SettingsView: View {
     private func settingsLink(icon: String, title: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(spacing: 12) {
-                Image(systemName: icon)
-                    .font(.system(size: 16))
-                    .foregroundColor(.white)
-                Text(title)
-                    .font(.customFont("CabinetGrotesk-Medium", size: 15))
-                    .foregroundColor(.white)
+                Image(systemName: icon).font(.system(size: 16)).foregroundColor(.white)
+                Text(title).font(.customFont("CabinetGrotesk-Medium", size: 15)).foregroundColor(.white)
                 Spacer()
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(Color.white.opacity(0.3))
+                Image(systemName: "chevron.right").font(.system(size: 12, weight: .medium)).foregroundColor(Color.white.opacity(0.3))
             }
             .padding(.vertical, 14)
         }
