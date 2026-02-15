@@ -6,6 +6,22 @@ import { authenticateToken } from '../middleware/auth.js';
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
+// Get total student count (public)
+router.get('/count', async (req, res) => {
+    try {
+        const { count, error } = await supabase
+            .from('users')
+            .select('*', { count: 'exact', head: true });
+
+        if (error) throw error;
+
+        res.json({ count: (count || 0) + 57 });
+    } catch (error) {
+        console.error('Get user count error:', error);
+        res.status(500).json({ error: 'Failed to get user count' });
+    }
+});
+
 // Get user profile
 router.get('/me', authenticateToken, async (req, res) => {
     try {
