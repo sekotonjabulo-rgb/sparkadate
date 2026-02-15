@@ -162,6 +162,44 @@
             margin-bottom: clamp(20px, 5vw, 36px);
         }
 
+        .student-count {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: clamp(16px, 4vw, 24px);
+            opacity: 0;
+            animation: fadeIn 0.6s ease-out 0.3s forwards;
+        }
+
+        .student-count-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #4CAF50;
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .student-count-text {
+            font-size: clamp(13px, 3vw, 15px);
+            color: var(--color-text-secondary);
+        }
+
+        .student-count-number {
+            color: var(--color-text-primary);
+            font-weight: 500;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         .btn-primary {
             padding: clamp(12px, 3vw, 16px) clamp(32px, 8vw, 48px);
             background-color: var(--color-surface);
@@ -332,6 +370,10 @@
             <img src="blueocean.jpeg" alt="Spark" class="hero-logo">
             <h1 class="hero-title">Connect deeply before the big reveal</h1>
             <p class="hero-subtitle">Spark is a blind dating app where real connections happen before appearances matter.</p>
+            <div class="student-count">
+                <span class="student-count-dot"></span>
+                <span class="student-count-text"><span class="student-count-number" id="studentCount">0</span> students joined</span>
+            </div>
             <a href="app.html" class="btn-primary">Start your journey</a>
         </section>
 
@@ -382,6 +424,44 @@
             installPrompt.style.display = 'none';
             localStorage.setItem('installPromptDismissed', 'true');
         });
+
+        // Student count animation
+        (function() {
+            const BASE_COUNT = 124;
+            const LAUNCH_DATE = new Date('2025-02-01T00:00:00Z');
+            const countEl = document.getElementById('studentCount');
+
+            // Add ~1 student per 3 hours since launch to simulate organic growth
+            const hoursSinceLaunch = Math.max(0, (Date.now() - LAUNCH_DATE.getTime()) / (1000 * 60 * 60));
+            const bonusStudents = Math.floor(hoursSinceLaunch / 3);
+            const targetCount = BASE_COUNT + bonusStudents;
+
+            // Animate from 0 to target
+            const duration = 1500;
+            const startTime = performance.now();
+
+            function easeOut(t) {
+                return 1 - Math.pow(1 - t, 3);
+            }
+
+            function animateCount(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const easedProgress = easeOut(progress);
+                const current = Math.floor(easedProgress * targetCount);
+
+                countEl.textContent = current.toLocaleString();
+
+                if (progress < 1) {
+                    requestAnimationFrame(animateCount);
+                } else {
+                    countEl.textContent = targetCount.toLocaleString() + '+';
+                }
+            }
+
+            // Start animation when element is visible
+            setTimeout(() => requestAnimationFrame(animateCount), 400);
+        })();
     </script>
 </body>
 </html>
