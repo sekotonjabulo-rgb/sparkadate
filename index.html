@@ -168,8 +168,6 @@
             justify-content: center;
             gap: 8px;
             margin-bottom: clamp(16px, 4vw, 24px);
-            opacity: 0;
-            animation: fadeIn 0.6s ease-out 0.3s forwards;
         }
 
         .student-count-dot {
@@ -177,7 +175,6 @@
             height: 8px;
             background-color: var(--color-text-secondary);
             border-radius: 50%;
-            animation: pulse 2s ease-in-out infinite;
         }
 
         .student-count-text {
@@ -188,16 +185,6 @@
         .student-count-number {
             color: var(--color-text-primary);
             font-weight: 500;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.4; }
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(8px); }
-            to { opacity: 1; transform: translateY(0); }
         }
 
         .btn-primary {
@@ -429,40 +416,10 @@
         (function() {
             const countEl = document.getElementById('studentCount');
 
-            function easeOut(t) {
-                return 1 - Math.pow(1 - t, 3);
-            }
-
-            function animateCount(targetCount) {
-                const duration = 1500;
-                const startTime = performance.now();
-
-                function step(currentTime) {
-                    const elapsed = currentTime - startTime;
-                    const progress = Math.min(elapsed / duration, 1);
-                    const current = Math.floor(easeOut(progress) * targetCount);
-
-                    countEl.textContent = current.toLocaleString();
-
-                    if (progress < 1) {
-                        requestAnimationFrame(step);
-                    } else {
-                        countEl.textContent = targetCount.toLocaleString();
-                    }
-                }
-
-                requestAnimationFrame(step);
-            }
-
             fetch('https://sparkadate-1n.onrender.com/api/users/count')
                 .then(res => res.json())
-                .then(data => {
-                    setTimeout(() => animateCount(data.count), 400);
-                })
-                .catch(() => {
-                    // Fallback if API is unavailable
-                    setTimeout(() => animateCount(57), 400);
-                });
+                .then(data => { countEl.textContent = data.count; })
+                .catch(() => { countEl.textContent = 57; });
         })();
     </script>
 </body>
