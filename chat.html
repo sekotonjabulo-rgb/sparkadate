@@ -834,7 +834,27 @@
             </div>
         </main>
     </div>
-    
+
+    <!-- Notification Permission Prompt -->
+    <div class="notification-prompt" id="notificationPrompt" style="display: none;">
+        <div class="notification-prompt-content">
+            <div class="notification-prompt-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                </svg>
+            </div>
+            <div class="notification-prompt-text">
+                <h3>Stay notified</h3>
+                <p>Get notified when your match sends you a message so you never miss a conversation.</p>
+            </div>
+            <div class="notification-prompt-actions">
+                <button class="btn-dismiss" id="dismissNotifications">Not now</button>
+                <button class="btn-enable" id="enableNotifications">Enable</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Register Service Worker -->
     <script>
     if ('serviceWorker' in navigator) {
@@ -1547,49 +1567,30 @@
         window.addEventListener('beforeunload', handlePageUnload);
         window.addEventListener('pagehide', handlePageUnload);
 
-        // Push notification setup with custom prompt
+        // Push notification setup with custom prompt (one-time decision)
         async function setupPushNotifications() {
-            console.log('=== PUSH SETUP START ===');
-            
-            const isPWA = window.matchMedia('(display-mode: standalone)').matches || 
-                          window.navigator.standalone === true;
-            console.log('Is PWA mode?', isPWA);
-            
-            if (!isPWA) {
-                console.log('⚠️ Not running as PWA! Open from home screen icon.');
+            if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
                 return;
             }
-            
-            if (!('serviceWorker' in navigator)) {
-                console.log('❌ Service Worker not supported');
-                return;
-            }
-            console.log('✓ Service Worker supported');
-            
-            if (!('PushManager' in window)) {
-                console.log('❌ Push Manager not supported');
-                return;
-            }
-            console.log('✓ Push Manager supported');
 
+            // Check if user already made a decision — their choice is final until changed in settings
             const notificationDecision = localStorage.getItem('sparkNotificationDecision');
-            
+
             if (notificationDecision === 'dismissed') {
-                console.log('User previously dismissed notification prompt');
                 return;
             }
 
-            if (Notification.permission === 'granted') {
-                console.log('Permission already granted, subscribing...');
+            if (notificationDecision === 'granted') {
                 await subscribeUserToPush();
                 return;
             }
 
             if (Notification.permission === 'denied') {
-                console.log('Permission denied by user');
+                localStorage.setItem('sparkNotificationDecision', 'denied');
                 return;
             }
 
+            // No decision yet — show the prompt once
             showNotificationPrompt();
         }
 
@@ -1597,87 +1598,57 @@
             const prompt = document.getElementById('notificationPrompt');
             const enableBtn = document.getElementById('enableNotifications');
             const dismissBtn = document.getElementById('dismissNotifications');
-            
+
             prompt.style.display = 'flex';
-            
+
             enableBtn.addEventListener('click', async () => {
                 prompt.style.display = 'none';
+                localStorage.setItem('sparkNotificationDecision', 'granted');
                 await subscribeUserToPush();
             });
-            
+
             dismissBtn.addEventListener('click', () => {
                 prompt.style.display = 'none';
                 localStorage.setItem('sparkNotificationDecision', 'dismissed');
-                console.log('User dismissed notification prompt');
             });
         }
 
         async function subscribeUserToPush() {
             try {
-                console.log('Waiting for service worker to be ready...');
                 const registration = await navigator.serviceWorker.ready;
-                console.log('✓ Service Worker ready:', registration);
-
-                console.log('Checking existing subscription...');
                 let subscription = await registration.pushManager.getSubscription();
-                console.log('Existing subscription:', subscription);
 
                 if (subscription) {
-                    console.log('✓ Already subscribed');
                     try {
                         await SparkAPI.push.subscribe(subscription);
-                        console.log('✓ Re-saved existing subscription');
                     } catch (e) {
                         console.log('Could not save existing subscription:', e);
                     }
                     return;
                 }
 
-                console.log('Requesting notification permission...');
                 const permission = await Notification.requestPermission();
-                console.log('Permission result:', permission);
-                
+
                 if (permission !== 'granted') {
-                    console.log('❌ Notification permission denied');
                     localStorage.setItem('sparkNotificationDecision', 'denied');
                     return;
                 }
-                console.log('✓ Permission granted');
-                localStorage.setItem('sparkNotificationDecision', 'granted');
 
-                console.log('Fetching VAPID key from backend...');
                 const vapidResponse = await SparkAPI.push.getVapidKey();
-                console.log('VAPID response:', vapidResponse);
-                
+
                 if (!vapidResponse || !vapidResponse.publicKey) {
-                    console.log('❌ VAPID key not available');
                     return;
                 }
-                console.log('✓ VAPID key received:', vapidResponse.publicKey.substring(0, 20) + '...');
 
-                console.log('Converting VAPID key...');
                 const applicationServerKey = urlBase64ToUint8Array(vapidResponse.publicKey);
-                console.log('✓ VAPID key converted');
-
-                console.log('Subscribing to push...');
                 subscription = await registration.pushManager.subscribe({
                     userVisibleOnly: true,
                     applicationServerKey: applicationServerKey
                 });
-                console.log('✓ Push subscription created:', subscription);
 
-                console.log('Sending subscription to backend...');
-                const saveResponse = await SparkAPI.push.subscribe(subscription);
-                console.log('✓ Backend save response:', saveResponse);
-                
-                console.log('=== PUSH SETUP SUCCESS ===');
+                await SparkAPI.push.subscribe(subscription);
             } catch (error) {
-                console.error('❌ Push subscription error:', error);
-                console.error('Error details:', {
-                    name: error.name,
-                    message: error.message,
-                    stack: error.stack
-                });
+                console.error('Push subscription error:', error);
             }
         }
 
