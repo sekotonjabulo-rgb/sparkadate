@@ -93,6 +93,19 @@ const server = httpServer.listen(PORT, '0.0.0.0', () => {
     console.log(`WebSocket server enabled`);
     console.log(`Health check: /api/health`);
     console.log('========================================');
+
+    // Self-ping every 5 minutes to prevent Render free tier from sleeping
+    const SELF_PING_INTERVAL = 5 * 60 * 1000;
+    const selfUrl = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
+
+    setInterval(async () => {
+        try {
+            const res = await fetch(`${selfUrl}/healthz`);
+            console.log(`[Keep-Alive] Pinged ${selfUrl}/healthz — ${res.status}`);
+        } catch (err) {
+            console.error('[Keep-Alive] Ping failed:', err.message);
+        }
+    }, SELF_PING_INTERVAL);
 });
 
 // Error Handling to prevent silent crashes
