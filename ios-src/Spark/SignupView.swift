@@ -40,49 +40,47 @@ struct SignupView: View {
                     .foregroundColor(Color.white.opacity(0.65))
                     .padding(.bottom, 32)
 
-                ScrollView(showsIndicators: false) {
-                    VStack(spacing: 16) {
-                        SparkTextField(text: $displayName, placeholder: "Display name")
-                            .textContentType(.name)
+                VStack(spacing: 16) {
+                    SparkTextField(text: $displayName, placeholder: "Display name")
+                        .textContentType(.name)
 
-                        SparkTextField(text: $email, placeholder: "Email", keyboardType: .emailAddress)
-                            .textContentType(.emailAddress)
-                            .autocapitalization(.none)
-                            .disableAutocorrection(true)
+                    SparkTextField(text: $email, placeholder: "Email", keyboardType: .emailAddress)
+                        .textContentType(.emailAddress)
+                        .autocapitalization(.none)
+                        .disableAutocorrection(true)
 
-                        ZStack(alignment: .trailing) {
-                            if showPassword {
-                                SparkTextField(text: $password, placeholder: "Password (8+ characters)")
-                            } else {
-                                SecureSparkTextField(text: $password, placeholder: "Password (8+ characters)")
-                            }
-                            Button(action: { showPassword.toggle() }) {
-                                Image(systemName: showPassword ? "eye.slash" : "eye")
-                                    .font(.system(size: 18))
-                                    .foregroundColor(Color.white.opacity(0.65))
-                            }
-                            .padding(.trailing, 16)
+                    ZStack(alignment: .trailing) {
+                        if showPassword {
+                            SparkTextField(text: $password, placeholder: "Password (8+ characters)")
+                        } else {
+                            SecureSparkTextField(text: $password, placeholder: "Password (8+ characters)")
                         }
-
-                        if !password.isEmpty && password.count < 8 {
-                            Text("Password must be at least 8 characters")
-                                .font(.customFont("CabinetGrotesk-Medium", size: 12))
-                                .foregroundColor(Color.white.opacity(0.45))
+                        Button(action: { showPassword.toggle() }) {
+                            Image(systemName: showPassword ? "eye.slash" : "eye")
+                                .font(.system(size: 18))
+                                .foregroundColor(Color.white.opacity(0.65))
                         }
+                        .padding(.trailing, 16)
+                    }
 
-                        SecureSparkTextField(text: $confirmPassword, placeholder: "Confirm password")
+                    if !password.isEmpty && password.count < 8 {
+                        Text("Password must be at least 8 characters")
+                            .font(.customFont("CabinetGrotesk-Medium", size: 12))
+                            .foregroundColor(Color.white.opacity(0.45))
+                    }
 
-                        if !confirmPassword.isEmpty && password != confirmPassword {
-                            Text("Passwords don't match")
-                                .font(.customFont("CabinetGrotesk-Medium", size: 12))
-                                .foregroundColor(.red)
-                        }
+                    SecureSparkTextField(text: $confirmPassword, placeholder: "Confirm password")
 
-                        if let error = errorMessage {
-                            Text(error)
-                                .font(.customFont("CabinetGrotesk-Medium", size: 14))
-                                .foregroundColor(.red)
-                        }
+                    if !confirmPassword.isEmpty && password != confirmPassword {
+                        Text("Passwords don't match")
+                            .font(.customFont("CabinetGrotesk-Medium", size: 12))
+                            .foregroundColor(.red)
+                    }
+
+                    if let error = errorMessage {
+                        Text(error)
+                            .font(.customFont("CabinetGrotesk-Medium", size: 14))
+                            .foregroundColor(.red)
                     }
                 }
 
