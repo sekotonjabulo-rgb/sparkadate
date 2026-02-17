@@ -428,12 +428,19 @@
         // Student count - fetch real count from API
         (function() {
             const countEl = document.getElementById('studentCount');
+            const FALLBACK_COUNT = 57;
+            let hasAnimated = false;
 
             function easeOut(t) {
                 return 1 - Math.pow(1 - t, 3);
             }
 
             function animateCount(targetCount) {
+                if (hasAnimated) {
+                    countEl.textContent = targetCount.toLocaleString() + '+';
+                    return;
+                }
+                hasAnimated = true;
                 const duration = 1500;
                 const startTime = performance.now();
 
@@ -454,14 +461,26 @@
                 requestAnimationFrame(step);
             }
 
-            fetch('https://sparkadate-1n.onrender.com/api/users/count')
-                .then(res => res.json())
+            // Show fallback count immediately so it never stays at 0
+            setTimeout(() => animateCount(FALLBACK_COUNT), 400);
+
+            // Try to fetch the real count with a 5s timeout
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+            fetch('https://sparkadate-1n.onrender.com/api/users/count', { signal: controller.signal })
+                .then(res => {
+                    if (!res.ok) throw new Error('API error');
+                    return res.json();
+                })
                 .then(data => {
-                    setTimeout(() => animateCount(data.count), 400);
+                    clearTimeout(timeoutId);
+                    if (data.count && data.count > FALLBACK_COUNT) {
+                        animateCount(data.count);
+                    }
                 })
                 .catch(() => {
-                    // Fallback if API is unavailable
-                    setTimeout(() => animateCount(57), 400);
+                    clearTimeout(timeoutId);
                 });
         })();
     </script>
