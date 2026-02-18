@@ -94,18 +94,35 @@ const server = httpServer.listen(PORT, '0.0.0.0', () => {
     console.log(`Health check: /api/health`);
     console.log('========================================');
 
-    // Self-ping every 5 minutes to prevent Render free tier from sleeping
-    const SELF_PING_INTERVAL = 5 * 60 * 1000;
-    const selfUrl = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
+    // Keep-alive ping every 14 minutes.
+    // NOTE: Self-pinging (server pinging itself) does NOT prevent Render from
+    // spinning down the service — Render ignores self-originated requests.
+    // For reliable keep-alive, use an EXTERNAL service (e.g. UptimeRobot, cron-job.org)
+    // to hit the /healthz endpoint from outside.
+    // KEEP_ALIVE_URL can be set to an external monitoring service's inbound URL,
+    // or left unset to fall back to a self-ping (useful for logging/debugging only).
+    const KEEP_ALIVE_INTERVAL = 14 * 60 * 1000;
+    const keepAliveUrl = process.env.KEEP_ALIVE_URL
+        || process.env.RENDER_EXTERNAL_URL
+        || `http://localhost:${PORT}`;
+    const isSelfPing = !process.env.KEEP_ALIVE_URL;
+
+    if (isSelfPing) {
+        console.warn('[Keep-Alive] WARNING: No KEEP_ALIVE_URL set. Self-pinging will NOT prevent Render from sleeping. Set up an external monitor at: ' + keepAliveUrl + '/healthz');
+    } else {
+        console.log(`[Keep-Alive] External keep-alive configured: ${keepAliveUrl}/healthz`);
+    }
 
     setInterval(async () => {
         try {
-            const res = await fetch(`${selfUrl}/healthz`);
-            console.log(`[Keep-Alive] Pinged ${selfUrl}/healthz — ${res.status}`);
+            const res = await fetch(`${keepAliveUrl}/healthz`, {
+                signal: AbortSignal.timeout(10000)
+            });
+            console.log(`[Keep-Alive] Pinged ${keepAliveUrl}/healthz — ${res.status}`);
         } catch (err) {
             console.error('[Keep-Alive] Ping failed:', err.message);
         }
-    }, SELF_PING_INTERVAL);
+    }, KEEP_ALIVE_INTERVAL);
 });
 
 // Error Handling to prevent silent crashes
