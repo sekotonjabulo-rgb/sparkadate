@@ -372,7 +372,7 @@
             <p class="hero-subtitle">Spark is a blind social app for students where relationships form before appearance matters.</p>
             <div class="student-count">
                 <span class="student-count-dot"></span>
-                <span class="student-count-text"><span class="student-count-number" id="studentCount">0</span> students joined</span>
+                <span class="student-count-text"><span class="student-count-number" id="studentCount">50</span> students joined</span>
             </div>
             <a href="app.html" class="btn-primary">Start your journey</a>
         </section>
@@ -435,14 +435,14 @@
                 return 1 - Math.pow(1 - t, 3);
             }
 
-            function animateCount(targetCount) {
+            function animateCount(targetCount, startCount = 50) {
                 const duration = 1500;
                 const startTime = performance.now();
 
                 function step(currentTime) {
                     const elapsed = currentTime - startTime;
                     const progress = Math.min(elapsed / duration, 1);
-                    const current = Math.floor(easeOut(progress) * targetCount);
+                    const current = Math.floor(startCount + easeOut(progress) * (targetCount - startCount));
 
                     countEl.textContent = current.toLocaleString();
 
