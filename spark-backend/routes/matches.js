@@ -101,6 +101,34 @@ router.get('/current', authenticateToken, async (req, res) => {
             }
         }
 
+        // Check if a match was recently auto-expired (within last 24 hours)
+        const { data: expiredMatch } = await supabase
+            .from('matches')
+            .select('id, matched_at, expired_at, expire_reason')
+            .or(`user_a_id.eq.${userId},user_b_id.eq.${userId}`)
+            .eq('status', 'expired')
+            .order('expired_at', { ascending: false })
+            .limit(1)
+            .single();
+
+        if (expiredMatch && expiredMatch.expired_at) {
+            const expiredAt = new Date(expiredMatch.expired_at);
+            const now = new Date();
+            const hoursSinceExpiry = (now - expiredAt) / (1000 * 60 * 60);
+
+            if (hoursSinceExpiry < 24) {
+                return res.json({
+                    match: null,
+                    expired_match: {
+                        id: expiredMatch.id,
+                        matched_at: expiredMatch.matched_at,
+                        expired_at: expiredMatch.expired_at,
+                        expire_reason: expiredMatch.expire_reason
+                    }
+                });
+            }
+        }
+
         return res.json({ match: null });
     } catch (error) {
         console.error('Get current match error:', error);
