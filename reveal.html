@@ -290,13 +290,6 @@
                     return;
                 }
 
-                // Check reveal gate
-                const gate = match.reveal_gate;
-                if (gate && !gate.met) {
-                    showGateLockedState(gate);
-                    return;
-                }
-
                 if (match.reveal_requested_by === currentUser.id) {
                     showWaitingState();
                     startPolling();
@@ -304,18 +297,6 @@
             } catch (error) {
                 console.error('Initial status check error:', error);
             }
-        }
-
-        function showGateLockedState(gate) {
-            const remaining = Math.max(0, gate.required - gate.your_messages);
-            if (remaining > 0) {
-                requestBtn.textContent = `Send ${remaining} more message${remaining === 1 ? '' : 's'} to unlock`;
-            } else {
-                requestBtn.textContent = 'Waiting for your match to chat more';
-            }
-            requestBtn.disabled = true;
-            requestBtn.style.opacity = '0.4';
-            requestBtn.style.cursor = 'default';
         }
 
         function showWaitingState() {

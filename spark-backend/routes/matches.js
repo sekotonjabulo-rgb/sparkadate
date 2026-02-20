@@ -5,8 +5,6 @@ import { calculateCompatibility } from '../services/gemini.js';
 
 const router = express.Router();
 
-const REVEAL_MIN_MESSAGES_PER_USER = 5;
-
 function calculateDistanceKm(lat1, lon1, lat2, lon2) {
     if (!lat1 || !lon1 || !lat2 || !lon2) return null;
     const R = 6371;
@@ -44,26 +42,6 @@ router.get('/current', authenticateToken, async (req, res) => {
         if (match) {
             const partner = match.user_a_id === userId ? match.user_b : match.user_a;
 
-            // Fetch per-user message counts for reveal gate progress
-            let revealGate = null;
-            if (match.status === 'active') {
-                const { data: msgs } = await supabase
-                    .from('messages')
-                    .select('sender_id')
-                    .eq('match_id', match.id)
-                    .is('deleted_at', null);
-
-                const yourCount = (msgs || []).filter(m => m.sender_id === userId).length;
-                const partnerCount = (msgs || []).filter(m => m.sender_id !== userId).length;
-
-                revealGate = {
-                    required: REVEAL_MIN_MESSAGES_PER_USER,
-                    your_messages: yourCount,
-                    partner_messages: partnerCount,
-                    met: yourCount >= REVEAL_MIN_MESSAGES_PER_USER && partnerCount >= REVEAL_MIN_MESSAGES_PER_USER
-                };
-            }
-
             return res.json({
                 match: {
                     id: match.id,
@@ -78,8 +56,7 @@ router.get('/current', authenticateToken, async (req, res) => {
                     reveal_requested_at: match.reveal_requested_at,
                     revealed_seen_by: match.revealed_seen_by || [],
                     status: match.status,
-                    partner_left: false,
-                    reveal_gate: revealGate
+                    partner_left: false
                 }
             });
         }
@@ -396,27 +373,6 @@ router.post('/:matchId/reveal', authenticateToken, async (req, res) => {
             return res.status(403).json({ error: 'Not authorized' });
         }
 
-        // Check minimum message gate before allowing reveal
-        const { data: messages } = await supabase
-            .from('messages')
-            .select('sender_id')
-            .eq('match_id', matchId)
-            .is('deleted_at', null);
-
-        const countA = (messages || []).filter(m => m.sender_id === match.user_a_id).length;
-        const countB = (messages || []).filter(m => m.sender_id === match.user_b_id).length;
-
-        if (countA < REVEAL_MIN_MESSAGES_PER_USER || countB < REVEAL_MIN_MESSAGES_PER_USER) {
-            return res.status(400).json({
-                error: 'Not enough conversation yet',
-                reveal_gate: {
-                    required: REVEAL_MIN_MESSAGES_PER_USER,
-                    your_messages: userId === match.user_a_id ? countA : countB,
-                    partner_messages: userId === match.user_a_id ? countB : countA
-                }
-            });
-        }
-
         if (match.reveal_requested_by && match.reveal_requested_by !== userId) {
             await supabase
                 .from('matches')
@@ -464,27 +420,6 @@ router.post('/:matchId/force-reveal', authenticateToken, async (req, res) => {
 
         if (now < revealAvailableAt) {
             return res.status(400).json({ error: 'Timer has not expired yet' });
-        }
-
-        // Check minimum message gate before allowing reveal
-        const { data: messages } = await supabase
-            .from('messages')
-            .select('sender_id')
-            .eq('match_id', matchId)
-            .is('deleted_at', null);
-
-        const countA = (messages || []).filter(m => m.sender_id === match.user_a_id).length;
-        const countB = (messages || []).filter(m => m.sender_id === match.user_b_id).length;
-
-        if (countA < REVEAL_MIN_MESSAGES_PER_USER || countB < REVEAL_MIN_MESSAGES_PER_USER) {
-            return res.status(400).json({
-                error: 'Not enough conversation yet',
-                reveal_gate: {
-                    required: REVEAL_MIN_MESSAGES_PER_USER,
-                    your_messages: userId === match.user_a_id ? countA : countB,
-                    partner_messages: userId === match.user_a_id ? countB : countA
-                }
-            });
         }
 
         await supabase
