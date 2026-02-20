@@ -316,66 +316,6 @@
         .notification-badge.visible {
             display: flex;
         }
-        .btn-icon.locked {
-            opacity: 0.35;
-            cursor: default;
-            border-color: rgba(255, 255, 255, 0.06);
-        }
-        .btn-icon.locked:hover {
-            border-color: rgba(255, 255, 255, 0.06);
-            background-color: transparent;
-        }
-        .btn-icon.locked svg {
-            stroke: rgba(255, 255, 255, 0.4);
-        }
-        .gate-tooltip {
-            display: none;
-            position: absolute;
-            bottom: calc(100% + 8px);
-            right: 0;
-            background: rgba(30, 30, 30, 0.95);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 12px 14px;
-            width: 200px;
-            z-index: 100;
-            animation: tooltipFadeIn 0.2s ease-out;
-        }
-        .gate-tooltip.visible {
-            display: block;
-        }
-        .gate-tooltip-title {
-            font-size: 12px;
-            font-weight: 500;
-            color: rgba(255, 255, 255, 0.5);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 8px;
-        }
-        .gate-tooltip-bar {
-            height: 4px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 2px;
-            margin-bottom: 6px;
-            overflow: hidden;
-        }
-        .gate-tooltip-fill {
-            height: 100%;
-            background: var(--color-surface);
-            border-radius: 2px;
-            transition: width 0.4s ease;
-        }
-        .gate-tooltip-text {
-            font-size: 12px;
-            color: rgba(255, 255, 255, 0.55);
-            line-height: 1.4;
-        }
-        @keyframes tooltipFadeIn {
-            from { opacity: 0; transform: translateY(4px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
         .chat-messages {
     flex: 1;
     overflow-y: auto;
@@ -804,20 +744,11 @@
                         </svg>
                     </a>
                     <a href="reveal.html" class="btn-icon" id="revealBtn" title="Request reveal">
-                        <svg class="reveal-eye-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
                             <circle cx="12" cy="12" r="3"/>
                         </svg>
-                        <svg class="reveal-lock-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none">
-                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                        </svg>
                         <span class="notification-badge" id="revealNotification">1</span>
-                        <div class="gate-tooltip" id="gateTooltip">
-                            <div class="gate-tooltip-title">Reveal locked</div>
-                            <div class="gate-tooltip-bar"><div class="gate-tooltip-fill" id="gateFill"></div></div>
-                            <div class="gate-tooltip-text" id="gateText"></div>
-                        </div>
                     </a>
                     <div class="header-menu-container">
                         <button class="btn-icon" id="headerMenuBtn" title="Menu">
@@ -1168,29 +1099,10 @@
                         return;
                     }
                     revealNotification.classList.remove('visible');
-                    revealBtn.classList.remove('locked');
                     revealBtn.dataset.status = 'already-revealed';
                     revealBtn.title = 'Already revealed';
-                    updateRevealIcon(false);
                     return;
                 }
-
-                // Check reveal gate
-                const gate = match.reveal_gate;
-                if (gate && !gate.met) {
-                    revealNotification.classList.remove('visible');
-                    revealBtn.classList.add('locked');
-                    revealBtn.dataset.status = 'gate-locked';
-                    revealBtn.title = 'Keep chatting to unlock reveal';
-                    updateRevealIcon(true);
-                    updateGateTooltip(gate);
-                    return;
-                }
-
-                // Gate met — show normal states
-                revealBtn.classList.remove('locked');
-                updateRevealIcon(false);
-                hideGateTooltip();
 
                 if (match.reveal_requested_by && match.reveal_requested_by !== currentUser.id) {
                     revealNotification.classList.add('visible');
@@ -1204,42 +1116,9 @@
             }
         }
 
-        function updateRevealIcon(locked) {
-            const eyeIcon = revealBtn.querySelector('.reveal-eye-icon');
-            const lockIcon = revealBtn.querySelector('.reveal-lock-icon');
-            if (locked) {
-                eyeIcon.style.display = 'none';
-                lockIcon.style.display = '';
-            } else {
-                eyeIcon.style.display = '';
-                lockIcon.style.display = 'none';
-            }
-        }
-
-        function updateGateTooltip(gate) {
-            const total = (gate.your_messages || 0) + (gate.partner_messages || 0);
-            const needed = (gate.required || 5) * 2;
-            const pct = Math.min(100, Math.round((total / needed) * 100));
-            document.getElementById('gateFill').style.width = pct + '%';
-            document.getElementById('gateText').textContent =
-                `Send ${Math.max(0, gate.required - gate.your_messages)} more messages to unlock`;
-        }
-
-        function hideGateTooltip() {
-            document.getElementById('gateTooltip').classList.remove('visible');
-        }
-
         revealBtn.addEventListener('click', (e) => {
             e.preventDefault();
             const status = revealBtn.dataset.status;
-
-            if (status === 'gate-locked') {
-                const tooltip = document.getElementById('gateTooltip');
-                tooltip.classList.toggle('visible');
-                // Auto-hide after 3s
-                setTimeout(() => tooltip.classList.remove('visible'), 3000);
-                return;
-            }
 
             if (status === 'pending-request') {
                 window.location.href = 'revealrequest.html';
