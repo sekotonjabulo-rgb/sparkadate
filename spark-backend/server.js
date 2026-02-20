@@ -11,6 +11,7 @@ import presenceRoutes from './routes/presence.js';
 import typingRoutes from './routes/typing.js';
 import pushRoutes from './routes/push.js';
 import { initializeWebSocket } from './services/websocket.js';
+import { startMatchExpiry } from './services/matchExpiry.js';
 
 dotenv.config();
 
@@ -93,6 +94,9 @@ const server = httpServer.listen(PORT, '0.0.0.0', () => {
     console.log(`WebSocket server enabled`);
     console.log(`Health check: /api/health`);
     console.log('========================================');
+
+    // Start match auto-expiry background job
+    startMatchExpiry();
 
     // Keep-alive ping every 14 minutes.
     // NOTE: Self-pinging (server pinging itself) does NOT prevent Render from
