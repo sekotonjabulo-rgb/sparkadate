@@ -225,14 +225,13 @@ class ViewController: UIViewController, WKNavigationDelegate, WKScriptMessageHan
 
     // MARK: - WKNavigationDelegate
 
-    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-        hideOfflineOverlay()
-        // Send push token to web app if available
-        if let token = AppDelegate.shared?.deviceToken {
-            let js = "window.SparkNative && SparkNative._onPushToken && SparkNative._onPushToken('\(token)');"
-            webView.evaluateJavaScript(js)
-        }
-    }
+func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+    hideOfflineOverlay()
+    let js = """
+    document.dispatchEvent(new CustomEvent('SparkNativeReady'));
+    """
+    webView.evaluateJavaScript(js)
+}
 
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
         let nsError = error as NSError
