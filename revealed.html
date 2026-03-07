@@ -164,17 +164,17 @@
             text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
         }
 
-        .revealed-actions {
-            position: relative;
-            z-index: 1;
-            width: 100%;
-            max-width: 428px;
-            margin: 0 auto;
-            padding: 0 24px 24px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
+.revealed-actions {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 428px;
+    margin: 0 auto;
+    padding: 0 24px max(64px, calc(env(safe-area-inset-bottom) + 48px));
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
 
         .btn-primary {
             width: 100%;
