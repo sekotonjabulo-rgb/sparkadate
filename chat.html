@@ -338,15 +338,20 @@
         .message-wrapper.received {
             align-items: flex-start;
         }
-        .message {
+.message {
     max-width: 260px;
-    padding: 9px 13px;
+    padding: 8px 12px 6px 12px;
     font-size: 15px;
     line-height: 1.45;
     border-radius: 18px;
     width: fit-content;
     word-wrap: break-word;
     overflow-wrap: break-word;
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: flex-end;
+    gap: 6px;
 }
         .message.sent {
             background-color: var(--color-bubble-sent);
@@ -354,19 +359,18 @@
         .message.received {
             background-color: var(--color-bubble-received);
         }
-        .message-time {
-            font-size: 10px;
-            color: var(--color-text-secondary);
-            opacity: 0;
-            transition: opacity 0.2s ease;
-            padding: 0 4px;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-        .message-wrapper:hover .message-time {
-            opacity: 1;
-        }
+.message-time {
+    font-size: 10px;
+    color: var(--color-text-secondary);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: auto;
+    white-space: nowrap;
+    opacity: 1;
+    transition: none;
+    padding: 0;
+}
         .edited-label {
             font-style: italic;
             opacity: 0.7;
@@ -1058,114 +1062,114 @@
         }
 
         function addMessageToUI(content, isSent, animate = true, timestamp = null, messageData = null) {
-            const time = timestamp ? new Date(timestamp) : new Date();
+    const time = timestamp ? new Date(timestamp) : new Date();
 
-            addDateSeparator(time);
+    addDateSeparator(time);
 
-            const wrapper = document.createElement('div');
-            wrapper.className = `message-wrapper ${isSent ? 'sent' : 'received'}${animate ? '' : ' no-animation'}`;
-            if (messageData) {
-                wrapper.dataset.messageId = messageData.id;
-            }
+    const wrapper = document.createElement('div');
+    wrapper.className = `message-wrapper ${isSent ? 'sent' : 'received'}${animate ? '' : ' no-animation'}`;
+    if (messageData) {
+        wrapper.dataset.messageId = messageData.id;
+    }
 
-            const timeString = time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            const isEdited = !!messageData?.edited_at;
-            const editedLabel = isEdited ? '<span class="edited-label">(edited)</span>' : '';
-            const editedClass = isEdited ? ' has-edited' : '';
+    const timeString = time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const isEdited = !!messageData?.edited_at;
+    const editedLabel = isEdited ? '<span class="edited-label">(edited)</span>' : '';
+    const editedClass = isEdited ? ' has-edited' : '';
 
-            let replyPreview = '';
-            if (messageData?.reply_to_id && messagesMap.has(messageData.reply_to_id)) {
-                const originalMsg = messagesMap.get(messageData.reply_to_id);
-                const previewText = originalMsg.content.length > 50
-                    ? originalMsg.content.substring(0, 50) + '...'
-                    : originalMsg.content;
-                replyPreview = `<div class="message-reply-preview">${escapeHtml(previewText)}</div>`;
-            }
+    let replyPreview = '';
+    if (messageData?.reply_to_id && messagesMap.has(messageData.reply_to_id)) {
+        const originalMsg = messagesMap.get(messageData.reply_to_id);
+        const previewText = originalMsg.content.length > 50
+            ? originalMsg.content.substring(0, 50) + '...'
+            : originalMsg.content;
+        replyPreview = `<div class="message-reply-preview">${escapeHtml(previewText)}</div>`;
+    }
 
-            let dropdownItems = `
-                <button class="message-dropdown-item" data-action="reply">
-                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="9 17 4 12 9 7"></polyline>
-                        <path d="M20 18v-2a4 4 0 0 0-4-4H4"></path>
-                    </svg>
-                    Reply
-                </button>
-            `;
+    let dropdownItems = `
+        <button class="message-dropdown-item" data-action="reply">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 17 4 12 9 7"></polyline>
+                <path d="M20 18v-2a4 4 0 0 0-4-4H4"></path>
+            </svg>
+            Reply
+        </button>
+    `;
 
-            if (isSent && messageData) {
-                dropdownItems = `
-                    <button class="message-dropdown-item" data-action="reply">
-                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="9 17 4 12 9 7"></polyline>
-                            <path d="M20 18v-2a4 4 0 0 0-4-4H4"></path>
-                        </svg>
-                        Reply
-                    </button>
-                    <button class="message-dropdown-item" data-action="edit">
-                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                        </svg>
-                        Edit
-                    </button>
-                    <button class="message-dropdown-item delete" data-action="delete">
-                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="3 6 5 6 21 6"></polyline>
-                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                        </svg>
-                        Delete
-                    </button>
-                `;
-            }
+    if (isSent && messageData) {
+        dropdownItems = `
+            <button class="message-dropdown-item" data-action="reply">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="9 17 4 12 9 7"></polyline>
+                    <path d="M20 18v-2a4 4 0 0 0-4-4H4"></path>
+                </svg>
+                Reply
+            </button>
+            <button class="message-dropdown-item" data-action="edit">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
+                Edit
+            </button>
+            <button class="message-dropdown-item delete" data-action="delete">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+                Delete
+            </button>
+        `;
+    }
 
-            wrapper.innerHTML = `
-                ${replyPreview}
-                <div class="message-row">
-                    <div class="message ${isSent ? 'sent' : 'received'}">
-                        <span>${escapeHtml(content)}</span>
-                    </div>
-                    <button class="message-menu-btn" type="button">
-                        <svg viewBox="0 0 24 24">
-                            <circle cx="12" cy="5" r="2"/>
-                            <circle cx="12" cy="12" r="2"/>
-                            <circle cx="12" cy="19" r="2"/>
-                        </svg>
-                    </button>
-                    <div class="message-dropdown">${dropdownItems}</div>
-                </div>
+    wrapper.innerHTML = `
+        ${replyPreview}
+        <div class="message-row">
+            <div class="message ${isSent ? 'sent' : 'received'}">
+                <span>${escapeHtml(content)}</span>
                 <span class="message-time${editedClass}">${timeString} ${editedLabel}</span>
-            `;
+            </div>
+            <button class="message-menu-btn" type="button">
+                <svg viewBox="0 0 24 24">
+                    <circle cx="12" cy="5" r="2"/>
+                    <circle cx="12" cy="12" r="2"/>
+                    <circle cx="12" cy="19" r="2"/>
+                </svg>
+            </button>
+            <div class="message-dropdown">${dropdownItems}</div>
+        </div>
+    `;
 
-            if (messageData) {
-                const menuBtn = wrapper.querySelector('.message-menu-btn');
-                const dropdown = wrapper.querySelector('.message-dropdown');
+    if (messageData) {
+        const menuBtn = wrapper.querySelector('.message-menu-btn');
+        const dropdown = wrapper.querySelector('.message-dropdown');
 
-                menuBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    document.querySelectorAll('.message-dropdown.visible').forEach(d => {
-                        if (d !== dropdown) d.classList.remove('visible');
-                    });
-                    document.querySelectorAll('.message-menu-btn.active').forEach(b => {
-                        if (b !== menuBtn) b.classList.remove('active');
-                    });
-                    dropdown.classList.toggle('visible');
-                    menuBtn.classList.toggle('active');
-                });
+        menuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            document.querySelectorAll('.message-dropdown.visible').forEach(d => {
+                if (d !== dropdown) d.classList.remove('visible');
+            });
+            document.querySelectorAll('.message-menu-btn.active').forEach(b => {
+                if (b !== menuBtn) b.classList.remove('active');
+            });
+            dropdown.classList.toggle('visible');
+            menuBtn.classList.toggle('active');
+        });
 
-                wrapper.querySelectorAll('.message-dropdown-item').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        dropdown.classList.remove('visible');
-                        menuBtn.classList.remove('active');
-                        const action = btn.dataset.action;
-                        handleMessageAction(action, messageData, wrapper);
-                    });
-                });
-            }
+        wrapper.querySelectorAll('.message-dropdown-item').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                dropdown.classList.remove('visible');
+                menuBtn.classList.remove('active');
+                const action = btn.dataset.action;
+                handleMessageAction(action, messageData, wrapper);
+            });
+        });
+    }
 
-            chatMessages.insertBefore(wrapper, typingIndicator);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
+    chatMessages.insertBefore(wrapper, typingIndicator);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
 
         document.addEventListener('click', () => {
             document.querySelectorAll('.message-dropdown.visible').forEach(d => d.classList.remove('visible'));
