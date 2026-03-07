@@ -43,6 +43,7 @@
             --color-skeleton-shine: rgba(255, 255, 255, 0.12);
             --radius-pill: 28px;
             --font-heading: 'CabinetGrotesk-Medium', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
         }
 
         * {
@@ -57,7 +58,7 @@
         }
 
         body {
-            font-family: var(--font-heading);
+            font-family: var(--font-body);
             background-color: var(--color-background);
             color: var(--color-text-primary);
             -webkit-font-smoothing: antialiased;
@@ -94,6 +95,7 @@
         }
 
         .match-label {
+            font-family: var(--font-heading);
             font-size: 15px;
             color: var(--color-text-secondary);
             margin-bottom: 10px;
@@ -103,6 +105,7 @@
         }
 
         .match-name {
+            font-family: var(--font-heading);
             font-size: 32px;
             font-weight: 500;
             letter-spacing: -0.02em;
@@ -209,7 +212,7 @@
             color: var(--color-background);
             border: none;
             border-radius: var(--radius-pill);
-            font-family: var(--font-heading);
+            font-family: var(--font-body);
             font-size: 17px;
             font-weight: 500;
             cursor: pointer;

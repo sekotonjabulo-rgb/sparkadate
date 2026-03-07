@@ -47,6 +47,7 @@
             --radius-input: 16px;
             --radius-card: 20px;
             --font-heading: 'CabinetGrotesk-Medium', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
         }
 
         * {
@@ -61,7 +62,7 @@
         }
 
         body {
-            font-family: var(--font-heading);
+            font-family: var(--font-body);
             background-color: var(--color-background);
             color: var(--color-text-primary);
             -webkit-font-smoothing: antialiased;
@@ -95,6 +96,7 @@
         }
 
         .payment-title {
+            font-family: var(--font-heading);
             font-size: 28px;
             font-weight: 500;
             letter-spacing: -0.02em;
@@ -153,7 +155,7 @@
             background-color: var(--color-surface);
             border: none;
             border-radius: var(--radius-pill);
-            font-family: var(--font-heading);
+            font-family: var(--font-body);
             font-size: 16px;
             font-weight: 500;
             color: var(--color-background);
@@ -205,7 +207,7 @@
             background-color: var(--color-input-bg);
             border: 1px solid var(--color-input-border);
             border-radius: var(--radius-input);
-            font-family: var(--font-heading);
+            font-family: var(--font-body);
             font-size: 16px;
             font-weight: 500;
             color: var(--color-text-primary);
@@ -246,7 +248,7 @@
             color: var(--color-background);
             border: none;
             border-radius: var(--radius-pill);
-            font-family: var(--font-heading);
+            font-family: var(--font-body);
             font-size: 16px;
             font-weight: 500;
             cursor: pointer;
