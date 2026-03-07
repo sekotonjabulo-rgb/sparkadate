@@ -1,212 +1,203 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#000000">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Spark">
-    <link rel="apple-touch-icon" href="spark-icon.png">
-    <title>Spark</title>
-    
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-8F6YCX65EM"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-8F6YCX65EM');
-</script>
-
-    <style>
-        @font-face {
-            font-family: 'CabinetGrotesk-Medium';
-            src: url('fonts/CabinetGrotesk-Medium.woff2') format('woff2'),
-                 url('fonts/CabinetGrotesk-Medium.woff') format('woff'),
-                 url('fonts/CabinetGrotesk-Medium.ttf') format('truetype');
-            font-weight: 500;
-            font-display: swap;
-            font-style: normal;
-        }
-
-        :root {
-            --color-background: #000000;
-            --color-text-primary: #FFFFFF;
-            --font-heading: 'CabinetGrotesk-Medium', -apple-system, BlinkMacSystemFont, sans-serif;
-            --safe-area-inset-top: env(safe-area-inset-top);
-            --safe-area-inset-bottom: env(safe-area-inset-bottom);
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        html, body {
-            height: 100%;
-            overflow: hidden;
-        }
-
-        body {
-            font-family: var(--font-heading);
-            background-color: var(--color-background);
-            color: var(--color-text-primary);
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-            overscroll-behavior: none;
-            position: fixed;
-            width: 100%;
-        }
-
-        .splash-screen {
-            height: 100dvh;
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 16px;
-            animation: contentFadeIn 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards,
-                       contentFadeOut 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) 1.1s forwards;
-        }
-
-        .logo {
-            width: clamp(80px, 20vw, 120px);
-            height: clamp(80px, 20vw, 120px);
-            object-fit: contain;
-        }
-
-        @keyframes contentFadeIn {
-            0% {
-                opacity: 0;
-                transform: scale(0.95);
-            }
-            100% {
-                opacity: 1;
-                transform: scale(1);
-            }
-        }
-
-        @keyframes contentFadeOut {
-            0% {
-                opacity: 1;
-                transform: scale(1);
-            }
-            100% {
-                opacity: 0;
-                transform: scale(1.05);
-            }
-        }
-
-        @supports (padding: max(0px)) {
-            body {
-                padding-left: env(safe-area-inset-left);
-                padding-right: env(safe-area-inset-right);
-            }
-        }
-    </style>
-    <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js');
-        }
-    </script>
-    <script>
-        // SparkNative polyfill — no-ops when running in browser (not native app)
-        if (!window.SparkNative) {
-            window.SparkNative = {
-                isNativeApp: false,
-                platform: 'web',
-                haptic: function() {},
-                share: function() {},
-                setBadge: function() {},
-                openExternal: function(url) { window.open(url, '_blank'); },
-                getDeviceInfo: function() {},
-                getPushToken: function() {},
-                showAlert: function(opts) { alert(opts && opts.message || ''); },
-                copyToClipboard: function(text) {
-                    navigator.clipboard && navigator.clipboard.writeText(text);
-                },
-                onPushToken: null,
-                onDeepLink: null,
-                onResume: null,
-                onDeviceInfo: null,
-                onAlertAction: null
-            };
-        }
-
-        // Wire up native bridge when running inside the iOS app
-        document.addEventListener('SparkNativeReady', function() {
-            // Clear badge when app opens
-            SparkNative.setBadge(0);
-
-            // Capture APNs push token and store it for the session
-            SparkNative.onPushToken = function(token) {
-                window._sparkPushToken = token;
-                // Send token to backend if user is already authenticated
-                const session = localStorage.getItem('spark_session') ||
-                                sessionStorage.getItem('spark_session');
-                if (session && token) {
-                    fetch('/api/push-token', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json',
-                                   'Authorization': 'Bearer ' + session },
-                        body: JSON.stringify({ token: token, platform: 'ios' })
-                    }).catch(function() {});
-                }
-            };
-            SparkNative.getPushToken();
-
-            // Handle deep links from notification taps
-            SparkNative.onDeepLink = function(path) {
-                if (path) { window.location.href = path; }
-            };
-
-            // Re-fetch push token when app resumes from background
-            SparkNative.onResume = function() {
-                SparkNative.setBadge(0);
-                SparkNative.getPushToken();
-            };
-        });
-    </script>
-</head>
-<body>
-    <main class="splash-screen">
-        <img src="spark-icon.png" alt="Spark logo" class="logo">
-    </main>
-    <script src="js/api.js"></script>
-    <script>
-        // Prevent double-tap zoom on iOS
-        let lastTouchEnd = 0;
-        document.addEventListener('touchend', function(event) {
-            const now = Date.now();
-            if (now - lastTouchEnd <= 300) {
-                event.preventDefault();
-            }
-            lastTouchEnd = now;
-        }, false);
-
-        setTimeout(() => {
-            // Check if user is logged in
-            if (SparkAPI.auth.isLoggedIn()) {
-                // User is logged in - try to restore last page
-                const lastPage = SparkAPI.navigation.getLastPage();
-                if (lastPage) {
-                    // Restore to last visited page
-                    window.location.href = lastPage;
-                } else {
-                    // No saved page - go to match selection
-                    window.location.href = 'match.html';
-                }
-            } else {
-                // Not logged in - go to onboarding
-                window.location.href = 'onboarding.html';
-            }
-        }, 1500);
-    </script>
-</body>
+<!DOCTYPE html> 
+<html lang="en"> 
+<head> 
+    <meta charset="UTF-8"> 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"> 
+    <link rel="manifest" href="manifest.json"> 
+    <meta name="theme-color" content="#000000"> 
+    <meta name="apple-mobile-web-app-capable" content="yes"> 
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"> 
+    <meta name="apple-mobile-web-app-title" content="Spark"> 
+    <link rel="apple-touch-icon" href="spark-icon.png"> 
+    <title>Spark</title> 
+     
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-8F6YCX65EM"></script> 
+<script> 
+  window.dataLayer = window.dataLayer || []; 
+  function gtag(){dataLayer.push(arguments);} 
+  gtag('js', new Date()); 
+ 
+  gtag('config', 'G-8F6YCX65EM'); 
+</script> 
+ 
+    <style> 
+        @font-face { 
+            font-family: 'CabinetGrotesk-Medium'; 
+            src: url('fonts/CabinetGrotesk-Medium.woff2') format('woff2'), 
+                 url('fonts/CabinetGrotesk-Medium.woff') format('woff'), 
+                 url('fonts/CabinetGrotesk-Medium.ttf') format('truetype'); 
+            font-weight: 500; 
+            font-display: swap; 
+            font-style: normal; 
+        } 
+ 
+        :root { 
+            --color-background: #000000; 
+            --color-text-primary: #FFFFFF; 
+            --font-heading: 'CabinetGrotesk-Medium', -apple-system, BlinkMacSystemFont, sans-serif; 
+            --safe-area-inset-top: env(safe-area-inset-top); 
+            --safe-area-inset-bottom: env(safe-area-inset-bottom); 
+        } 
+ 
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+            -webkit-tap-highlight-color: transparent; 
+        } 
+ 
+        html, body { 
+            height: 100%; 
+            overflow: hidden; 
+        } 
+ 
+        body { 
+            font-family: var(--font-heading); 
+            background-color: var(--color-background); 
+            color: var(--color-text-primary); 
+            -webkit-font-smoothing: antialiased; 
+            -moz-osx-font-smoothing: grayscale; 
+            overscroll-behavior: none; 
+            position: fixed; 
+            width: 100%; 
+        } 
+ 
+        .splash-screen { 
+            height: 100dvh; 
+            width: 100%; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center; 
+            padding: 16px; 
+            animation: contentFadeIn 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards, 
+                       contentFadeOut 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) 1.1s forwards; 
+        } 
+ 
+        .logo { 
+            width: clamp(80px, 20vw, 120px); 
+            height: clamp(80px, 20vw, 120px); 
+            object-fit: contain; 
+        } 
+ 
+        @keyframes contentFadeIn { 
+            0% { 
+                opacity: 0; 
+                transform: scale(0.95); 
+            } 
+            100% { 
+                opacity: 1; 
+                transform: scale(1); 
+            } 
+        } 
+ 
+        @keyframes contentFadeOut { 
+            0% { 
+                opacity: 1; 
+                transform: scale(1); 
+            } 
+            100% { 
+                opacity: 0; 
+                transform: scale(1.05); 
+            } 
+        } 
+ 
+        @supports (padding: max(0px)) { 
+            body { 
+                padding-left: env(safe-area-inset-left); 
+                padding-right: env(safe-area-inset-right); 
+            } 
+        } 
+    </style> 
+    <script> 
+        if ('serviceWorker' in navigator) { 
+            navigator.serviceWorker.register('sw.js'); 
+        } 
+    </script> 
+    <script> 
+        // SparkNative polyfill — no-ops when running in browser (not native app) 
+        if (!window.SparkNative) { 
+            window.SparkNative = { 
+                isNativeApp: false, 
+                platform: 'web', 
+                haptic: function() {}, 
+                share: function() {}, 
+                setBadge: function() {}, 
+                openExternal: function(url) { window.open(url, '_blank'); }, 
+                getDeviceInfo: function() {}, 
+                getPushToken: function() {}, 
+                showAlert: function(opts) { alert(opts && opts.message || ''); }, 
+                copyToClipboard: function(text) { 
+                    navigator.clipboard && navigator.clipboard.writeText(text); 
+                }, 
+                onPushToken: null, 
+                onDeepLink: null, 
+                onResume: null, 
+                onDeviceInfo: null, 
+                onAlertAction: null 
+            }; 
+        } 
+ 
+        // Wire up native bridge when running inside the iOS app 
+        document.addEventListener('SparkNativeReady', function() { 
+            SparkNative.setBadge(0); 
+ 
+            SparkNative.onPushToken = function(token) { 
+                window._sparkPushToken = token; 
+                
+                // Get session (expecting JSON object for access_token)
+                const sessionStr = localStorage.getItem('spark_session') || 
+                                 sessionStorage.getItem('spark_session');
+                
+                if (sessionStr && token) { 
+                    const session = JSON.parse(sessionStr);
+                    fetch('https://tqfplimunahyajxpzrnc.supabase.co/functions/v1/swift-api', { 
+                        method: 'POST', 
+                        headers: { 
+                            'Content-Type': 'application/json', 
+                            'Authorization': `Bearer ${session.access_token}` 
+                        }, 
+                        body: JSON.stringify({ push_token: token, platform: 'ios' }) 
+                    }).catch(function(err) { console.error('Push token sync failed', err); }); 
+                } 
+            }; 
+            SparkNative.getPushToken(); 
+ 
+            SparkNative.onDeepLink = function(path) { 
+                if (path) { window.location.href = path; } 
+            }; 
+ 
+            SparkNative.onResume = function() { 
+                SparkNative.setBadge(0); 
+                SparkNative.getPushToken(); 
+            }; 
+        }); 
+    </script> 
+</head> 
+<body> 
+    <main class="splash-screen"> 
+        <img src="spark-icon.png" alt="Spark logo" class="logo"> 
+    </main> 
+    <script src="js/api.js"></script> 
+    <script> 
+        // Prevent double-tap zoom on iOS 
+        let lastTouchEnd = 0; 
+        document.addEventListener('touchend', function(event) { 
+            const now = Date.now(); 
+            if (now - lastTouchEnd <= 300) { 
+                event.preventDefault(); 
+            } 
+            lastTouchEnd = now; 
+        }, false); 
+ 
+        setTimeout(() => { 
+            if (SparkAPI.auth.isLoggedIn()) { 
+                const lastPage = SparkAPI.navigation.getLastPage(); 
+                window.location.href = lastPage ? lastPage : 'match.html'; 
+            } else { 
+                window.location.href = 'onboarding.html'; 
+            } 
+        }, 1500); 
+    </script> 
+</body> 
 </html>
