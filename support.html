@@ -38,6 +38,8 @@
             --surface: rgba(255,255,255,0.06);
             --radius: 18px;
             --font: 'CabinetGrotesk-Medium', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-heading: 'CabinetGrotesk-Medium', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
         }
 
         * {
@@ -49,7 +51,7 @@
         body {
             background: var(--bg);
             color: var(--text-primary);
-            font-family: var(--font);
+            font-family: var(--font-body);
             line-height: 1.6;
             -webkit-font-smoothing: antialiased;
         }
@@ -109,6 +111,7 @@
         }
 
         h1 {
+            font-family: var(--font-heading);
             font-size: clamp(32px, 6vw, 44px);
             margin-bottom: 12px;
         }
@@ -120,6 +123,7 @@
         }
 
         .section-title {
+            font-family: var(--font-heading);
             font-size: 20px;
             margin-bottom: 24px;
         }
@@ -138,7 +142,7 @@
             background: none;
             border: none;
             color: var(--text-primary);
-            font-family: var(--font);
+            font-family: var(--font-body);
             font-size: 16px;
             cursor: pointer;
         }
