@@ -4,7 +4,7 @@ on:
   push:
     branches: [ main ]
     paths:
-      - 'ios-src/**'
+      - 'Spark/**'
       - '*.html'
       - 'js/**'
       - 'fonts/**'
@@ -12,7 +12,7 @@ on:
   pull_request:
     branches: [ main ]
     paths:
-      - 'ios-src/**'
+      - 'Spark/**'
       - '*.html'
       - 'js/**'
       - 'fonts/**'
@@ -34,15 +34,10 @@ jobs:
     - name: Show Xcode version
       run: xcodebuild -version
 
-    - name: Install CocoaPods dependencies
-      run: |
-        cd ios-src
-        pod install
-
     - name: Build unsigned IPA
       run: |
-        cd ios-src
-        xcodebuild -workspace Spark.xcworkspace \
+        cd Spark
+        xcodebuild -project Spark.xcodeproj \
           -scheme Spark \
           -configuration Release \
           -sdk iphoneos \
@@ -69,4 +64,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: Spark-Unsigned-IPA
-        path: ios-src/build/Spark-Unsigned.ipa
+        path: Spark/build/Spark-Unsigned.ipa
