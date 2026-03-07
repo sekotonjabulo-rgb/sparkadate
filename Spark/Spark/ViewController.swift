@@ -5,8 +5,6 @@ import UserNotifications
 class ViewController: UIViewController, WKNavigationDelegate, WKScriptMessageHandler, WKUIDelegate {
 
     private(set) var webView: WKWebView!
-    private var progressView: UIProgressView!
-    private var progressObservation: NSKeyValueObservation?
     private var networkOverlay: UIView?
 
     // MARK: - Lifecycle
@@ -15,7 +13,6 @@ class ViewController: UIViewController, WKNavigationDelegate, WKScriptMessageHan
         super.viewDidLoad()
         view.backgroundColor = .black
         setupWebView()
-        setupProgressBar()
         setupSwipeNavigation()
         setupConnectivityMonitoring()
         loadApp()
@@ -23,10 +20,6 @@ class ViewController: UIViewController, WKNavigationDelegate, WKScriptMessageHan
 
     override var prefersStatusBarHidden: Bool {
         return true
-    }
-
-    deinit {
-        progressObservation?.invalidate()
     }
 
     // MARK: - WebView Setup
@@ -83,33 +76,6 @@ class ViewController: UIViewController, WKNavigationDelegate, WKScriptMessageHan
             webView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
             webView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             webView.trailingAnchor.constraint(equalTo: view.trailingAnchor)
-        ])
-
-        // Observe loading progress
-        progressObservation = webView.observe(\.estimatedProgress) { [weak self] webView, _ in
-            self?.progressView.setProgress(Float(webView.estimatedProgress), animated: true)
-            if webView.estimatedProgress >= 1.0 {
-                UIView.animate(withDuration: 0.3, delay: 0.3) {
-                    self?.progressView.alpha = 0
-                }
-            } else {
-                self?.progressView.alpha = 1
-            }
-        }
-    }
-
-    private func setupProgressBar() {
-        progressView = UIProgressView(progressViewStyle: .bar)
-        progressView.translatesAutoresizingMaskIntoConstraints = false
-        progressView.progressTintColor = UIColor(red: 1.0, green: 0.35, blue: 0.5, alpha: 1.0)
-        progressView.trackTintColor = .clear
-        view.addSubview(progressView)
-
-        NSLayoutConstraint.activate([
-            progressView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-            progressView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            progressView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            progressView.heightAnchor.constraint(equalToConstant: 2)
         ])
     }
 
