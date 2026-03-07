@@ -64,14 +64,6 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        @supports (padding: max(0px)) {
-            body {
-                padding-top: env(safe-area-inset-top);
-                padding-bottom: env(safe-area-inset-bottom);
-                padding-left: env(safe-area-inset-left);
-                padding-right: env(safe-area-inset-right);
-            }
-        }
         .chat-container {
             height: 100dvh;
             display: flex;
@@ -204,6 +196,7 @@
             align-items: center;
             justify-content: space-between;
             padding: 16px 20px;
+            padding-top: calc(16px + env(safe-area-inset-top, 0px));
             border-bottom: 1px solid var(--color-input-border);
             flex-shrink: 0;
             background: rgba(0, 0, 0, 0.4);
@@ -217,7 +210,6 @@
             flex-direction: column;
         }
         .chat-name {
-            font-family: var(--font-heading);
             font-size: 16px;
             font-weight: 500;
         }
@@ -651,6 +643,7 @@
         }
         .chat-input-container {
     padding: 8px 16px;
+    padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
     flex-shrink: 0;
     background: rgba(0, 0, 0, 0.4);
     backdrop-filter: blur(10px);
@@ -667,7 +660,7 @@
     padding: 0 16px;
     padding-right: 48px;
     background-color: var(--color-input-bg);
-    border: 1px solid var(--color-input-border);
+    border: none;
     border-radius: 22px;
     font-family: var(--font-body);
     font-size: 16px;
@@ -678,9 +671,6 @@
 }
         .chat-input::placeholder {
             color: var(--color-text-secondary);
-        }
-        .chat-input:focus {
-            border-color: rgba(255, 255, 255, 0.3);
         }
         .btn-send {
     position: absolute;
@@ -832,7 +822,7 @@
             </div>
             <div class="chat-input-container">
                 <div class="chat-input-wrapper">
-                    <input type="text" class="chat-input" id="messageInput" placeholder="Type a message...">
+                    <input type="text" class="chat-input" id="messageInput" placeholder="Message...">
                     <button class="btn-send" id="sendBtn">
                         <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M5 12h14M12 5l7 7-7 7"/>
