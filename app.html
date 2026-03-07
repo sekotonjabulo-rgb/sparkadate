@@ -115,6 +115,64 @@
             navigator.serviceWorker.register('sw.js');
         }
     </script>
+    <script>
+        // SparkNative polyfill — no-ops when running in browser (not native app)
+        if (!window.SparkNative) {
+            window.SparkNative = {
+                isNativeApp: false,
+                platform: 'web',
+                haptic: function() {},
+                share: function() {},
+                setBadge: function() {},
+                openExternal: function(url) { window.open(url, '_blank'); },
+                getDeviceInfo: function() {},
+                getPushToken: function() {},
+                showAlert: function(opts) { alert(opts && opts.message || ''); },
+                copyToClipboard: function(text) {
+                    navigator.clipboard && navigator.clipboard.writeText(text);
+                },
+                onPushToken: null,
+                onDeepLink: null,
+                onResume: null,
+                onDeviceInfo: null,
+                onAlertAction: null
+            };
+        }
+
+        // Wire up native bridge when running inside the iOS app
+        document.addEventListener('SparkNativeReady', function() {
+            // Clear badge when app opens
+            SparkNative.setBadge(0);
+
+            // Capture APNs push token and store it for the session
+            SparkNative.onPushToken = function(token) {
+                window._sparkPushToken = token;
+                // Send token to backend if user is already authenticated
+                const session = localStorage.getItem('spark_session') ||
+                                sessionStorage.getItem('spark_session');
+                if (session && token) {
+                    fetch('/api/push-token', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json',
+                                   'Authorization': 'Bearer ' + session },
+                        body: JSON.stringify({ token: token, platform: 'ios' })
+                    }).catch(function() {});
+                }
+            };
+            SparkNative.getPushToken();
+
+            // Handle deep links from notification taps
+            SparkNative.onDeepLink = function(path) {
+                if (path) { window.location.href = path; }
+            };
+
+            // Re-fetch push token when app resumes from background
+            SparkNative.onResume = function() {
+                SparkNative.setBadge(0);
+                SparkNative.getPushToken();
+            };
+        });
+    </script>
 </head>
 <body>
     <main class="splash-screen">
