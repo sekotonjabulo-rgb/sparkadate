@@ -92,6 +92,7 @@
             overflow: hidden;
             overscroll-behavior: none;
             touch-action: none;
+            justify-content: space-between;
         }
 
         .progress-bar {
@@ -332,7 +333,9 @@
         }
 
 .onboarding-actions {
-    padding: 16px 0 max(32px, calc(env(safe-area-inset-bottom, 0px) + 20px));
+    padding: 16px 0;
+    padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
+    margin-bottom: 8px;
     flex-shrink: 0;
 }
 
