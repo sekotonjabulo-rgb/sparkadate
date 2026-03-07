@@ -85,7 +85,7 @@
             height: 100dvh;
             display: flex;
             flex-direction: column;
-            padding: 16px 16px 0px;
+            padding: 16px 16px 0;
             max-width: 428px;
             margin: 0 auto;
             animation: blurFadeIn 0.6s ease-out forwards;
@@ -122,6 +122,7 @@
             display: none;
             flex-direction: column;
             flex: 1;
+            min-height: 0;
             animation: fadeIn 0.3s ease-out forwards;
         }
 
@@ -331,9 +332,7 @@
         }
 
 .onboarding-actions {
-    margin-top: auto;
-    padding-top: 16px;
-    padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+    padding: 16px 0 max(32px, env(safe-area-inset-bottom, 32px));
     flex-shrink: 0;
 }
 
@@ -398,14 +397,11 @@
                 <div class="form-group">
                     <input type="number" class="form-input" id="ageInput" placeholder="Enter your age" min="18" max="120" required>
                 </div>
-                <div class="onboarding-actions">
-                    <button type="button" class="btn-primary" id="continueBtn1" disabled>Continue</button>
-                </div>
             </div>
 
             <div class="question-section" id="questionGender">
                 <h1 class="onboarding-title">Tell us about yourself</h1>
-                
+
                 <p class="section-label">I am a</p>
                 <div class="option-group" id="genderGroup">
                     <button type="button" class="option-btn" data-value="man">Man</button>
@@ -419,10 +415,6 @@
                     <button type="button" class="option-btn" data-value="women">Women</button>
                     <button type="button" class="option-btn" data-value="everyone">Everyone</button>
                 </div>
-
-                <div class="onboarding-actions">
-                    <button type="button" class="btn-primary" id="continueBtn2" disabled>Continue</button>
-                </div>
             </div>
 
             <div class="question-section" id="questionLocation">
@@ -430,9 +422,6 @@
                 <p class="onboarding-subtitle">This helps us find people near you.</p>
                 <div class="form-group">
                     <input type="text" class="form-input" id="locationInput" placeholder="City or region" required>
-                </div>
-                <div class="onboarding-actions">
-                    <button type="button" class="btn-primary" id="continueBtn3" disabled>Continue</button>
                 </div>
             </div>
 
@@ -481,12 +470,12 @@
                         </button>
                     </div>
                 </div>
-
-                <div class="onboarding-actions">
-                    <button type="button" class="btn-primary" id="continueBtn4" disabled>Continue</button>
-                </div>
             </div>
         </section>
+
+        <div class="onboarding-actions">
+            <button type="button" class="btn-primary" id="continueBtn" disabled>Continue</button>
+        </div>
     </main>
 
     <script>
@@ -507,10 +496,7 @@ const locationInput = document.getElementById('locationInput');
 const genderBtns = document.querySelectorAll('#genderGroup .option-btn');
 const seekingBtns = document.querySelectorAll('#seekingGroup .option-btn');
 const photoSlots = document.querySelectorAll('.photo-slot');
-const continueBtn1 = document.getElementById('continueBtn1');
-const continueBtn2 = document.getElementById('continueBtn2');
-const continueBtn3 = document.getElementById('continueBtn3');
-const continueBtn4 = document.getElementById('continueBtn4');
+const continueBtn = document.getElementById('continueBtn');
 
 let currentStep = 1;
 let userData = {
@@ -529,6 +515,25 @@ function updateProgress() {
     progressFill.style.width = `${(currentStep / 4) * 100}%`;
 }
 
+function updateButtonState() {
+    switch (currentStep) {
+        case 1: {
+            const age = parseInt(ageInput.value);
+            continueBtn.disabled = !(age >= 18 && age <= 120);
+            break;
+        }
+        case 2:
+            continueBtn.disabled = !(userData.gender && userData.seeking);
+            break;
+        case 3:
+            continueBtn.disabled = !locationInput.value.trim();
+            break;
+        case 4:
+            continueBtn.disabled = !userData.photos.some(p => p !== null);
+            break;
+    }
+}
+
 function showStep(step) {
     document.querySelectorAll('.question-section').forEach(section => {
         section.classList.remove('active');
@@ -538,23 +543,20 @@ function showStep(step) {
     if (step === 2) document.getElementById('questionGender').classList.add('active');
     if (step === 3) document.getElementById('questionLocation').classList.add('active');
     if (step === 4) document.getElementById('questionPhotos').classList.add('active');
+
+    updateButtonState();
 }
 
-ageInput.addEventListener('input', () => {
-    const age = parseInt(ageInput.value);
-    continueBtn1.disabled = !(age >= 18 && age <= 120);
-});
+ageInput.addEventListener('input', updateButtonState);
 
-locationInput.addEventListener('input', () => {
-    continueBtn3.disabled = !locationInput.value.trim();
-});
+locationInput.addEventListener('input', updateButtonState);
 
 genderBtns.forEach(btn => {
     btn.addEventListener('click', () => {
         genderBtns.forEach(b => b.classList.remove('selected'));
         btn.classList.add('selected');
         userData.gender = btn.dataset.value;
-        continueBtn2.disabled = !(userData.gender && userData.seeking);
+        updateButtonState();
     });
 });
 
@@ -563,13 +565,12 @@ seekingBtns.forEach(btn => {
         seekingBtns.forEach(b => b.classList.remove('selected'));
         btn.classList.add('selected');
         userData.seeking = btn.dataset.value;
-        continueBtn2.disabled = !(userData.gender && userData.seeking);
+        updateButtonState();
     });
 });
 
 function updatePhotoBtn() {
-    const hasPhoto = userData.photos.some(p => p !== null);
-    continueBtn4.disabled = !hasPhoto;
+    updateButtonState();
 }
 
         async function compressImage(base64Data, maxWidth = 1200, quality = 0.7) {
@@ -646,38 +647,39 @@ input.addEventListener('change', async (e) => {
     });
 });
 
-continueBtn1.addEventListener('click', () => {
-    userData.age = parseInt(ageInput.value);
-    currentStep = 2;
-    updateProgress();
-    showStep(2);
-});
+continueBtn.addEventListener('click', (e) => {
+    if (continueBtn.disabled) return;
 
-continueBtn2.addEventListener('click', () => {
-    currentStep = 3;
-    updateProgress();
-    showStep(3);
-    requestLocation();
-});
-
-continueBtn3.addEventListener('click', () => {
-    userData.location = locationInput.value.trim();
-    currentStep = 4;
-    updateProgress();
-    showStep(4);
+    if (currentStep === 1) {
+        userData.age = parseInt(ageInput.value);
+        currentStep = 2;
+        updateProgress();
+        showStep(2);
+    } else if (currentStep === 2) {
+        currentStep = 3;
+        updateProgress();
+        showStep(3);
+        requestLocation();
+    } else if (currentStep === 3) {
+        userData.location = locationInput.value.trim();
+        currentStep = 4;
+        updateProgress();
+        showStep(4);
+    } else if (currentStep === 4) {
+        handleContinue4(e);
+    }
 });
 
 function handleContinue4(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (continueBtn4.disabled || isNavigating) {
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+
+    if (continueBtn.disabled || isNavigating) {
         console.log('Button disabled or already navigating');
         return;
     }
     
     isNavigating = true;
-    continueBtn4.disabled = true;
+    continueBtn.disabled = true;
     
     console.log('Starting navigation process');
     
@@ -726,15 +728,13 @@ function handleContinue4(e) {
             } else {
                 alert('Unable to save your information. Please try using fewer or smaller photos.');
                 isNavigating = false;
-                continueBtn4.disabled = false;
+                continueBtn.disabled = false;
             }
         }
     }
-    
+
     attemptSave();
 }
-
-continueBtn4.addEventListener('click', handleContinue4);
 
 function requestLocation() {
     if ('geolocation' in navigator) {
@@ -748,7 +748,7 @@ function requestLocation() {
                     const city = data.address.city || data.address.town || data.address.village || '';
                     const region = data.address.state || data.address.country || '';
                     locationInput.value = city ? `${city}, ${region}` : region;
-                    continueBtn3.disabled = !locationInput.value.trim();
+                    updateButtonState();
                 } catch (error) {
                     console.log('Reverse geocoding failed');
                 }
