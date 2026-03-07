@@ -3,7 +3,7 @@ import WebKit
 import UserNotifications
 
 class ViewController: UIViewController, WKNavigationDelegate, WKScriptMessageHandler, WKUIDelegate {
-
+    
     private(set) var webView: WKWebView!
     private var networkOverlay: UIView?
 
