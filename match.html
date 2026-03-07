@@ -51,12 +51,14 @@
         html, body {
             height: 100%;
             overflow: hidden;
+            background-color: #000000;
         }
 
         body {
             font-family: var(--font-heading);
-            background-color: var(--color-background);
+            background-color: #000000;
             color: var(--color-text-primary);
+            color-scheme: dark;
             -webkit-font-smoothing: antialiased;
         }
 
@@ -69,6 +71,39 @@
             padding: 16px;
             max-width: 428px;
             margin: 0 auto;
+            position: relative;
+        }
+
+        .match-header {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            z-index: 10;
+        }
+
+        .back-btn {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: none;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: border-color 0.2s ease, background-color 0.2s ease;
+            text-decoration: none;
+        }
+
+        .back-btn:hover {
+            border-color: rgba(255, 255, 255, 0.3);
+            background-color: rgba(255, 255, 255, 0.08);
+        }
+
+        .back-btn svg {
+            width: 18px;
+            height: 18px;
+            stroke: var(--color-text-primary);
         }
 
         .match-content {
@@ -120,47 +155,36 @@
             width: 120px;
             height: 14px;
             background: var(--color-skeleton);
-            border-radius: 4px;
+            border-radius: 100px;
             margin-bottom: 10px;
-            overflow: hidden;
-            position: relative;
+            animation: pulse 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
         }
 
         .skeleton-name {
             width: 100px;
             height: 28px;
             background: var(--color-skeleton);
-            border-radius: 6px;
-            overflow: hidden;
-            position: relative;
+            border-radius: 100px;
+            animation: pulse 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+            animation-delay: 0.1s;
         }
 
         .skeleton-age {
             width: 80px;
             height: 14px;
             background: var(--color-skeleton);
-            border-radius: 4px;
+            border-radius: 100px;
             margin-top: 6px;
-            overflow: hidden;
-            position: relative;
+            animation: pulse 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+            animation-delay: 0.2s;
         }
 
-        .skeleton-label::after,
-        .skeleton-name::after,
-        .skeleton-age::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, var(--color-skeleton-shine), transparent);
-            animation: shimmer 1.5s infinite;
-        }
-
-        @keyframes shimmer {
-            100% {
-                left: 100%;
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.4;
             }
         }
 
@@ -192,6 +216,13 @@
 </head>
 <body>
     <main class="match-screen">
+        <div class="match-header">
+            <a href="chat.html" class="back-btn" aria-label="Go back">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+            </a>
+        </div>
         <div class="match-content">
             <div class="skeleton" id="skeleton">
                 <div class="skeleton-label"></div>

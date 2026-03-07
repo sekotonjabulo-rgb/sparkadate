@@ -60,12 +60,14 @@
             width: 100%;
             overscroll-behavior: none;
             touch-action: none;
+            background-color: #000000;
         }
 
         body {
             font-family: var(--font-heading);
-            background-color: var(--color-background);
+            background-color: #000000;
             color: var(--color-text-primary);
+            color-scheme: dark;
             -webkit-font-smoothing: antialiased;
         }
 
@@ -82,12 +84,45 @@
             touch-action: none;
         }
 
+        .onboarding-nav {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            flex-shrink: 0;
+        }
+
+        .back-btn {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: none;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: border-color 0.2s ease, background-color 0.2s ease;
+            text-decoration: none;
+            flex-shrink: 0;
+        }
+
+        .back-btn:hover {
+            border-color: rgba(255, 255, 255, 0.3);
+            background-color: rgba(255, 255, 255, 0.08);
+        }
+
+        .back-btn svg {
+            width: 18px;
+            height: 18px;
+            stroke: var(--color-text-primary);
+        }
+
         .progress-bar {
             width: 100%;
             height: 4px;
             background-color: var(--color-progress-bg);
             border-radius: var(--radius-progress);
-            margin-bottom: 24px;
             flex-shrink: 0;
         }
 
@@ -373,8 +408,15 @@
 </head>
 <body>
     <main class="onboarding-screen">
-        <div class="progress-bar">
-            <div class="progress-fill" id="progressFill"></div>
+        <div class="onboarding-nav">
+            <button type="button" class="back-btn" id="backBtn" aria-label="Go back">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+            </button>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
         </div>
 
         <section class="onboarding-content">
@@ -630,6 +672,17 @@ input.addEventListener('change', async (e) => {
         input.value = '';
         updatePhotoBtn();
     });
+});
+
+const backBtn = document.getElementById('backBtn');
+backBtn.addEventListener('click', () => {
+    if (currentStep > 1) {
+        currentStep--;
+        updateProgress();
+        showStep(currentStep);
+    } else {
+        window.location.href = 'onboarding.html';
+    }
 });
 
 continueBtn1.addEventListener('click', () => {
