@@ -184,7 +184,7 @@
             display: flex;
             flex-direction: column;
             gap: 12px;
-            padding: 0 16px max(40px, env(safe-area-inset-bottom, 40px));
+            padding: 0 16px calc(8px + env(safe-area-inset-bottom, 0px));
         }
 
         .reveal-actions.hidden {

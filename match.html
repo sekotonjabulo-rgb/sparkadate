@@ -85,10 +85,8 @@
 
         .match-content {
             text-align: center;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            position: relative;
+            display: grid;
+            place-items: center;
         }
 
         .match-label {
@@ -117,10 +115,10 @@
         }
 
         .skeleton {
+            grid-area: 1 / 1;
             display: flex;
             flex-direction: column;
             align-items: center;
-            position: absolute;
             transition: opacity 0.4s ease;
         }
 
@@ -178,6 +176,7 @@
         }
 
         .match-info {
+            grid-area: 1 / 1;
             display: flex;
             flex-direction: column;
             align-items: center;
