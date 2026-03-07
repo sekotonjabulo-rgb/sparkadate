@@ -4,6 +4,7 @@ import SwiftUI
 class Onboarding1ViewController: UIViewController {
     private var hostingController: UIHostingController<Onboarding1View>?
     var onNavigateToSignup: (([String: Any]) -> Void)?
+    var onBack: (() -> Void)?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -12,6 +13,9 @@ class Onboarding1ViewController: UIViewController {
         var onboarding1View = Onboarding1View()
         onboarding1View.onNavigateToSignup = { [weak self] userData in
             self?.onNavigateToSignup?(userData)
+        }
+        onboarding1View.onBack = { [weak self] in
+            self?.onBack?()
         }
 
         let hostingController = UIHostingController(rootView: onboarding1View)

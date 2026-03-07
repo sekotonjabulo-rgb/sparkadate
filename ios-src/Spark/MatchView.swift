@@ -104,12 +104,28 @@ struct MatchView: View {
     @State private var navigateAfterDelay = false
     var onNavigateToChat: (() -> Void)?
     var onNavigateToPlan: (() -> Void)?
+    var onBack: (() -> Void)?
 
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
 
             VStack(spacing: 0) {
+                // Back button header
+                HStack {
+                    Button(action: { onBack?() }) {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 18, weight: .medium))
+                            .foregroundColor(.white)
+                            .frame(width: 36, height: 36)
+                    }
+                    Spacer()
+                }
+                .padding(.horizontal, 16)
+                .padding(.top, 8)
+
+                Spacer()
+
                 switch viewModel.state {
                 case .loading:
                     loadingView
@@ -123,6 +139,8 @@ struct MatchView: View {
                 case .error(let msg):
                     errorView(msg)
                 }
+
+                Spacer()
             }
             .frame(maxWidth: 428)
         }
@@ -136,29 +154,25 @@ struct MatchView: View {
 
     private var loadingView: some View {
         VStack(spacing: 16) {
-            Spacer()
-            // Skeleton shimmer
-            RoundedRectangle(cornerRadius: 8)
+            Capsule()
                 .fill(Color.white.opacity(0.08))
                 .frame(width: 180, height: 20)
-                .shimmer()
+                .pulse(delay: 0)
 
-            RoundedRectangle(cornerRadius: 8)
+            Capsule()
                 .fill(Color.white.opacity(0.08))
                 .frame(width: 120, height: 32)
-                .shimmer()
+                .pulse(delay: 0.1)
 
-            RoundedRectangle(cornerRadius: 8)
+            Capsule()
                 .fill(Color.white.opacity(0.08))
                 .frame(width: 60, height: 16)
-                .shimmer()
-            Spacer()
+                .pulse(delay: 0.2)
         }
     }
 
     private var searchingView: some View {
         VStack(spacing: 16) {
-            Spacer()
             ProgressView()
                 .progressViewStyle(CircularProgressViewStyle(tint: .white))
                 .scaleEffect(1.2)
@@ -170,14 +184,11 @@ struct MatchView: View {
             Text("Looking for your next connection")
                 .font(.customFont("CabinetGrotesk-Medium", size: 14))
                 .foregroundColor(Color.white.opacity(0.4))
-            Spacer()
         }
     }
 
     private var matchFoundView: some View {
         VStack(spacing: 12) {
-            Spacer()
-
             Text("You're matched with")
                 .font(.customFont("CabinetGrotesk-Medium", size: 15))
                 .foregroundColor(Color.white.opacity(0.65))
@@ -194,8 +205,6 @@ struct MatchView: View {
                     .foregroundColor(Color.white.opacity(0.5))
                     .opacity(showContent ? 1 : 0)
             }
-
-            Spacer()
         }
         .onAppear {
             withAnimation(.easeOut(duration: 0.8)) {
@@ -230,31 +239,28 @@ struct MatchView: View {
     }
 }
 
-// MARK: - Shimmer Modifier
-struct ShimmerModifier: ViewModifier {
-    @State private var phase: CGFloat = -1
+// MARK: - Pulse Modifier
+struct PulseModifier: ViewModifier {
+    let delay: Double
+    @State private var isAnimating = false
 
     func body(content: Content) -> some View {
         content
-            .overlay(
-                LinearGradient(
-                    gradient: Gradient(colors: [.clear, Color.white.opacity(0.1), .clear]),
-                    startPoint: .leading,
-                    endPoint: .trailing
-                )
-                .offset(x: phase * 200)
+            .opacity(isAnimating ? 0.4 : 1.0)
+            .animation(
+                .easeInOut(duration: 0.9)
+                .repeatForever(autoreverses: true)
+                .delay(delay),
+                value: isAnimating
             )
-            .clipped()
             .onAppear {
-                withAnimation(.linear(duration: 1.5).repeatForever(autoreverses: false)) {
-                    phase = 1
-                }
+                isAnimating = true
             }
     }
 }
 
 extension View {
-    func shimmer() -> some View {
-        modifier(ShimmerModifier())
+    func pulse(delay: Double = 0) -> some View {
+        modifier(PulseModifier(delay: delay))
     }
 }

@@ -5,6 +5,7 @@ class MatchViewController: UIViewController {
     private var hostingController: UIHostingController<MatchView>?
     var onNavigateToChat: (() -> Void)?
     var onNavigateToPlan: (() -> Void)?
+    var onBack: (() -> Void)?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -16,6 +17,9 @@ class MatchViewController: UIViewController {
         }
         matchView.onNavigateToPlan = { [weak self] in
             self?.onNavigateToPlan?()
+        }
+        matchView.onBack = { [weak self] in
+            self?.onBack?()
         }
 
         let hostingController = UIHostingController(rootView: matchView)

@@ -106,6 +106,12 @@ class ViewController: UIViewController, WKNavigationDelegate, UIDocumentInteract
                 self.showSignup(userData: userData)
             }
         }
+        onboarding1VC.onBack = { [weak self] in
+            guard let self = self else { return }
+            onboarding1VC.dismiss(animated: false) {
+                self.showOnboarding()
+            }
+        }
         presentNative(onboarding1VC)
     }
 
@@ -146,6 +152,10 @@ class ViewController: UIViewController, WKNavigationDelegate, UIDocumentInteract
         matchVC.onNavigateToPlan = { [weak self] in
             guard let self = self else { return }
             matchVC.dismiss(animated: false) { self.showPlan() }
+        }
+        matchVC.onBack = { [weak self] in
+            guard let self = self else { return }
+            matchVC.dismiss(animated: false) { self.showChat(matchData: nil) }
         }
         presentNative(matchVC)
     }

@@ -87,17 +87,27 @@ struct Onboarding1View: View {
     @State private var isLoading = false
     var onComplete: (([String: Any]) -> Void)?
     var onNavigateToSignup: (([String: Any]) -> Void)?
+    var onBack: (() -> Void)?
 
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
 
             VStack(spacing: 0) {
-                // Progress bar
-                ProgressBarView(currentStep: currentStep, totalSteps: 4)
-                    .padding(.horizontal, 16)
-                    .padding(.top, 16)
-                    .padding(.bottom, 24)
+                // Back button + progress bar
+                HStack(spacing: 12) {
+                    Button(action: { goBack() }) {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 18, weight: .medium))
+                            .foregroundColor(.white)
+                            .frame(width: 36, height: 36)
+                    }
+
+                    ProgressBarView(currentStep: currentStep, totalSteps: 4)
+                }
+                .padding(.horizontal, 16)
+                .padding(.top, 16)
+                .padding(.bottom, 16)
 
                 // Content
                 Group {
@@ -120,6 +130,16 @@ struct Onboarding1View: View {
                 opacity = 1
                 blur = 0
             }
+        }
+    }
+
+    private func goBack() {
+        if currentStep > 1 {
+            withAnimation(.easeOut(duration: 0.3)) {
+                currentStep -= 1
+            }
+        } else {
+            onBack?()
         }
     }
 
