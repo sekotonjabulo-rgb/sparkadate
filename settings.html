@@ -593,15 +593,15 @@
         }
 
         /* Save Button */
-        .save-bar {
-            padding: 16px 20px;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border-top: 1px solid var(--color-input-border);
-            display: none;
-            flex-shrink: 0;
-        }
+.save-bar {
+    padding: 16px 20px max(64px, calc(env(safe-area-inset-bottom) + 48px));
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-top: none;
+    display: none;
+    flex-shrink: 0;
+}
 
         .save-bar.visible {
             display: block;
@@ -1259,6 +1259,7 @@
     </script>
 </body>
 </html>
+
 
 
 
