@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Support – Spark</title>
     <meta name="description" content="Spark Support. FAQs and contact information." />
     <link rel="icon" href="../blueocean.jpeg" type="image/jpeg" />
@@ -29,6 +29,8 @@
         }
 
         :root {
+            --safe-area-inset-top: env(safe-area-inset-top);
+            --safe-area-inset-bottom: env(safe-area-inset-bottom);
             --bg: #000;
             --text-primary: #fff;
             --text-secondary: rgba(255,255,255,0.65);
@@ -50,6 +52,15 @@
             font-family: var(--font);
             line-height: 1.6;
             -webkit-font-smoothing: antialiased;
+        }
+
+        @supports (padding: max(0px)) {
+            body {
+                padding-top: env(safe-area-inset-top);
+                padding-bottom: env(safe-area-inset-bottom);
+                padding-left: env(safe-area-inset-left);
+                padding-right: env(safe-area-inset-right);
+            }
         }
 
         nav {
